@@ -1,0 +1,12 @@
+program Program
+    const int a = 3;
+    const bool b = true;
+    const char c = 'a';
+
+    // will throw error
+    const int a = 4;
+    const int aa = true;
+
+	{
+
+	}

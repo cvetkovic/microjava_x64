@@ -1,0 +1,60 @@
+program P
+	const int size = 10;
+	abstract class Tab{
+		// kod sa semantickom greskom
+		int size;
+		{
+			abstract int getp(int i);
+			abstract int getn(int i);
+			int getSize() { return size;}
+		}
+	}
+	class Table extends Tab{
+		int pos[], neg[];
+		{
+			void putp (int a, int idx) { this.pos[idx]=a; }
+			void putn (int a, int idx) { this.neg[idx]=a; }
+			int getp (int idx) { return pos[idx]; }
+			int getn (int idx) { return neg[idx]; }
+		}
+	}
+	Table val;
+	{
+		void f(char ch, int a, int arg)
+			int x;
+		{
+			x = arg;
+		}
+		
+		void
+		main()
+			int x, i;
+		char c;
+		{
+			val = new Table;
+			val.pos = new int [size];
+			val.neg = new int [size];
+			for (i = 0; i<size; i++)
+			{
+				val.putp(0,i);
+				val.putn(0,i);
+			}
+			f(c, x, i);
+
+			read(x);
+			for (;x > 0;)
+			{
+				if (0 <= x && x < size)
+				{
+					// kod sa semantickom greskom
+					val.putp(val.getp(x)+1);
+				} else
+				if (size < x && x < 0)
+				{
+					// kod sa semantickom greskom
+					val.putn(val.getn(x)+1);
+				}
+				read(x);
+			}
+		}
+	}

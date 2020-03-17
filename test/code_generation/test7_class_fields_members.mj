@@ -1,0 +1,36 @@
+program Program
+	class C
+	{
+	    int b;
+	    int polje;
+
+	    {
+	        int ff(int a)
+	        {
+	            print(a);
+	            print(' ');
+	            print(b + 1);
+	            print(' ');
+	            print(polje);
+	            print(' ');
+
+	            return this.b;
+	        }
+	    }
+	}
+
+	C c;
+
+	{
+		void main()
+		{
+		    c = new C;
+		    c.b = 1;
+
+            print(c.ff(1));
+            print(' ');
+            print(c.b);
+            print(' ');
+            print(c.polje);
+		}
+	}

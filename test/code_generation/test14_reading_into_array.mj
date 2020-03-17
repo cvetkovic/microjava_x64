@@ -1,0 +1,36 @@
+program MJProgram
+	const int size = 10;
+
+	class Point
+	{
+		int x, y;
+		{
+			void toString()
+			{
+				print('(');
+				print(x); print(','); print(' '); print(y);
+				print(')');
+			}
+		}
+	}
+
+	Point shapes[];
+{
+	void main()
+		int i;
+		int x, y;
+
+	{
+	    shapes = new Point[2];
+	    for (i=0;i<2;i++)
+	    {
+	        shapes[i] = new Point;
+
+	        read(shapes[i].x);
+	        read(shapes[i].y);
+	    }
+
+	    for (i=0;i<2;i++)
+	        shapes[i].toString();
+	}
+}

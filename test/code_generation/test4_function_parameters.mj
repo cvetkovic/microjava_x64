@@ -1,0 +1,22 @@
+program Program
+    int t;
+
+    {
+        int test(int a, int b, int c)
+        {
+            return a + b + c;
+        }
+
+        void p(int a, int b, int c)
+        {
+            print(6);
+        }
+
+	    void main()
+	    {
+	        t = test(1, 2, 3);
+	        //p(1, 2, 3);
+            print(' ');
+            print(1 + test(1, 2, 3));
+        }
+	}

@@ -1,0 +1,16 @@
+program MJProgram
+	int x; int y;
+{
+
+	int k () int c; {
+		c = 1;
+		return c+2;
+	}
+
+	void main() {
+		y = 2;
+		x = y + 2;
+		y = k() + 3;
+		print(y);
+	}
+}

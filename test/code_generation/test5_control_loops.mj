@@ -1,0 +1,21 @@
+program Program
+    int i;
+    int j;
+
+    {
+	    void main()
+	    {
+	        for (i = 0; i < 10; i++)
+	        {
+                if (i == 1)
+                    continue;
+
+	            for (j = 0; j < 10; j++)
+                {
+                    print(i);
+	                print(j);
+                    print(' ');
+                }
+	        }
+        }
+	}

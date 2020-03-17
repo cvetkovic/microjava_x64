@@ -1,0 +1,31 @@
+program Program
+	class C
+	{
+	    int b;
+	    int polje;
+
+	    {
+	        void f(int a)
+	        {
+	            print(this.b);
+	            print(b);
+	        }
+	    }
+	}
+
+    int a;
+	C c;
+
+	{
+		void main()
+		{
+		    c = new C;
+
+            c.f(1);
+            c.b = 5;
+            c.polje = 6;
+
+            print(c.b);
+            print(c.polje);
+		}
+	}

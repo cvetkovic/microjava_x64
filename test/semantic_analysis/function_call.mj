@@ -1,0 +1,46 @@
+program Program
+	abstract class A{
+		int x[],y[];
+		{
+			abstract int getValue(int a);
+		}
+	}
+	const int pi = 3, e = 2;
+	class B extends A {
+		int i;
+		{
+			int getValue(int a) int b; bool c;{ return this.i + this.x[0] + a; }
+			void m(){}
+		}
+	}
+
+	B c;
+
+	{
+	    int f(int a, char b, bool d)
+	    {
+	        return 1;
+	    }
+
+		void main() {
+		    print(f());
+		    print(f(1));
+		    print(f(1,2));
+		    print(f(1,'c',true));
+
+			print(c.getValue());
+			print(c.getValue(1));
+			print(c.getValue(1,2));
+			print(c.getValue(1,2,3));
+
+		    f();
+		    f(1);
+		    f(1,2);
+		    f(1,'c',true);
+
+			c.m();
+			c.m(1);
+			c.m(1,2);
+			c.m(1,2,3);
+		}
+	}

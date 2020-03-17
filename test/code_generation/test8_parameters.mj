@@ -1,0 +1,30 @@
+program Program
+    class A
+    {
+        {
+            void f(int a, char b, bool c)
+            {
+                print(a);
+                print(b);
+                print(c);
+            }
+        }
+    }
+
+    A klasa;
+
+    {
+        void k(int z, char x, bool c)
+        {
+            print(z);
+            print(x);
+            print(c);
+        }
+
+	    void main()
+	    {
+	        klasa = new A;
+            klasa.f(1, 'a', true);
+            k(1, 'a', true);
+        }
+	}

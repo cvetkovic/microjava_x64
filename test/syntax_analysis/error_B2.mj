@@ -1,0 +1,11 @@
+program MJProgram
+	int x; int y;
+	{
+		int main()
+		{
+			for (i = ; ui < ; )
+			{
+				val.putp(0,i);
+			}
+		}
+	}

@@ -1,0 +1,20 @@
+program Program
+    int niz[];
+    {
+        int f(int a, int b)
+        {
+            return a;
+        }
+
+	    void main()
+	        int i;
+	    {
+	        niz = new int[10];
+
+	        for (i = 0; i < 10; i++)
+	            niz[i] = i;
+
+	        for (i = 0; i < 10; i++)
+	            print(f(niz[i], i));
+        }
+	}

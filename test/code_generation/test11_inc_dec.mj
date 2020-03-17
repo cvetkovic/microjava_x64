@@ -1,0 +1,29 @@
+program P
+    class C
+    {
+        int field;
+        {
+            void method()
+            {
+                print(field);
+            }
+
+            int saberi(int a, int b)
+            {
+                return a + b;
+            }
+        }
+    }
+
+    C c;
+
+    {
+        void main()
+        {
+            c = new C;
+            c.field = 1;
+            print(c.field);
+            c.field++;
+            print(c.field);
+        }
+    }

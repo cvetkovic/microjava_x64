@@ -1,0 +1,11 @@
+program Program
+    int a, b, c[];
+    char d;
+    bool e[];
+
+    // will throw error
+    //int c;
+
+	{
+
+	}

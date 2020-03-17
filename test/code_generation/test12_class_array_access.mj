@@ -1,0 +1,31 @@
+program MJProgram
+
+    class Point
+    {
+        int x, y;
+    }
+
+    Point niz[];
+
+    {
+        void main()
+            int i;
+        {
+            niz = new Point[5];
+
+            for (i = 0; i < 5; i++)
+            {
+                niz[i] = new Point;
+                niz[i].x = i;
+                niz[i].y = i + 1;
+            }
+
+            for (i = 0; i < 5; i++)
+            {
+                print(niz[i].x);
+                print(niz[i].y);
+                print(' ');
+                print(' ');
+            }
+        }
+    }
