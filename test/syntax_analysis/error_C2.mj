@@ -1,0 +1,9 @@
+program MJProgram
+	class  {{}}
+	class A {{}}
+	class A extends {{}}
+	class A extends B {{}}
+	class extends B {{}}
+	{
+
+	}

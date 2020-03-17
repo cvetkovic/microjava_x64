@@ -1,0 +1,66 @@
+program MJProgram
+
+    class BasePoint
+    {
+        int x, y;
+        {
+            void toString()
+            {
+                print(this.x);
+                print(this.y);
+                print('a');
+                print(' ');
+            }
+
+            void abstr()
+            {
+                print('a');
+                print('b');
+                print('s');
+                print('t');
+                print('r');
+            }
+        }
+    }
+
+    class Point extends BasePoint
+    {
+        {
+            void toString()
+            {
+                print(this.x);
+                print(this.y);
+                print('d');
+                print(' ');
+            }
+
+            void abstr()
+            {
+                print('d');
+                print('e');
+                print('r');
+                print('i');
+                print('v');
+            }
+        }
+    }
+
+    BasePoint bp;
+    Point b;
+
+    {
+        void main()
+            int i;
+        {
+            bp = new Point;
+            b = new Point;
+
+            bp.x = 1;
+            bp.y = 2;
+            b.x = 3;
+            b.y = 4;
+
+            bp.toString();
+            b.toString();
+        }
+    }

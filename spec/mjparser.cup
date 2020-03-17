@@ -1,0 +1,436 @@
+package rs.ac.bg.etf.pp1;
+
+import java.io.*;
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+import cvetkovic.parser.ast.*;
+import cvetkovic.lexer.*;
+import rs.etf.pp1.symboltable.concepts.*;
+
+parser code {:
+	
+	Logger log = Logger.getLogger(getClass());
+
+	private boolean errorDetected = false;
+
+    public void report_error(String message, Object info) {
+    	errorDetected = true;
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" at line ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+    
+	// overriding default error_sync_size() which returns 3
+	public int error_sync_size()
+	{
+		return 1;
+	}
+
+	public boolean isErrorDetected()
+	{
+	    return errorDetected;
+	}
+	
+:}
+
+init with {:
+	errorDetected = false;
+:};
+
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+terminal PROGRAM, BREAK, CLASS, ABSTRACT, ELSE, CONST, 
+		 IF, NEW, PRINT, READ, RETURN, VOID, FOR, EXTENDS, 
+		 CONTINUE, 
+		 
+		 ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION,
+		 MODULO, EQUAL, NOT_EQUAL, GREATER, GREATER_OR_EQUAL, 
+		 LESS, LESS_OR_EQUAL, LOGICAL_AND, LOGICAL_OR, ASSINGMENT,
+		 INCREMENT, DECREMENT, DELIMITER, COMMA, DOT, 
+		 LEFT_ROUND_BRACKET, RIGHT_ROUND_BRACKET, 
+		 LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, 
+		 LEFT_CURLY_BRACKET, RIGHT_CURLY_BRACKET;
+		 
+terminal Integer NUM_CONST;
+terminal String IDENT;
+terminal Character CHAR;
+terminal Boolean BOOLEAN;
+
+non terminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgramName;
+non terminal rs.etf.pp1.symboltable.concepts.Obj ClassDecl, ClassName;
+non terminal rs.etf.pp1.symboltable.concepts.Obj Designator;
+non terminal rs.etf.pp1.symboltable.concepts.Obj MethodDecl, MethodName, MethodSignature;
+non terminal rs.etf.pp1.symboltable.concepts.Obj SingleFormalParameter;
+non terminal rs.etf.pp1.symboltable.concepts.Obj ActPars;
+non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractClassDecl, AbstractClassName;
+non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractMethodName, AbstractMethodDecl;
+
+non terminal rs.etf.pp1.symboltable.concepts.Struct ConstValue;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Type;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Expr;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Term;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+non terminal rs.etf.pp1.symboltable.concepts.Struct CondFact;
+non terminal rs.etf.pp1.symboltable.concepts.Struct MethodDeclReturnType;
+non terminal rs.etf.pp1.symboltable.concepts.Struct AbstractMethodReturnType;
+
+non terminal VarDecl, ElseStatementKeyword, ForKeyword, StartForCondition, ForVarDeclEnd,
+             ForLoopConditionEnd, EndOfForStatement, FormPars, Statement, ConstDecl, DesignatorStatement, IfCondition, IfKeyword,
+             LogicalOr, Condition, CondTerm, Assignop, Relop, Addop, Mulop;
+
+non terminal ProgramElementsDeclList, ProgramElementsDeclListElement, ProgramMethodsDeclList;
+non terminal AdditionalConstDeclaration, SingleConstDeclaration;
+non terminal MultipleVarDeclaration, SingleVarDeclaration, SingleVarArray;
+non terminal ClassDeclExtends, ClassVarList, ClassMethodList, ClassMethod;
+non terminal AbstractExtends, AbstractClassVarList, AbstractClassMethodList, AbstractClassMultipleMethodTypes, AbstractClassMethodTypesAllowed;
+non terminal MethodParameters, MethodVarDeclList, MethodStatements;
+non terminal AbstractMethodParameters;
+non terminal MultipleFormalParameter, FormParamArray;
+non terminal ElseStatement, ForVarDecl, ForLoopCondition, ForUpdateVarList, ReturnStatement, MultiplePrint, MultipleStatement;
+non terminal DesignatorParams;
+non terminal ConditionRight;
+non terminal CondTermRight;
+non terminal ExprNegative;
+non terminal FactorFunctionCallParameters, FactorFunctionCallParametersSingle, FactorArrayDecl;
+non terminal DesignatorInvokeMethodName, DesignatorInvokeMethodNameEnd;
+
+// {} - zero or more
+// [] - optional
+// () - once
+
+precedence left ELSE;
+start with Program;
+
+//////////////////////////////////////////////
+// program declaration
+//////////////////////////////////////////////
+Program ::= (Program) PROGRAM ProgramName ProgramElementsDeclList LEFT_CURLY_BRACKET ProgramMethodsDeclList RIGHT_CURLY_BRACKET;
+
+// program name
+ProgramName ::= (ProgramName) IDENT:programName;
+
+// multiple global variable, class, abstract class, constant
+ProgramElementsDeclList ::= (ProgramElementsDeclarationList) ProgramElementsDeclList ProgramElementsDeclListElement | 
+			 				(NoProgramElements) /* epsilon */;
+			 
+// single global variable, class, abstract class, constant
+ProgramElementsDeclListElement ::= (SingleProgramConst) ConstDecl |
+								   (SingleProgramVar) VarDecl |
+								   (SingleProgramAbstractClass) AbstractClassDecl |
+								   (SingleProgramClass) ClassDecl;
+
+// multiple program method declaration
+ProgramMethodsDeclList ::= (ProgramMethodDeclList) ProgramMethodsDeclList MethodDecl |
+						   (NoProgramMethodList)   /* epsilon */;
+
+//////////////////////////////////////////////
+// constants declaration
+//////////////////////////////////////////////
+
+ConstDecl ::= (ConstDecl) CONST Type:constType SingleConstDeclaration AdditionalConstDeclaration DELIMITER;
+
+AdditionalConstDeclaration ::= (AdditionalConstantDeclaration) AdditionalConstDeclaration COMMA SingleConstDeclaration |
+							   (NoAditionalConstDeclaration) /* epsilon */;
+
+SingleConstDeclaration ::= (SingleConst) IDENT:constName ASSINGMENT ConstValue;
+
+// follow of error symbol in this case is either COMMA or DELIMITER
+ConstValue ::= (NumericalConst) NUM_CONST:constNumValue |
+			   (CharacterConst) CHAR:constCharValue |
+			   (BooleanConst) BOOLEAN:constBoolValue;
+			   
+//////////////////////////////////////////////
+// variable declaration
+//////////////////////////////////////////////
+
+VarDecl ::= (VarDeclarationRoot) Type:varType MultipleVarDeclaration DELIMITER |
+			(VarDeclError) error:e DELIMITER {: parser.report_error("Recovered from invalid variable declaration.", null); :};
+
+MultipleVarDeclaration ::= (MultipleVariablesDeclaration) MultipleVarDeclaration COMMA SingleVarDeclaration |
+						   (SingleVarDecl) SingleVarDeclaration;
+
+SingleVarDeclaration ::= (SingleVariableDeclaration) IDENT:variableName SingleVarArray |
+						 (SingleVarError) error:e {: parser.report_error("Recovered from invalid variable declaration.", null); :};
+
+SingleVarArray ::= (SingleVarNoArray) /* epsilon */ |
+                   (SingleVarArray) LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET;
+
+//////////////////////////////////////////////
+// class declaration
+//////////////////////////////////////////////
+
+ClassDecl ::= (ClassDeclaration) CLASS ClassName ClassDeclExtends LEFT_CURLY_BRACKET ClassVarList ClassMethodList RIGHT_CURLY_BRACKET |
+			  (ClassDeclarationErrorInExtends) CLASS ClassName error:e LEFT_CURLY_BRACKET ClassVarList ClassMethodList RIGHT_CURLY_BRACKET |
+			  (ClassDeclarationErrorBeforeExtends) error:l ClassDeclExtends LEFT_CURLY_BRACKET ClassVarList ClassMethodList RIGHT_CURLY_BRACKET;
+
+ClassName ::= (ClassName) IDENT:className;
+
+ClassDeclExtends ::= (ClassDeclExtendsModifier) EXTENDS Type:classExtendsType |
+					 (NoClassExtends) /* epsilon */;
+
+ClassVarList ::= (ClassVarListt) ClassVarList VarDecl |
+				 (NoClassVarList) /* epsilon */;
+
+ClassMethodList ::= (ClassMethodListt) LEFT_CURLY_BRACKET ClassMethod RIGHT_CURLY_BRACKET |
+					(NoClassMethodList) /* epsilon */;
+
+ClassMethod ::= (ClassMethodd) ClassMethod MethodDecl |
+			    (NoClassMethod) /* epsilon */;
+
+//////////////////////////////////////////////
+// abstract class declaration
+//////////////////////////////////////////////
+
+AbstractClassDecl ::= (AbstractClassDecl) ABSTRACT CLASS AbstractClassName AbstractExtends LEFT_CURLY_BRACKET AbstractClassVarList AbstractClassMethodList RIGHT_CURLY_BRACKET;
+
+AbstractClassName ::= (AbstractClassName) IDENT:abstractClassIdent;
+
+AbstractExtends ::= (AbstractClassExtends) EXTENDS Type:abstractExtendsType |
+					(NoAbstractExtends) /* epsilon */;
+					   
+AbstractClassVarList ::= (AbstractClassVariableList) AbstractClassVarList VarDecl |
+					     (NoAbstractClassVarList) /* epsilon */;
+
+AbstractClassMethodList ::= (AbstractClassMethodListing) LEFT_CURLY_BRACKET AbstractClassMultipleMethodTypes RIGHT_CURLY_BRACKET |
+							(NoAbstractClassMethodList) /* epsilon */;
+					   
+AbstractClassMultipleMethodTypes ::= (AbstractClassMultipleMethodTypesClass) AbstractClassMultipleMethodTypes AbstractClassMethodTypesAllowed |
+									 (NoAbstractClassMultipleMethodTypes) /* epsilon */;
+
+AbstractClassMethodTypesAllowed ::= (AbstractClassMethodTypesMethodType) MethodDecl | 
+									(AbstractClassMethodTypesAbstractMethodType) AbstractMethodDecl;
+
+//////////////////////////////////////////////
+// method declaration
+//////////////////////////////////////////////
+
+MethodDecl ::= (MethodDecl) MethodSignature MethodVarDeclList LEFT_CURLY_BRACKET MethodStatements RIGHT_CURLY_BRACKET;
+
+MethodSignature ::= (MethodSignature) MethodDeclReturnType MethodName LEFT_ROUND_BRACKET MethodParameters RIGHT_ROUND_BRACKET;
+
+MethodName ::= (MethodName) IDENT:methodName;
+
+MethodDeclReturnType ::= (MethodWithReturn) Type:methodReturnType |
+						 (MethodWithoutReturn) VOID:methodIsVoid;
+				
+MethodParameters ::= (MethodParameterss) FormPars |
+					 (NoMethodParameters) /* epsilon */;
+				
+MethodVarDeclList ::= (MethodVarDeclListt) MethodVarDeclList VarDecl |
+					  (NoMethodVarDeclList) /* epsilon */;
+				
+MethodStatements ::= (MethodStatementss) MethodStatements Statement |
+					 (NoMethodStatements) /* epsilon */;
+
+//////////////////////////////////////////////
+// abstract method declaration
+//////////////////////////////////////////////
+
+AbstractMethodDecl ::= (AbstractMethodDeclaration) ABSTRACT AbstractMethodReturnType AbstractMethodName LEFT_ROUND_BRACKET AbstractMethodParameters RIGHT_ROUND_BRACKET DELIMITER |
+					   (AbstractMethodDeclarationError) error:e DELIMITER {: parser.report_error("Recovered from invalid abstract method declaration error.", null); :};
+
+AbstractMethodName ::= (AbstractMethodName) IDENT;
+
+AbstractMethodReturnType ::= (AbstractMethodWithReturn) Type:abstractMethodReturnType |
+							 (AbstractMethodWithoutReturn) VOID:abstractMethodIsVoid;
+							 
+AbstractMethodParameters ::= (AbstractMethodParameterss) FormPars |
+							 (NoAbstractMethodParameters) /* epsilon */;
+
+//////////////////////////////////////////////
+// formal parameter
+//////////////////////////////////////////////
+
+FormPars ::= (FormPars) SingleFormalParameter MultipleFormalParameter;
+
+// follow of error symbol in this case is either COMMA or RIGHT_ROUND_BRACKET
+SingleFormalParameter ::= (SingleFormParameter) Type:formParamType IDENT:formParamName FormParamArray |
+						  (SingleFormParameterError) error:e {: parser.report_error("Recovered from invalid formal parameter declaration error.", null); :};
+						  
+MultipleFormalParameter ::= (MultipleFormalParameterr) MultipleFormalParameter COMMA SingleFormalParameter |
+							(NoMultipleFormalParameter) /* epsilon */;
+
+FormParamArray ::= (FormParamArray) LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET |
+				   (NoFormParamArray) /* epsilon */;
+				   
+//////////////////////////////////////////////
+// type
+//////////////////////////////////////////////
+
+Type ::= (DataType) IDENT:typeIdent;
+
+//////////////////////////////////////////////
+// statement
+//////////////////////////////////////////////
+
+Statement ::= (StatementDesignator) DesignatorStatement DELIMITER |
+			  (IfStatement) IfCondition Statement ElseStatement |
+			  (ForStatement) ForKeyword LEFT_ROUND_BRACKET ForVarDecl ForVarDeclEnd ForLoopCondition ForLoopConditionEnd ForUpdateVarList RIGHT_ROUND_BRACKET Statement EndOfForStatement |
+			  (BreakStatement) BREAK:breakSt DELIMITER |
+			  (ContinueStatement) CONTINUE:continueSt DELIMITER |
+			  (ReturnStatementt) RETURN ReturnStatement DELIMITER |
+			  (ReadStatement) READ LEFT_ROUND_BRACKET Designator RIGHT_ROUND_BRACKET DELIMITER |
+			  (PrintStatement) PRINT LEFT_ROUND_BRACKET Expr MultiplePrint RIGHT_ROUND_BRACKET DELIMITER |
+			  (MultipleStatementt) LEFT_CURLY_BRACKET MultipleStatement RIGHT_CURLY_BRACKET |
+			  (ErrorStatement) error:e {: parser.report_error("Recovered from invalid statement error.", null); :};
+
+IfCondition ::= (IfCondition) IfKeyword LEFT_ROUND_BRACKET Condition RIGHT_ROUND_BRACKET;
+
+IfKeyword ::= (IfKeyword) IF;
+
+ElseStatement ::= (ElseStatementt) ElseStatementKeyword Statement |
+				  (NoElseStatement) /* epsilon */;
+
+// added so that we can change conditional statement context to ELSE branch
+ElseStatementKeyword ::= (ElseStatementKeyword) ELSE;
+
+ForKeyword ::= (ForKeyword) FOR;
+
+// follow of error symbol in this case is either DELIMITER
+ForVarDecl ::= (SingleForVarDecl) DesignatorStatement |
+               (NoForVarDecl) /* epsilon */ |
+			   (ForVarDeclError) error:e {: parser.report_error("Recovered from invalid variable declaration in for statement.", null); :};
+
+ForVarDeclEnd ::= (ForVarDeclEnd) DELIMITER;
+
+// follow of error symbol in this case is either DELIMITER
+ForLoopCondition ::= (SingleForLoopCondition) StartForCondition Condition |
+                     (NoForLoopCondition) /* epsilon */ |
+					 (ForLoopConditionError) error:e {: parser.report_error("Recovered from invalid loop condition in for statement.", null); :};
+
+StartForCondition ::= (StartForCondition) /* epsilon */;
+
+ForLoopConditionEnd ::= (ForLoopConditionEnd) DELIMITER;
+
+// follow of error symbol in this case is either RIGHT_ROUND_BRACKET
+ForUpdateVarList ::= (SingleForUpdateVarList) DesignatorStatement |
+					 (NoForUpdateVarList) /* epsilon */ |
+					 (ForUpdateVarListError) error:e {: parser.report_error("Recovered from invalid loop condition update code in for statement.", null); :};
+
+// added because of non-conditional jump
+EndOfForStatement ::= (EndOfForStatement) /* epsilon */;
+
+ReturnStatement ::= (ExprReturnStatement) Expr |
+					(BlankReturnStatement) /* epsilon */;
+			   
+MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst |
+				  (NoMultiplePrint) /* epsilon */;
+			   
+MultipleStatement ::= (MultipleStatements) MultipleStatement Statement |
+					  (NoMultipleStatement) /* epsilon */;
+
+//////////////////////////////////////////////
+// designator statement
+//////////////////////////////////////////////
+
+DesignatorStatement ::= (DesignatorAssign) Designator Assignop Expr |
+						(DesignatorInvoke) Designator LEFT_ROUND_BRACKET DesignatorParams RIGHT_ROUND_BRACKET |
+						(DesignatorIncrement) Designator INCREMENT |
+						(DesignatorDecrement) Designator DECREMENT;
+
+DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) /* epsilon */;
+DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) /* epsilon */;
+
+DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName ActPars DesignatorInvokeMethodNameEnd |
+					 (NoDesignatorMethodCallParameters) /* epsilon */;
+
+//////////////////////////////////////////////
+// method call parameters
+//////////////////////////////////////////////
+
+ActPars ::= (ActParsSingle) Expr |
+            (ActParsMultiple) Expr COMMA ActPars;
+
+//////////////////////////////////////////////
+// condition calculation
+//////////////////////////////////////////////
+
+Condition ::= (Condition) CondTerm ConditionRight;
+
+ConditionRight ::= (ConditionRightt) ConditionRight LogicalOr CondTerm |
+				  (NoConditionRight) /* epsilon */;
+
+LogicalOr ::= (LogicalOrCondition) LOGICAL_OR;
+
+CondTerm ::= (CondTerm) CondFact CondTermRight;
+
+CondTermRight ::= (CondTermRightt) CondTermRight LOGICAL_AND CondFact |
+				 (NoCondTermRight) /* epsilon */;
+
+CondFact ::= (CondFactUnary) Expr |
+             (CondFactBinary) Expr:ExprLeft Relop Expr:ExprRight;
+
+//////////////////////////////////////////////
+// expression
+//////////////////////////////////////////////
+
+Expr ::= (UnaryExpression) ExprNegative Term |
+         (BinaryExpression) Expr Addop Term;
+
+ExprNegative ::= (ExpressionNegative) SUBTRACTION |
+				 (ExpressionPositive) /* epsilon */;
+
+//////////////////////////////////////////////
+// term
+//////////////////////////////////////////////
+
+Term ::= (TermSingle) Factor |
+         (TermMultiple) Term Mulop Factor;
+
+//////////////////////////////////////////////
+// factor
+//////////////////////////////////////////////
+
+Factor ::= (FactorFunctionCall) Designator FactorFunctionCallParameters |
+		   (FactorNumericalConst) NUM_CONST:factorNumConst |
+		   (FactorCharConst) CHAR:factorChar |
+		   (FactorBoolConst) BOOLEAN:factorBoolean |
+		   (FactorArrayDeclaration) NEW Type FactorArrayDecl |
+		   (FactorExpressionInBrackets) LEFT_ROUND_BRACKET Expr RIGHT_ROUND_BRACKET;
+		   
+FactorFunctionCallParameters ::= (FactorFunctionCallParameter) LEFT_ROUND_BRACKET FactorFunctionCallParametersSingle RIGHT_ROUND_BRACKET |
+								 (NoFactorFunctionCallParameter) /* epsilon */;
+
+FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName ActPars DesignatorInvokeMethodNameEnd |
+									   (NoFactorFunctionCallParameterSingle) /* epsilon */;
+
+FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET Expr RIGHT_SQUARE_BRACKET |
+					(NoArrayDeclaration) /* epsilon */;
+
+//////////////////////////////////////////////
+// designator
+//////////////////////////////////////////////
+
+Designator ::= (DesignatorRoot) IDENT:designatorNameSingle |
+               (DesignatorArrayAccess) Designator LEFT_SQUARE_BRACKET Expr:designatorArrayIndex RIGHT_SQUARE_BRACKET |
+               (DesignatorNonArrayAccess) Designator DOT IDENT:designatorName;
+
+//////////////////////////////////////////////
+// assignment statement
+//////////////////////////////////////////////
+
+Assignop ::= (Assignop) ASSINGMENT;
+
+//////////////////////////////////////////////
+// relational and arithmetic operators
+//////////////////////////////////////////////
+
+Relop ::= (OperatorEqual) EQUAL |
+		  (OperatorNotEqual) NOT_EQUAL |
+		  (OperatorGreater) GREATER |
+		  (OperatorGreaterOrEqual) GREATER_OR_EQUAL |
+		  (OperatorLess) LESS |
+		  (OperatorLessOrEqual) LESS_OR_EQUAL;
+				 
+Addop ::= (OperatorAddition) ADDITION |
+		  (OperatorSubtraction) SUBTRACTION;
+				 
+Mulop ::= (OperatorMultiplication) MULTIPLICATION |
+		  (OperatorDivision) DIVISION |
+		  (OperatorModulo) MODULO;

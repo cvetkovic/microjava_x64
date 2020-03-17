@@ -1,0 +1,17 @@
+program MJProgram
+	abstract class A{
+		int x[],y[];
+		{
+			abstract ;
+			abstract int ;
+			abstract int getValue;
+			abstract int getValue();
+			abstract int getValue(int);
+			abstract int getValue(int a);
+
+			int getValue() {}
+		}
+	}
+	{
+
+	}

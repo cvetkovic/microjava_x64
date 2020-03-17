@@ -1,0 +1,34 @@
+program P
+const char n = 'n';
+{
+
+    int suma(int a[])
+        int i;
+        int sum;
+    {
+
+        if (a == null) return 0;
+
+        sum = 0;
+        for(i = 0; i < 10; i++){
+            sum = sum + a[i];
+        }
+
+        return sum;
+    }
+
+    void main()
+    int niz[];
+    int i;
+    {
+
+        niz = new int[10];
+
+        for (i = 0; i < 10; i++){
+            niz[i] = i + 1;
+        }
+
+        print(suma(niz));
+
+    }
+}

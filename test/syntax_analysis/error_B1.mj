@@ -1,0 +1,17 @@
+program MJProgram
+	{
+		int main() {}
+
+		int main(p1) {}
+
+		int main(p1 p11) {}
+
+		int main(p1 , p2 p22) {}
+		int main(p1 p11, p2) {}
+
+		int main(p1, p2 p22, p3 p33) {}
+		int main(p1 p11, p2, p3 p33) {}
+		int main(p1 p11, p2 p22, p3) {}
+
+		int main(p1 p11, p2 p22, p3 p33) {}
+	}

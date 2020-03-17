@@ -1,0 +1,87 @@
+program MJProgram
+
+    abstract class AbstractBaseClass
+    {
+        int x, y;
+        {
+            abstract void toString();
+            
+            void abstr()
+            {
+                print('a');
+                print('b');
+                print('s');
+                print('t');
+                print('r');
+                print(' ');
+            }
+        }
+    }
+
+
+    class BasePoint extends AbstractBaseClass
+    {
+        {
+            void toString()
+            {
+                print(this.x);
+                print(this.y);
+                print('a');
+                print(' ');
+            }
+        }
+    }
+
+    class Point extends BasePoint
+    {
+        {
+            void toString()
+            {
+                print(this.x);
+                print(this.y);
+                print(' ');
+                print(' ');
+            }
+
+            void abstr()
+            {
+                print('d');
+                print('e');
+                print('r');
+                print('i');
+                print('v');
+                print(' ');
+            }
+        }
+    }
+
+    AbstractBaseClass niz[];
+
+    {
+        void main()
+            int i;
+        {
+            niz = new AbstractBaseClass[10];
+
+            for (i = 0; i < 5; i++)
+            {
+                if (i % 2 == 0)
+                    niz[i] = new Point;
+                else
+                    niz[i] = new BasePoint;
+
+                niz[i].x = i;
+                niz[i].y = i + 1;
+            }
+
+            for (i = 0; i < 5; i++)
+                niz[i].toString();
+
+            print(' ');
+            print(' ');
+            print(' ');
+
+            for (i = 0; i < 5; i++)
+                niz[i].abstr();
+        }
+    }

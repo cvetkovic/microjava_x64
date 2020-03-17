@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="MJCompiler" default="repackage" basedir=".">
+
+    <target name="checkForChangesInSpecifications">
+        <!--<condition property="specifications">
+            <or>
+
+            </or>
+        </condition>-->
+    </target>
+
+    <target name="delete"
+            if="specifications"
+            depends="checkForChangesInSpecifications">
+        <delete dir="src/cvetkovic/lexer"/>
+        <delete dir="src/cvetkovic/parser"/>
+        <delete>
+            <fileset dir="spec">
+                <exclude name="mjlexer.flex"/>
+                <exclude name="mjparser.cup"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="makeDirectories" depends="delete">
+        <mkdir dir="src/cvetkovic/lexer"/>
+        <mkdir dir="src/cvetkovic/parser"/>
+    </target>
+
+    <target name="lexerGen" depends="makeDirectories">
+        <java jar="lib/JFlex.jar" fork="true">
+            <arg value="-d"/>
+            <arg value="./src/cvetkovic/lexer"/>
+            <arg value="spec/mjlexer.flex"/>
+        </java>
+    </target>
+
+    <target name="parserGen" depends="lexerGen">
+        <java jar="lib/cup_v10k.jar" fork="true">
+            <arg value="-destdir"/>
+            <arg value="src/cvetkovic/parser"/>
+
+            <arg value="-package"/>
+            <arg value="cvetkovic.parser"/>
+
+            <arg value="-ast"/>
+            <arg value="src.cvetkovic.parser.ast"/>
+
+            <arg value="-parser"/>
+            <arg value="MJParser"/>
+
+            <!--<arg value="-dump_states"/>-->
+
+            <arg value="-buildtree"/>
+            <arg value="spec/mjparser.cup"/>
+        </java>
+    </target>
+
+    <target name="repackage" depends="parserGen">
+        <replace dir="src/cvetkovic/parser/ast" value="cvetkovic.parser.ast" token="src.cvetkovic.parser.ast"
+                 summary="true"/>
+        <replace dir="src/cvetkovic/parser" value="cvetkovic.parser" token="rs.ac.bg.etf.pp1"/>
+    </target>
+
+    <!--<target name="compile">
+        <javac srcdir="src/cvetkovic" includeantruntime="false">
+            <classpath>
+                <pathelement path="lib/JFlex.jar" />
+                <pathelement path="lib/cup_v10k.jar" />
+                <pathelement path="lib/log4j-1.2.17.jar" />
+                <pathelement path="lib/symboltable.jar" />
+            </classpath>
+        </javac>
+    </target>-->
+
+</project>

@@ -1,0 +1,40 @@
+program Program
+
+    abstract class AbstractBaseClass
+    {
+        int abstractBaseField;
+        {
+            abstract int abstractBaseMethod(int k);
+        }
+    }
+
+    abstract class BaseClass extends AbstractBaseClass
+    {
+        int baseField;
+        {
+            abstract void baseMethod(int k);
+        }
+    }
+
+    class Derived extends BaseClass
+    {
+        int derivedField;
+        {
+            int abstractBaseMethod(int k)
+            {
+                return 2;
+            }
+
+            int derivedMethod()
+            {
+                return 1;
+            }
+        }
+    }
+
+    {
+	    void main()
+	    {
+
+        }
+	}

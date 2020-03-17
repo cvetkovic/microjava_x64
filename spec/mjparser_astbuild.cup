@@ -1,0 +1,479 @@
+package rs.ac.bg.etf.pp1;
+
+import java.io.*;
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+import cvetkovic.parser.ast.*;
+import cvetkovic.lexer.*;
+import rs.etf.pp1.symboltable.concepts.*;
+
+parser code {:
+	
+	Logger log = Logger.getLogger(getClass());
+
+	private boolean errorDetected = false;
+
+    public void report_error(String message, Object info) {
+    	errorDetected = true;
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" at line ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+    
+	// overriding default error_sync_size() which returns 3
+	public int error_sync_size()
+	{
+		return 1;
+	}
+
+	public boolean isErrorDetected()
+	{
+	    return errorDetected;
+	}
+	
+:}
+
+init with {:
+	errorDetected = false;
+:};
+
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+terminal PROGRAM, BREAK, CLASS, ABSTRACT, ELSE, CONST, 
+		 IF, NEW, PRINT, READ, RETURN, VOID, FOR, EXTENDS, 
+		 CONTINUE, 
+		 
+		 ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION,
+		 MODULO, EQUAL, NOT_EQUAL, GREATER, GREATER_OR_EQUAL, 
+		 LESS, LESS_OR_EQUAL, LOGICAL_AND, LOGICAL_OR, ASSINGMENT,
+		 INCREMENT, DECREMENT, DELIMITER, COMMA, DOT, 
+		 LEFT_ROUND_BRACKET, RIGHT_ROUND_BRACKET, 
+		 LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, 
+		 LEFT_CURLY_BRACKET, RIGHT_CURLY_BRACKET;
+		 
+terminal Integer NUM_CONST;
+terminal String IDENT;
+terminal Character CHAR;
+terminal Boolean BOOLEAN;
+
+non terminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgramName;
+non terminal rs.etf.pp1.symboltable.concepts.Obj ClassDecl, ClassName;
+non terminal rs.etf.pp1.symboltable.concepts.Obj Designator;
+non terminal rs.etf.pp1.symboltable.concepts.Obj MethodDecl, MethodName, MethodSignature;
+non terminal rs.etf.pp1.symboltable.concepts.Obj SingleFormalParameter;
+non terminal rs.etf.pp1.symboltable.concepts.Obj ActPars;
+non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractClassDecl, AbstractClassName;
+non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractMethodName, AbstractMethodDecl;
+
+non terminal rs.etf.pp1.symboltable.concepts.Struct ConstValue;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Type;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Expr;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Term;
+non terminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+non terminal rs.etf.pp1.symboltable.concepts.Struct CondFact;
+non terminal rs.etf.pp1.symboltable.concepts.Struct MethodDeclReturnType;
+non terminal rs.etf.pp1.symboltable.concepts.Struct AbstractMethodReturnType;
+
+non terminal VarDecl VarDecl;
+nonterminal ElseStatementKeyword ElseStatementKeyword;
+nonterminal ForKeyword ForKeyword;
+nonterminal StartForCondition StartForCondition;
+nonterminal ForVarDeclEnd ForVarDeclEnd;
+nonterminal
+             ForLoopConditionEnd ForLoopConditionEnd;
+nonterminal EndOfForStatement EndOfForStatement;
+nonterminal FormPars FormPars;
+nonterminal Statement Statement;
+nonterminal ConstDecl ConstDecl;
+nonterminal DesignatorStatement DesignatorStatement;
+nonterminal IfCondition IfCondition;
+nonterminal IfKeyword IfKeyword;
+nonterminal
+             LogicalOr LogicalOr;
+nonterminal Condition Condition;
+nonterminal CondTerm CondTerm;
+nonterminal Assignop Assignop;
+nonterminal Relop Relop;
+nonterminal Addop Addop;
+nonterminal Mulop Mulop;
+
+non terminal ProgramElementsDeclList ProgramElementsDeclList;
+nonterminal ProgramElementsDeclListElement ProgramElementsDeclListElement;
+nonterminal ProgramMethodsDeclList ProgramMethodsDeclList;
+non terminal AdditionalConstDeclaration AdditionalConstDeclaration;
+nonterminal SingleConstDeclaration SingleConstDeclaration;
+non terminal MultipleVarDeclaration MultipleVarDeclaration;
+nonterminal SingleVarDeclaration SingleVarDeclaration;
+nonterminal SingleVarArray SingleVarArray;
+non terminal ClassDeclExtends ClassDeclExtends;
+nonterminal ClassVarList ClassVarList;
+nonterminal ClassMethodList ClassMethodList;
+nonterminal ClassMethod ClassMethod;
+non terminal AbstractExtends AbstractExtends;
+nonterminal AbstractClassVarList AbstractClassVarList;
+nonterminal AbstractClassMethodList AbstractClassMethodList;
+nonterminal AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes;
+nonterminal AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed;
+non terminal MethodParameters MethodParameters;
+nonterminal MethodVarDeclList MethodVarDeclList;
+nonterminal MethodStatements MethodStatements;
+non terminal AbstractMethodParameters AbstractMethodParameters;
+non terminal MultipleFormalParameter MultipleFormalParameter;
+nonterminal FormParamArray FormParamArray;
+non terminal ElseStatement ElseStatement;
+nonterminal ForVarDecl ForVarDecl;
+nonterminal ForLoopCondition ForLoopCondition;
+nonterminal ForUpdateVarList ForUpdateVarList;
+nonterminal ReturnStatement ReturnStatement;
+nonterminal MultiplePrint MultiplePrint;
+nonterminal MultipleStatement MultipleStatement;
+non terminal DesignatorParams DesignatorParams;
+non terminal ConditionRight ConditionRight;
+non terminal CondTermRight CondTermRight;
+non terminal ExprNegative ExprNegative;
+non terminal FactorFunctionCallParameters FactorFunctionCallParameters;
+nonterminal FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle;
+nonterminal FactorArrayDecl FactorArrayDecl;
+non terminal DesignatorInvokeMethodName DesignatorInvokeMethodName;
+nonterminal DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd;
+
+// {} - zero or more
+// [] - optional
+// () - once
+
+precedence left ELSE;
+start with Program;
+
+//////////////////////////////////////////////
+// program declaration
+//////////////////////////////////////////////
+Program ::= (Program) PROGRAM ProgramName:P1 ProgramElementsDeclList:P2 LEFT_CURLY_BRACKET ProgramMethodsDeclList:P3 RIGHT_CURLY_BRACKET {: RESULT=new Program(P1, P2, P3); RESULT.setLine(P1left); :};
+
+// program name
+ProgramName ::= (ProgramName) IDENT:programName {: RESULT=new ProgramName(programName); RESULT.setLine(programNameleft); :};
+
+// multiple global variable, class, abstract class, constant
+ProgramElementsDeclList ::= (ProgramElementsDeclarationList) ProgramElementsDeclList:P1 ProgramElementsDeclListElement:P2 {: RESULT=new ProgramElementsDeclarationList(P1, P2); RESULT.setLine(P1left); :} | 
+			 				(NoProgramElements) {: RESULT=new NoProgramElements(); :} /* epsilon */;
+			 
+// single global variable, class, abstract class, constant
+ProgramElementsDeclListElement ::= (SingleProgramConst) ConstDecl:C1 {: RESULT=new SingleProgramConst(C1); RESULT.setLine(C1left); :} |
+								   (SingleProgramVar) VarDecl:V1 {: RESULT=new SingleProgramVar(V1); RESULT.setLine(V1left); :} |
+								   (SingleProgramAbstractClass) AbstractClassDecl:A1 {: RESULT=new SingleProgramAbstractClass(A1); RESULT.setLine(A1left); :} |
+								   (SingleProgramClass) ClassDecl:C1 {: RESULT=new SingleProgramClass(C1); RESULT.setLine(C1left); :};
+
+// multiple program method declaration
+ProgramMethodsDeclList ::= (ProgramMethodDeclList) ProgramMethodsDeclList:P1 MethodDecl:M2 {: RESULT=new ProgramMethodDeclList(P1, M2); RESULT.setLine(P1left); :} |
+						   (NoProgramMethodList) {: RESULT=new NoProgramMethodList(); :}   /* epsilon */;
+
+//////////////////////////////////////////////
+// constants declaration
+//////////////////////////////////////////////
+
+ConstDecl ::= (ConstDecl) CONST Type:constType SingleConstDeclaration:S1 AdditionalConstDeclaration:A2 DELIMITER {: RESULT=new ConstDecl(constType, S1, A2); RESULT.setLine(constTypeleft); :};
+
+AdditionalConstDeclaration ::= (AdditionalConstantDeclaration) AdditionalConstDeclaration:A1 COMMA SingleConstDeclaration:S2 {: RESULT=new AdditionalConstantDeclaration(A1, S2); RESULT.setLine(A1left); :} |
+							   (NoAditionalConstDeclaration) {: RESULT=new NoAditionalConstDeclaration(); :} /* epsilon */;
+
+SingleConstDeclaration ::= (SingleConst) IDENT:constName ASSINGMENT ConstValue:C1 {: RESULT=new SingleConst(constName, C1); RESULT.setLine(constNameleft); :};
+
+// follow of error symbol in this case is either COMMA or DELIMITER
+ConstValue ::= (NumericalConst) NUM_CONST:constNumValue {: RESULT=new NumericalConst(constNumValue); RESULT.setLine(constNumValueleft); :} |
+			   (CharacterConst) CHAR:constCharValue {: RESULT=new CharacterConst(constCharValue); RESULT.setLine(constCharValueleft); :} |
+			   (BooleanConst) BOOLEAN:constBoolValue {: RESULT=new BooleanConst(constBoolValue); RESULT.setLine(constBoolValueleft); :};
+			   
+//////////////////////////////////////////////
+// variable declaration
+//////////////////////////////////////////////
+
+VarDecl ::= (VarDeclarationRoot) Type:varType MultipleVarDeclaration:M1 DELIMITER {: RESULT=new VarDeclarationRoot(varType, M1); RESULT.setLine(varTypeleft); :} |
+			(VarDeclError) error:e DELIMITER {: parser.report_error("Recovered from invalid variable declaration.", null); :} {: RESULT=new VarDeclError(); :};
+
+MultipleVarDeclaration ::= (MultipleVariablesDeclaration) MultipleVarDeclaration:M1 COMMA SingleVarDeclaration:S2 {: RESULT=new MultipleVariablesDeclaration(M1, S2); RESULT.setLine(M1left); :} |
+						   (SingleVarDecl) SingleVarDeclaration:S1 {: RESULT=new SingleVarDecl(S1); RESULT.setLine(S1left); :};
+
+SingleVarDeclaration ::= (SingleVariableDeclaration) IDENT:variableName SingleVarArray:S1 {: RESULT=new SingleVariableDeclaration(variableName, S1); RESULT.setLine(variableNameleft); :} |
+						 (SingleVarError) error:e {: parser.report_error("Recovered from invalid variable declaration.", null); :} {: RESULT=new SingleVarError(); :};
+
+SingleVarArray ::= (SingleVarNoArray) {: RESULT=new SingleVarNoArray(); :} /* epsilon */ |
+                   (SingleVarArray) LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET {: RESULT=new SingleVarArray(); :};
+
+//////////////////////////////////////////////
+// class declaration
+//////////////////////////////////////////////
+
+ClassDecl ::= (ClassDeclaration) CLASS ClassName:C1 ClassDeclExtends:C2 LEFT_CURLY_BRACKET ClassVarList:C3 ClassMethodList:C4 RIGHT_CURLY_BRACKET {: RESULT=new ClassDeclaration(C1, C2, C3, C4); RESULT.setLine(C1left); :} |
+			  (ClassDeclarationErrorInExtends) CLASS ClassName:C1 error:e LEFT_CURLY_BRACKET ClassVarList:C2 ClassMethodList:C3 RIGHT_CURLY_BRACKET {: RESULT=new ClassDeclarationErrorInExtends(C1, C2, C3); RESULT.setLine(C1left); :} |
+			  (ClassDeclarationErrorBeforeExtends) error:l ClassDeclExtends:C1 LEFT_CURLY_BRACKET ClassVarList:C2 ClassMethodList:C3 RIGHT_CURLY_BRACKET {: RESULT=new ClassDeclarationErrorBeforeExtends(C1, C2, C3); RESULT.setLine(C1left); :};
+
+ClassName ::= (ClassName) IDENT:className {: RESULT=new ClassName(className); RESULT.setLine(classNameleft); :};
+
+ClassDeclExtends ::= (ClassDeclExtendsModifier) EXTENDS Type:classExtendsType {: RESULT=new ClassDeclExtendsModifier(classExtendsType); RESULT.setLine(classExtendsTypeleft); :} |
+					 (NoClassExtends) {: RESULT=new NoClassExtends(); :} /* epsilon */;
+
+ClassVarList ::= (ClassVarListt) ClassVarList:C1 VarDecl:V2 {: RESULT=new ClassVarListt(C1, V2); RESULT.setLine(C1left); :} |
+				 (NoClassVarList) {: RESULT=new NoClassVarList(); :} /* epsilon */;
+
+ClassMethodList ::= (ClassMethodListt) LEFT_CURLY_BRACKET ClassMethod:C1 RIGHT_CURLY_BRACKET {: RESULT=new ClassMethodListt(C1); RESULT.setLine(C1left); :} |
+					(NoClassMethodList) {: RESULT=new NoClassMethodList(); :} /* epsilon */;
+
+ClassMethod ::= (ClassMethodd) ClassMethod:C1 MethodDecl:M2 {: RESULT=new ClassMethodd(C1, M2); RESULT.setLine(C1left); :} |
+			    (NoClassMethod) {: RESULT=new NoClassMethod(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// abstract class declaration
+//////////////////////////////////////////////
+
+AbstractClassDecl ::= (AbstractClassDecl) ABSTRACT CLASS AbstractClassName:A1 AbstractExtends:A2 LEFT_CURLY_BRACKET AbstractClassVarList:A3 AbstractClassMethodList:A4 RIGHT_CURLY_BRACKET {: RESULT=new AbstractClassDecl(A1, A2, A3, A4); RESULT.setLine(A1left); :};
+
+AbstractClassName ::= (AbstractClassName) IDENT:abstractClassIdent {: RESULT=new AbstractClassName(abstractClassIdent); RESULT.setLine(abstractClassIdentleft); :};
+
+AbstractExtends ::= (AbstractClassExtends) EXTENDS Type:abstractExtendsType {: RESULT=new AbstractClassExtends(abstractExtendsType); RESULT.setLine(abstractExtendsTypeleft); :} |
+					(NoAbstractExtends) {: RESULT=new NoAbstractExtends(); :} /* epsilon */;
+					   
+AbstractClassVarList ::= (AbstractClassVariableList) AbstractClassVarList:A1 VarDecl:V2 {: RESULT=new AbstractClassVariableList(A1, V2); RESULT.setLine(A1left); :} |
+					     (NoAbstractClassVarList) {: RESULT=new NoAbstractClassVarList(); :} /* epsilon */;
+
+AbstractClassMethodList ::= (AbstractClassMethodListing) LEFT_CURLY_BRACKET AbstractClassMultipleMethodTypes:A1 RIGHT_CURLY_BRACKET {: RESULT=new AbstractClassMethodListing(A1); RESULT.setLine(A1left); :} |
+							(NoAbstractClassMethodList) {: RESULT=new NoAbstractClassMethodList(); :} /* epsilon */;
+					   
+AbstractClassMultipleMethodTypes ::= (AbstractClassMultipleMethodTypesClass) AbstractClassMultipleMethodTypes:A1 AbstractClassMethodTypesAllowed:A2 {: RESULT=new AbstractClassMultipleMethodTypesClass(A1, A2); RESULT.setLine(A1left); :} |
+									 (NoAbstractClassMultipleMethodTypes) {: RESULT=new NoAbstractClassMultipleMethodTypes(); :} /* epsilon */;
+
+AbstractClassMethodTypesAllowed ::= (AbstractClassMethodTypesMethodType) MethodDecl:M1 {: RESULT=new AbstractClassMethodTypesMethodType(M1); RESULT.setLine(M1left); :} | 
+									(AbstractClassMethodTypesAbstractMethodType) AbstractMethodDecl:A1 {: RESULT=new AbstractClassMethodTypesAbstractMethodType(A1); RESULT.setLine(A1left); :};
+
+//////////////////////////////////////////////
+// method declaration
+//////////////////////////////////////////////
+
+MethodDecl ::= (MethodDecl) MethodSignature:M1 MethodVarDeclList:M2 LEFT_CURLY_BRACKET MethodStatements:M3 RIGHT_CURLY_BRACKET {: RESULT=new MethodDecl(M1, M2, M3); RESULT.setLine(M1left); :};
+
+MethodSignature ::= (MethodSignature) MethodDeclReturnType:M1 MethodName:M2 LEFT_ROUND_BRACKET MethodParameters:M3 RIGHT_ROUND_BRACKET {: RESULT=new MethodSignature(M1, M2, M3); RESULT.setLine(M1left); :};
+
+MethodName ::= (MethodName) IDENT:methodName {: RESULT=new MethodName(methodName); RESULT.setLine(methodNameleft); :};
+
+MethodDeclReturnType ::= (MethodWithReturn) Type:methodReturnType {: RESULT=new MethodWithReturn(methodReturnType); RESULT.setLine(methodReturnTypeleft); :} |
+						 (MethodWithoutReturn) VOID:methodIsVoid {: RESULT=new MethodWithoutReturn(); :};
+				
+MethodParameters ::= (MethodParameterss) FormPars:F1 {: RESULT=new MethodParameterss(F1); RESULT.setLine(F1left); :} |
+					 (NoMethodParameters) {: RESULT=new NoMethodParameters(); :} /* epsilon */;
+				
+MethodVarDeclList ::= (MethodVarDeclListt) MethodVarDeclList:M1 VarDecl:V2 {: RESULT=new MethodVarDeclListt(M1, V2); RESULT.setLine(M1left); :} |
+					  (NoMethodVarDeclList) {: RESULT=new NoMethodVarDeclList(); :} /* epsilon */;
+				
+MethodStatements ::= (MethodStatementss) MethodStatements:M1 Statement:S2 {: RESULT=new MethodStatementss(M1, S2); RESULT.setLine(M1left); :} |
+					 (NoMethodStatements) {: RESULT=new NoMethodStatements(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// abstract method declaration
+//////////////////////////////////////////////
+
+AbstractMethodDecl ::= (AbstractMethodDeclaration) ABSTRACT AbstractMethodReturnType:A1 AbstractMethodName:A2 LEFT_ROUND_BRACKET AbstractMethodParameters:A3 RIGHT_ROUND_BRACKET DELIMITER {: RESULT=new AbstractMethodDeclaration(A1, A2, A3); RESULT.setLine(A1left); :} |
+					   (AbstractMethodDeclarationError) error:e DELIMITER {: parser.report_error("Recovered from invalid abstract method declaration error.", null); :} {: RESULT=new AbstractMethodDeclarationError(); :};
+
+AbstractMethodName ::= (AbstractMethodName) IDENT:I1 {: RESULT=new AbstractMethodName(I1); RESULT.setLine(I1left); :};
+
+AbstractMethodReturnType ::= (AbstractMethodWithReturn) Type:abstractMethodReturnType {: RESULT=new AbstractMethodWithReturn(abstractMethodReturnType); RESULT.setLine(abstractMethodReturnTypeleft); :} |
+							 (AbstractMethodWithoutReturn) VOID:abstractMethodIsVoid {: RESULT=new AbstractMethodWithoutReturn(); :};
+							 
+AbstractMethodParameters ::= (AbstractMethodParameterss) FormPars:F1 {: RESULT=new AbstractMethodParameterss(F1); RESULT.setLine(F1left); :} |
+							 (NoAbstractMethodParameters) {: RESULT=new NoAbstractMethodParameters(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// formal parameter
+//////////////////////////////////////////////
+
+FormPars ::= (FormPars) SingleFormalParameter:S1 MultipleFormalParameter:M2 {: RESULT=new FormPars(S1, M2); RESULT.setLine(S1left); :};
+
+// follow of error symbol in this case is either COMMA or RIGHT_ROUND_BRACKET
+SingleFormalParameter ::= (SingleFormParameter) Type:formParamType IDENT:formParamName FormParamArray:F1 {: RESULT=new SingleFormParameter(formParamType, formParamName, F1); RESULT.setLine(formParamTypeleft); :} |
+						  (SingleFormParameterError) error:e {: parser.report_error("Recovered from invalid formal parameter declaration error.", null); :} {: RESULT=new SingleFormParameterError(); :};
+						  
+MultipleFormalParameter ::= (MultipleFormalParameterr) MultipleFormalParameter:M1 COMMA SingleFormalParameter:S2 {: RESULT=new MultipleFormalParameterr(M1, S2); RESULT.setLine(M1left); :} |
+							(NoMultipleFormalParameter) {: RESULT=new NoMultipleFormalParameter(); :} /* epsilon */;
+
+FormParamArray ::= (FormParamArray) LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET {: RESULT=new FormParamArray(); :} |
+				   (NoFormParamArray) {: RESULT=new NoFormParamArray(); :} /* epsilon */;
+				   
+//////////////////////////////////////////////
+// type
+//////////////////////////////////////////////
+
+Type ::= (DataType) IDENT:typeIdent {: RESULT=new DataType(typeIdent); RESULT.setLine(typeIdentleft); :};
+
+//////////////////////////////////////////////
+// statement
+//////////////////////////////////////////////
+
+Statement ::= (StatementDesignator) DesignatorStatement:D1 DELIMITER {: RESULT=new StatementDesignator(D1); RESULT.setLine(D1left); :} |
+			  (IfStatement) IfCondition:I1 Statement:S2 ElseStatement:E3 {: RESULT=new IfStatement(I1, S2, E3); RESULT.setLine(I1left); :} |
+			  (ForStatement) ForKeyword:F1 LEFT_ROUND_BRACKET ForVarDecl:F2 ForVarDeclEnd:F3 ForLoopCondition:F4 ForLoopConditionEnd:F5 ForUpdateVarList:F6 RIGHT_ROUND_BRACKET Statement:S7 EndOfForStatement:E8 {: RESULT=new ForStatement(F1, F2, F3, F4, F5, F6, S7, E8); RESULT.setLine(F1left); :} |
+			  (BreakStatement) BREAK:breakSt DELIMITER {: RESULT=new BreakStatement(); :} |
+			  (ContinueStatement) CONTINUE:continueSt DELIMITER {: RESULT=new ContinueStatement(); :} |
+			  (ReturnStatementt) RETURN ReturnStatement:R1 DELIMITER {: RESULT=new ReturnStatementt(R1); RESULT.setLine(R1left); :} |
+			  (ReadStatement) READ LEFT_ROUND_BRACKET Designator:D1 RIGHT_ROUND_BRACKET DELIMITER {: RESULT=new ReadStatement(D1); RESULT.setLine(D1left); :} |
+			  (PrintStatement) PRINT LEFT_ROUND_BRACKET Expr:E1 MultiplePrint:M2 RIGHT_ROUND_BRACKET DELIMITER {: RESULT=new PrintStatement(E1, M2); RESULT.setLine(E1left); :} |
+			  (MultipleStatementt) LEFT_CURLY_BRACKET MultipleStatement:M1 RIGHT_CURLY_BRACKET {: RESULT=new MultipleStatementt(M1); RESULT.setLine(M1left); :} |
+			  (ErrorStatement) error:e {: parser.report_error("Recovered from invalid statement error.", null); :} {: RESULT=new ErrorStatement(); :};
+
+IfCondition ::= (IfCondition) IfKeyword:I1 LEFT_ROUND_BRACKET Condition:C2 RIGHT_ROUND_BRACKET {: RESULT=new IfCondition(I1, C2); RESULT.setLine(I1left); :};
+
+IfKeyword ::= (IfKeyword) IF {: RESULT=new IfKeyword(); :};
+
+ElseStatement ::= (ElseStatementt) ElseStatementKeyword:E1 Statement:S2 {: RESULT=new ElseStatementt(E1, S2); RESULT.setLine(E1left); :} |
+				  (NoElseStatement) {: RESULT=new NoElseStatement(); :} /* epsilon */;
+
+// added so that we can change conditional statement context to ELSE branch
+ElseStatementKeyword ::= (ElseStatementKeyword) ELSE {: RESULT=new ElseStatementKeyword(); :};
+
+ForKeyword ::= (ForKeyword) FOR {: RESULT=new ForKeyword(); :};
+
+// follow of error symbol in this case is either DELIMITER
+ForVarDecl ::= (SingleForVarDecl) DesignatorStatement:D1 {: RESULT=new SingleForVarDecl(D1); RESULT.setLine(D1left); :} |
+               (NoForVarDecl) {: RESULT=new NoForVarDecl(); :} /* epsilon */ |
+			   (ForVarDeclError) error:e {: parser.report_error("Recovered from invalid variable declaration in for statement.", null); :} {: RESULT=new ForVarDeclError(); :};
+
+ForVarDeclEnd ::= (ForVarDeclEnd) DELIMITER {: RESULT=new ForVarDeclEnd(); :};
+
+// follow of error symbol in this case is either DELIMITER
+ForLoopCondition ::= (SingleForLoopCondition) StartForCondition:S1 Condition:C2 {: RESULT=new SingleForLoopCondition(S1, C2); RESULT.setLine(S1left); :} |
+                     (NoForLoopCondition) {: RESULT=new NoForLoopCondition(); :} /* epsilon */ |
+					 (ForLoopConditionError) error:e {: parser.report_error("Recovered from invalid loop condition in for statement.", null); :} {: RESULT=new ForLoopConditionError(); :};
+
+StartForCondition ::= (StartForCondition) {: RESULT=new StartForCondition(); :} /* epsilon */;
+
+ForLoopConditionEnd ::= (ForLoopConditionEnd) DELIMITER {: RESULT=new ForLoopConditionEnd(); :};
+
+// follow of error symbol in this case is either RIGHT_ROUND_BRACKET
+ForUpdateVarList ::= (SingleForUpdateVarList) DesignatorStatement:D1 {: RESULT=new SingleForUpdateVarList(D1); RESULT.setLine(D1left); :} |
+					 (NoForUpdateVarList) {: RESULT=new NoForUpdateVarList(); :} /* epsilon */ |
+					 (ForUpdateVarListError) error:e {: parser.report_error("Recovered from invalid loop condition update code in for statement.", null); :} {: RESULT=new ForUpdateVarListError(); :};
+
+// added because of non-conditional jump
+EndOfForStatement ::= (EndOfForStatement) {: RESULT=new EndOfForStatement(); :} /* epsilon */;
+
+ReturnStatement ::= (ExprReturnStatement) Expr:E1 {: RESULT=new ExprReturnStatement(E1); RESULT.setLine(E1left); :} |
+					(BlankReturnStatement) {: RESULT=new BlankReturnStatement(); :} /* epsilon */;
+			   
+MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst {: RESULT=new MultiplePrintSt(multiplePrintConst); RESULT.setLine(multiplePrintConstleft); :} |
+				  (NoMultiplePrint) {: RESULT=new NoMultiplePrint(); :} /* epsilon */;
+			   
+MultipleStatement ::= (MultipleStatements) MultipleStatement:M1 Statement:S2 {: RESULT=new MultipleStatements(M1, S2); RESULT.setLine(M1left); :} |
+					  (NoMultipleStatement) {: RESULT=new NoMultipleStatement(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// designator statement
+//////////////////////////////////////////////
+
+DesignatorStatement ::= (DesignatorAssign) Designator:D1 Assignop:A2 Expr:E3 {: RESULT=new DesignatorAssign(D1, A2, E3); RESULT.setLine(D1left); :} |
+						(DesignatorInvoke) Designator:D1 LEFT_ROUND_BRACKET DesignatorParams:D2 RIGHT_ROUND_BRACKET {: RESULT=new DesignatorInvoke(D1, D2); RESULT.setLine(D1left); :} |
+						(DesignatorIncrement) Designator:D1 INCREMENT {: RESULT=new DesignatorIncrement(D1); RESULT.setLine(D1left); :} |
+						(DesignatorDecrement) Designator:D1 DECREMENT {: RESULT=new DesignatorDecrement(D1); RESULT.setLine(D1left); :};
+
+DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) {: RESULT=new DesignatorInvokeMethodName(); :} /* epsilon */;
+DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) {: RESULT=new DesignatorInvokeMethodNameEnd(); :} /* epsilon */;
+
+DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName:D1 ActPars:A2 DesignatorInvokeMethodNameEnd:D3 {: RESULT=new DesignatorMethodCallParameters(D1, A2, D3); RESULT.setLine(D1left); :} |
+					 (NoDesignatorMethodCallParameters) {: RESULT=new NoDesignatorMethodCallParameters(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// method call parameters
+//////////////////////////////////////////////
+
+ActPars ::= (ActParsSingle) Expr:E1 {: RESULT=new ActParsSingle(E1); RESULT.setLine(E1left); :} |
+            (ActParsMultiple) Expr:E1 COMMA ActPars:A2 {: RESULT=new ActParsMultiple(E1, A2); RESULT.setLine(E1left); :};
+
+//////////////////////////////////////////////
+// condition calculation
+//////////////////////////////////////////////
+
+Condition ::= (Condition) CondTerm:C1 ConditionRight:C2 {: RESULT=new Condition(C1, C2); RESULT.setLine(C1left); :};
+
+ConditionRight ::= (ConditionRightt) ConditionRight:C1 LogicalOr:L2 CondTerm:C3 {: RESULT=new ConditionRightt(C1, L2, C3); RESULT.setLine(C1left); :} |
+				  (NoConditionRight) {: RESULT=new NoConditionRight(); :} /* epsilon */;
+
+LogicalOr ::= (LogicalOrCondition) LOGICAL_OR {: RESULT=new LogicalOrCondition(); :};
+
+CondTerm ::= (CondTerm) CondFact:C1 CondTermRight:C2 {: RESULT=new CondTerm(C1, C2); RESULT.setLine(C1left); :};
+
+CondTermRight ::= (CondTermRightt) CondTermRight:C1 LOGICAL_AND CondFact:C2 {: RESULT=new CondTermRightt(C1, C2); RESULT.setLine(C1left); :} |
+				 (NoCondTermRight) {: RESULT=new NoCondTermRight(); :} /* epsilon */;
+
+CondFact ::= (CondFactUnary) Expr:E1 {: RESULT=new CondFactUnary(E1); RESULT.setLine(E1left); :} |
+             (CondFactBinary) Expr:ExprLeft Relop:R1 Expr:ExprRight {: RESULT=new CondFactBinary(ExprLeft, R1, ExprRight); RESULT.setLine(ExprLeftleft); :};
+
+//////////////////////////////////////////////
+// expression
+//////////////////////////////////////////////
+
+Expr ::= (UnaryExpression) ExprNegative:E1 Term:T2 {: RESULT=new UnaryExpression(E1, T2); RESULT.setLine(E1left); :} |
+         (BinaryExpression) Expr:E1 Addop:A2 Term:T3 {: RESULT=new BinaryExpression(E1, A2, T3); RESULT.setLine(E1left); :};
+
+ExprNegative ::= (ExpressionNegative) SUBTRACTION {: RESULT=new ExpressionNegative(); :} |
+				 (ExpressionPositive) {: RESULT=new ExpressionPositive(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// term
+//////////////////////////////////////////////
+
+Term ::= (TermSingle) Factor:F1 {: RESULT=new TermSingle(F1); RESULT.setLine(F1left); :} |
+         (TermMultiple) Term:T1 Mulop:M2 Factor:F3 {: RESULT=new TermMultiple(T1, M2, F3); RESULT.setLine(T1left); :};
+
+//////////////////////////////////////////////
+// factor
+//////////////////////////////////////////////
+
+Factor ::= (FactorFunctionCall) Designator:D1 FactorFunctionCallParameters:F2 {: RESULT=new FactorFunctionCall(D1, F2); RESULT.setLine(D1left); :} |
+		   (FactorNumericalConst) NUM_CONST:factorNumConst {: RESULT=new FactorNumericalConst(factorNumConst); RESULT.setLine(factorNumConstleft); :} |
+		   (FactorCharConst) CHAR:factorChar {: RESULT=new FactorCharConst(factorChar); RESULT.setLine(factorCharleft); :} |
+		   (FactorBoolConst) BOOLEAN:factorBoolean {: RESULT=new FactorBoolConst(factorBoolean); RESULT.setLine(factorBooleanleft); :} |
+		   (FactorArrayDeclaration) NEW Type:T1 FactorArrayDecl:F2 {: RESULT=new FactorArrayDeclaration(T1, F2); RESULT.setLine(T1left); :} |
+		   (FactorExpressionInBrackets) LEFT_ROUND_BRACKET Expr:E1 RIGHT_ROUND_BRACKET {: RESULT=new FactorExpressionInBrackets(E1); RESULT.setLine(E1left); :};
+		   
+FactorFunctionCallParameters ::= (FactorFunctionCallParameter) LEFT_ROUND_BRACKET FactorFunctionCallParametersSingle:F1 RIGHT_ROUND_BRACKET {: RESULT=new FactorFunctionCallParameter(F1); RESULT.setLine(F1left); :} |
+								 (NoFactorFunctionCallParameter) {: RESULT=new NoFactorFunctionCallParameter(); :} /* epsilon */;
+
+FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName:D1 ActPars:A2 DesignatorInvokeMethodNameEnd:D3 {: RESULT=new FactorFunctionCallParameterSingle(D1, A2, D3); RESULT.setLine(D1left); :} |
+									   (NoFactorFunctionCallParameterSingle) {: RESULT=new NoFactorFunctionCallParameterSingle(); :} /* epsilon */;
+
+FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET Expr:E1 RIGHT_SQUARE_BRACKET {: RESULT=new ArrayDeclaration(E1); RESULT.setLine(E1left); :} |
+					(NoArrayDeclaration) {: RESULT=new NoArrayDeclaration(); :} /* epsilon */;
+
+//////////////////////////////////////////////
+// designator
+//////////////////////////////////////////////
+
+Designator ::= (DesignatorRoot) IDENT:designatorNameSingle {: RESULT=new DesignatorRoot(designatorNameSingle); RESULT.setLine(designatorNameSingleleft); :} |
+               (DesignatorArrayAccess) Designator:D1 LEFT_SQUARE_BRACKET Expr:designatorArrayIndex RIGHT_SQUARE_BRACKET {: RESULT=new DesignatorArrayAccess(D1, designatorArrayIndex); RESULT.setLine(D1left); :} |
+               (DesignatorNonArrayAccess) Designator:D1 DOT IDENT:designatorName {: RESULT=new DesignatorNonArrayAccess(D1, designatorName); RESULT.setLine(D1left); :};
+
+//////////////////////////////////////////////
+// assignment statement
+//////////////////////////////////////////////
+
+Assignop ::= (Assignop) ASSINGMENT {: RESULT=new Assignop(); :};
+
+//////////////////////////////////////////////
+// relational and arithmetic operators
+//////////////////////////////////////////////
+
+Relop ::= (OperatorEqual) EQUAL {: RESULT=new OperatorEqual(); :} |
+		  (OperatorNotEqual) NOT_EQUAL {: RESULT=new OperatorNotEqual(); :} |
+		  (OperatorGreater) GREATER {: RESULT=new OperatorGreater(); :} |
+		  (OperatorGreaterOrEqual) GREATER_OR_EQUAL {: RESULT=new OperatorGreaterOrEqual(); :} |
+		  (OperatorLess) LESS {: RESULT=new OperatorLess(); :} |
+		  (OperatorLessOrEqual) LESS_OR_EQUAL {: RESULT=new OperatorLessOrEqual(); :};
+				 
+Addop ::= (OperatorAddition) ADDITION {: RESULT=new OperatorAddition(); :} |
+		  (OperatorSubtraction) SUBTRACTION {: RESULT=new OperatorSubtraction(); :};
+				 
+Mulop ::= (OperatorMultiplication) MULTIPLICATION {: RESULT=new OperatorMultiplication(); :} |
+		  (OperatorDivision) DIVISION {: RESULT=new OperatorDivision(); :} |
+		  (OperatorModulo) MODULO {: RESULT=new OperatorModulo(); :};
