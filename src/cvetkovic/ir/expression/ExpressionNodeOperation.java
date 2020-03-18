@@ -8,5 +8,7 @@ public enum ExpressionNodeOperation {
     MODULO,
 
     ASSIGNMENT,
-    UNARY_MINUS
+    UNARY_MINUS,
+
+    VARIABLE
 }

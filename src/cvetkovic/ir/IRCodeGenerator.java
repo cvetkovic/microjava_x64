@@ -29,6 +29,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
 
+        currentExpressionDAG.emitQuadruples();
         System.out.println(currentExpressionDAG);
     }
 
