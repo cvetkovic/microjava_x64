@@ -1,15 +1,16 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/2/2020 22:24:19
+// 18/2/2020 17:24:49
 
 
 package cvetkovic.parser.ast;
 
 public class ProgramName implements SyntaxNode {
 
-    public rs.etf.pp1.symboltable.concepts.Obj obj = null;
     private SyntaxNode parent;
     private int line;
+    public rs.etf.pp1.symboltable.concepts.Obj obj = null;
+
     private String programName;
 
     public ProgramName(String programName) {

@@ -62,6 +62,10 @@ terminal String IDENT;
 terminal Character CHAR;
 terminal Boolean BOOLEAN;
 
+//////////////////////////////////////////////
+// struct nodes
+//////////////////////////////////////////////
+
 non terminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgramName;
 non terminal rs.etf.pp1.symboltable.concepts.Obj ClassDecl, ClassName;
 non terminal rs.etf.pp1.symboltable.concepts.Obj Designator;
@@ -70,6 +74,10 @@ non terminal rs.etf.pp1.symboltable.concepts.Obj SingleFormalParameter;
 non terminal rs.etf.pp1.symboltable.concepts.Obj ActPars;
 non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractClassDecl, AbstractClassName;
 non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractMethodName, AbstractMethodDecl;
+
+//////////////////////////////////////////////
+// struct nodes
+//////////////////////////////////////////////
 
 non terminal rs.etf.pp1.symboltable.concepts.Struct ConstValue;
 non terminal rs.etf.pp1.symboltable.concepts.Struct Type;
@@ -99,6 +107,9 @@ non terminal CondTermRight;
 non terminal ExprNegative;
 non terminal FactorFunctionCallParameters, FactorFunctionCallParametersSingle, FactorArrayDecl;
 non terminal DesignatorInvokeMethodName, DesignatorInvokeMethodNameEnd;
+
+// for expression DAG
+non terminal DesignatorAssignMakeLeaf;
 
 // {} - zero or more
 // [] - optional
@@ -329,10 +340,12 @@ MultipleStatement ::= (MultipleStatements) MultipleStatement Statement |
 // designator statement
 //////////////////////////////////////////////
 
-DesignatorStatement ::= (DesignatorAssign) Designator Assignop Expr |
+DesignatorStatement ::= (DesignatorAssign) Designator DesignatorAssignMakeLeaf Assignop Expr |
 						(DesignatorInvoke) Designator LEFT_ROUND_BRACKET DesignatorParams RIGHT_ROUND_BRACKET |
 						(DesignatorIncrement) Designator INCREMENT |
 						(DesignatorDecrement) Designator DECREMENT;
+
+DesignatorAssignMakeLeaf ::= (DesignatorAssignMakeLeaf) /* epsilon */;
 
 DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) /* epsilon */;
 DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) /* epsilon */;

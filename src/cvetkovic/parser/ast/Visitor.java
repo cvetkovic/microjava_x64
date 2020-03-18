@@ -1,444 +1,446 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/2/2020 22:24:19
+// 18/2/2020 17:24:49
 
 
 package cvetkovic.parser.ast;
 
 public interface Visitor {
 
-    public void visit(MethodDeclReturnType MethodDeclReturnType);
+    void visit(MethodDeclReturnType MethodDeclReturnType);
 
-    public void visit(FactorArrayDecl FactorArrayDecl);
+    void visit(FactorArrayDecl FactorArrayDecl);
 
-    public void visit(FactorFunctionCallParameters FactorFunctionCallParameters);
+    void visit(FactorFunctionCallParameters FactorFunctionCallParameters);
 
-    public void visit(Factor Factor);
+    void visit(Factor Factor);
 
-    public void visit(SingleFormalParameter SingleFormalParameter);
+    void visit(SingleFormalParameter SingleFormalParameter);
 
-    public void visit(Statement Statement);
+    void visit(Statement Statement);
 
-    public void visit(AbstractMethodReturnType AbstractMethodReturnType);
+    void visit(AbstractMethodReturnType AbstractMethodReturnType);
 
-    public void visit(MethodStatements MethodStatements);
+    void visit(MethodStatements MethodStatements);
 
-    public void visit(ReturnStatement ReturnStatement);
+    void visit(ReturnStatement ReturnStatement);
 
-    public void visit(FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle);
+    void visit(FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle);
 
-    public void visit(AbstractMethodDecl AbstractMethodDecl);
+    void visit(AbstractMethodDecl AbstractMethodDecl);
 
-    public void visit(Relop Relop);
+    void visit(Relop Relop);
 
-    public void visit(ElseStatement ElseStatement);
+    void visit(ElseStatement ElseStatement);
 
-    public void visit(ClassVarList ClassVarList);
+    void visit(ClassVarList ClassVarList);
 
-    public void visit(MultipleFormalParameter MultipleFormalParameter);
+    void visit(MultipleFormalParameter MultipleFormalParameter);
 
-    public void visit(Expr Expr);
+    void visit(Expr Expr);
 
-    public void visit(CondTermRight CondTermRight);
+    void visit(CondTermRight CondTermRight);
 
-    public void visit(ProgramElementsDeclList ProgramElementsDeclList);
+    void visit(ProgramElementsDeclList ProgramElementsDeclList);
 
-    public void visit(VarDecl VarDecl);
+    void visit(VarDecl VarDecl);
 
-    public void visit(DesignatorParams DesignatorParams);
+    void visit(DesignatorParams DesignatorParams);
 
-    public void visit(ClassMethod ClassMethod);
+    void visit(ClassMethod ClassMethod);
 
-    public void visit(ForLoopCondition ForLoopCondition);
+    void visit(ForLoopCondition ForLoopCondition);
 
-    public void visit(SingleConstDeclaration SingleConstDeclaration);
+    void visit(SingleConstDeclaration SingleConstDeclaration);
 
-    public void visit(MultipleVarDeclaration MultipleVarDeclaration);
+    void visit(MultipleVarDeclaration MultipleVarDeclaration);
 
-    public void visit(MultipleStatement MultipleStatement);
+    void visit(MultipleStatement MultipleStatement);
 
-    public void visit(LogicalOr LogicalOr);
+    void visit(LogicalOr LogicalOr);
 
-    public void visit(ForVarDecl ForVarDecl);
+    void visit(ForVarDecl ForVarDecl);
 
-    public void visit(Mulop Mulop);
+    void visit(Mulop Mulop);
 
-    public void visit(DesignatorStatement DesignatorStatement);
+    void visit(DesignatorStatement DesignatorStatement);
 
-    public void visit(ProgramElementsDeclListElement ProgramElementsDeclListElement);
+    void visit(ProgramElementsDeclListElement ProgramElementsDeclListElement);
 
-    public void visit(AbstractClassMethodList AbstractClassMethodList);
+    void visit(AbstractClassMethodList AbstractClassMethodList);
 
-    public void visit(Addop Addop);
+    void visit(Addop Addop);
 
-    public void visit(ConditionRight ConditionRight);
+    void visit(ConditionRight ConditionRight);
 
-    public void visit(MethodParameters MethodParameters);
+    void visit(MethodParameters MethodParameters);
 
-    public void visit(ClassMethodList ClassMethodList);
+    void visit(ClassMethodList ClassMethodList);
 
-    public void visit(Type Type);
+    void visit(Type Type);
 
-    public void visit(AdditionalConstDeclaration AdditionalConstDeclaration);
+    void visit(AdditionalConstDeclaration AdditionalConstDeclaration);
 
-    public void visit(AbstractMethodParameters AbstractMethodParameters);
+    void visit(AbstractMethodParameters AbstractMethodParameters);
 
-    public void visit(MethodVarDeclList MethodVarDeclList);
+    void visit(MethodVarDeclList MethodVarDeclList);
 
-    public void visit(ProgramMethodsDeclList ProgramMethodsDeclList);
+    void visit(ProgramMethodsDeclList ProgramMethodsDeclList);
 
-    public void visit(ClassDecl ClassDecl);
+    void visit(ClassDecl ClassDecl);
 
-    public void visit(ForUpdateVarList ForUpdateVarList);
+    void visit(ForUpdateVarList ForUpdateVarList);
 
-    public void visit(AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed);
+    void visit(AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed);
 
-    public void visit(AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes);
+    void visit(AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes);
 
-    public void visit(ExprNegative ExprNegative);
+    void visit(ExprNegative ExprNegative);
 
-    public void visit(ConstValue ConstValue);
+    void visit(ConstValue ConstValue);
 
-    public void visit(AbstractClassVarList AbstractClassVarList);
+    void visit(AbstractClassVarList AbstractClassVarList);
 
-    public void visit(MultiplePrint MultiplePrint);
+    void visit(MultiplePrint MultiplePrint);
 
-    public void visit(ClassDeclExtends ClassDeclExtends);
+    void visit(ClassDeclExtends ClassDeclExtends);
 
-    public void visit(ActPars ActPars);
+    void visit(ActPars ActPars);
 
-    public void visit(AbstractExtends AbstractExtends);
+    void visit(AbstractExtends AbstractExtends);
 
-    public void visit(Designator Designator);
+    void visit(Designator Designator);
 
-    public void visit(CondFact CondFact);
+    void visit(CondFact CondFact);
 
-    public void visit(SingleVarDeclaration SingleVarDeclaration);
+    void visit(SingleVarDeclaration SingleVarDeclaration);
 
-    public void visit(Term Term);
+    void visit(Term Term);
 
-    public void visit(OperatorModulo OperatorModulo);
+    void visit(OperatorModulo OperatorModulo);
 
-    public void visit(OperatorDivision OperatorDivision);
+    void visit(OperatorDivision OperatorDivision);
 
-    public void visit(OperatorMultiplication OperatorMultiplication);
+    void visit(OperatorMultiplication OperatorMultiplication);
 
-    public void visit(OperatorSubtraction OperatorSubtraction);
+    void visit(OperatorSubtraction OperatorSubtraction);
 
-    public void visit(OperatorAddition OperatorAddition);
+    void visit(OperatorAddition OperatorAddition);
 
-    public void visit(OperatorLessOrEqual OperatorLessOrEqual);
+    void visit(OperatorLessOrEqual OperatorLessOrEqual);
 
-    public void visit(OperatorLess OperatorLess);
+    void visit(OperatorLess OperatorLess);
 
-    public void visit(OperatorGreaterOrEqual OperatorGreaterOrEqual);
+    void visit(OperatorGreaterOrEqual OperatorGreaterOrEqual);
 
-    public void visit(OperatorGreater OperatorGreater);
+    void visit(OperatorGreater OperatorGreater);
 
-    public void visit(OperatorNotEqual OperatorNotEqual);
+    void visit(OperatorNotEqual OperatorNotEqual);
 
-    public void visit(OperatorEqual OperatorEqual);
+    void visit(OperatorEqual OperatorEqual);
 
-    public void visit(Assignop Assignop);
+    void visit(Assignop Assignop);
 
-    public void visit(DesignatorNonArrayAccess DesignatorNonArrayAccess);
+    void visit(DesignatorNonArrayAccess DesignatorNonArrayAccess);
 
-    public void visit(DesignatorArrayAccess DesignatorArrayAccess);
+    void visit(DesignatorArrayAccess DesignatorArrayAccess);
 
-    public void visit(DesignatorRoot DesignatorRoot);
+    void visit(DesignatorRoot DesignatorRoot);
 
-    public void visit(NoArrayDeclaration NoArrayDeclaration);
+    void visit(NoArrayDeclaration NoArrayDeclaration);
 
-    public void visit(ArrayDeclaration ArrayDeclaration);
+    void visit(ArrayDeclaration ArrayDeclaration);
 
-    public void visit(NoFactorFunctionCallParameterSingle NoFactorFunctionCallParameterSingle);
+    void visit(NoFactorFunctionCallParameterSingle NoFactorFunctionCallParameterSingle);
 
-    public void visit(FactorFunctionCallParameterSingle FactorFunctionCallParameterSingle);
+    void visit(FactorFunctionCallParameterSingle FactorFunctionCallParameterSingle);
 
-    public void visit(NoFactorFunctionCallParameter NoFactorFunctionCallParameter);
+    void visit(NoFactorFunctionCallParameter NoFactorFunctionCallParameter);
 
-    public void visit(FactorFunctionCallParameter FactorFunctionCallParameter);
+    void visit(FactorFunctionCallParameter FactorFunctionCallParameter);
 
-    public void visit(FactorExpressionInBrackets FactorExpressionInBrackets);
+    void visit(FactorExpressionInBrackets FactorExpressionInBrackets);
 
-    public void visit(FactorArrayDeclaration FactorArrayDeclaration);
+    void visit(FactorArrayDeclaration FactorArrayDeclaration);
 
-    public void visit(FactorBoolConst FactorBoolConst);
+    void visit(FactorBoolConst FactorBoolConst);
 
-    public void visit(FactorCharConst FactorCharConst);
+    void visit(FactorCharConst FactorCharConst);
 
-    public void visit(FactorNumericalConst FactorNumericalConst);
+    void visit(FactorNumericalConst FactorNumericalConst);
 
-    public void visit(FactorFunctionCall FactorFunctionCall);
+    void visit(FactorFunctionCall FactorFunctionCall);
 
-    public void visit(TermMultiple TermMultiple);
+    void visit(TermMultiple TermMultiple);
 
-    public void visit(TermSingle TermSingle);
+    void visit(TermSingle TermSingle);
 
-    public void visit(ExpressionPositive ExpressionPositive);
+    void visit(ExpressionPositive ExpressionPositive);
 
-    public void visit(ExpressionNegative ExpressionNegative);
+    void visit(ExpressionNegative ExpressionNegative);
 
-    public void visit(BinaryExpression BinaryExpression);
+    void visit(BinaryExpression BinaryExpression);
 
-    public void visit(UnaryExpression UnaryExpression);
+    void visit(UnaryExpression UnaryExpression);
 
-    public void visit(CondFactBinary CondFactBinary);
+    void visit(CondFactBinary CondFactBinary);
 
-    public void visit(CondFactUnary CondFactUnary);
+    void visit(CondFactUnary CondFactUnary);
 
-    public void visit(NoCondTermRight NoCondTermRight);
+    void visit(NoCondTermRight NoCondTermRight);
 
-    public void visit(CondTermRightt CondTermRightt);
+    void visit(CondTermRightt CondTermRightt);
 
-    public void visit(CondTerm CondTerm);
+    void visit(CondTerm CondTerm);
 
-    public void visit(LogicalOrCondition LogicalOrCondition);
+    void visit(LogicalOrCondition LogicalOrCondition);
 
-    public void visit(NoConditionRight NoConditionRight);
+    void visit(NoConditionRight NoConditionRight);
 
-    public void visit(ConditionRightt ConditionRightt);
+    void visit(ConditionRightt ConditionRightt);
 
-    public void visit(Condition Condition);
+    void visit(Condition Condition);
 
-    public void visit(ActParsMultiple ActParsMultiple);
+    void visit(ActParsMultiple ActParsMultiple);
 
-    public void visit(ActParsSingle ActParsSingle);
+    void visit(ActParsSingle ActParsSingle);
 
-    public void visit(NoDesignatorMethodCallParameters NoDesignatorMethodCallParameters);
+    void visit(NoDesignatorMethodCallParameters NoDesignatorMethodCallParameters);
 
-    public void visit(DesignatorMethodCallParameters DesignatorMethodCallParameters);
+    void visit(DesignatorMethodCallParameters DesignatorMethodCallParameters);
 
-    public void visit(DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd);
+    void visit(DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd);
 
-    public void visit(DesignatorInvokeMethodName DesignatorInvokeMethodName);
+    void visit(DesignatorInvokeMethodName DesignatorInvokeMethodName);
 
-    public void visit(DesignatorDecrement DesignatorDecrement);
+    void visit(DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf);
 
-    public void visit(DesignatorIncrement DesignatorIncrement);
+    void visit(DesignatorDecrement DesignatorDecrement);
 
-    public void visit(DesignatorInvoke DesignatorInvoke);
+    void visit(DesignatorIncrement DesignatorIncrement);
 
-    public void visit(DesignatorAssign DesignatorAssign);
+    void visit(DesignatorInvoke DesignatorInvoke);
 
-    public void visit(NoMultipleStatement NoMultipleStatement);
+    void visit(DesignatorAssign DesignatorAssign);
 
-    public void visit(MultipleStatements MultipleStatements);
+    void visit(NoMultipleStatement NoMultipleStatement);
 
-    public void visit(NoMultiplePrint NoMultiplePrint);
+    void visit(MultipleStatements MultipleStatements);
 
-    public void visit(MultiplePrintSt MultiplePrintSt);
+    void visit(NoMultiplePrint NoMultiplePrint);
 
-    public void visit(BlankReturnStatement BlankReturnStatement);
+    void visit(MultiplePrintSt MultiplePrintSt);
 
-    public void visit(ExprReturnStatement ExprReturnStatement);
+    void visit(BlankReturnStatement BlankReturnStatement);
 
-    public void visit(EndOfForStatement EndOfForStatement);
+    void visit(ExprReturnStatement ExprReturnStatement);
 
-    public void visit(ForUpdateVarListError ForUpdateVarListError);
+    void visit(EndOfForStatement EndOfForStatement);
 
-    public void visit(NoForUpdateVarList NoForUpdateVarList);
+    void visit(ForUpdateVarListError ForUpdateVarListError);
 
-    public void visit(SingleForUpdateVarList SingleForUpdateVarList);
+    void visit(NoForUpdateVarList NoForUpdateVarList);
 
-    public void visit(ForLoopConditionEnd ForLoopConditionEnd);
+    void visit(SingleForUpdateVarList SingleForUpdateVarList);
 
-    public void visit(StartForCondition StartForCondition);
+    void visit(ForLoopConditionEnd ForLoopConditionEnd);
 
-    public void visit(ForLoopConditionError ForLoopConditionError);
+    void visit(StartForCondition StartForCondition);
 
-    public void visit(NoForLoopCondition NoForLoopCondition);
+    void visit(ForLoopConditionError ForLoopConditionError);
 
-    public void visit(SingleForLoopCondition SingleForLoopCondition);
+    void visit(NoForLoopCondition NoForLoopCondition);
 
-    public void visit(ForVarDeclEnd ForVarDeclEnd);
+    void visit(SingleForLoopCondition SingleForLoopCondition);
 
-    public void visit(ForVarDeclError ForVarDeclError);
+    void visit(ForVarDeclEnd ForVarDeclEnd);
 
-    public void visit(NoForVarDecl NoForVarDecl);
+    void visit(ForVarDeclError ForVarDeclError);
 
-    public void visit(SingleForVarDecl SingleForVarDecl);
+    void visit(NoForVarDecl NoForVarDecl);
 
-    public void visit(ForKeyword ForKeyword);
+    void visit(SingleForVarDecl SingleForVarDecl);
 
-    public void visit(ElseStatementKeyword ElseStatementKeyword);
+    void visit(ForKeyword ForKeyword);
 
-    public void visit(NoElseStatement NoElseStatement);
+    void visit(ElseStatementKeyword ElseStatementKeyword);
 
-    public void visit(ElseStatementt ElseStatementt);
+    void visit(NoElseStatement NoElseStatement);
 
-    public void visit(IfKeyword IfKeyword);
+    void visit(ElseStatementt ElseStatementt);
 
-    public void visit(IfCondition IfCondition);
+    void visit(IfKeyword IfKeyword);
 
-    public void visit(ErrorStatement ErrorStatement);
+    void visit(IfCondition IfCondition);
 
-    public void visit(MultipleStatementt MultipleStatementt);
+    void visit(ErrorStatement ErrorStatement);
 
-    public void visit(PrintStatement PrintStatement);
+    void visit(MultipleStatementt MultipleStatementt);
 
-    public void visit(ReadStatement ReadStatement);
+    void visit(PrintStatement PrintStatement);
 
-    public void visit(ReturnStatementt ReturnStatementt);
+    void visit(ReadStatement ReadStatement);
 
-    public void visit(ContinueStatement ContinueStatement);
+    void visit(ReturnStatementt ReturnStatementt);
 
-    public void visit(BreakStatement BreakStatement);
+    void visit(ContinueStatement ContinueStatement);
 
-    public void visit(ForStatement ForStatement);
+    void visit(BreakStatement BreakStatement);
 
-    public void visit(IfStatement IfStatement);
+    void visit(ForStatement ForStatement);
 
-    public void visit(StatementDesignator StatementDesignator);
+    void visit(IfStatement IfStatement);
 
-    public void visit(DataType DataType);
+    void visit(StatementDesignator StatementDesignator);
 
-    public void visit(NoFormParamArray NoFormParamArray);
+    void visit(DataType DataType);
 
-    public void visit(FormParamArray FormParamArray);
+    void visit(NoFormParamArray NoFormParamArray);
 
-    public void visit(NoMultipleFormalParameter NoMultipleFormalParameter);
+    void visit(FormParamArray FormParamArray);
 
-    public void visit(MultipleFormalParameterr MultipleFormalParameterr);
+    void visit(NoMultipleFormalParameter NoMultipleFormalParameter);
 
-    public void visit(SingleFormParameterError SingleFormParameterError);
+    void visit(MultipleFormalParameterr MultipleFormalParameterr);
 
-    public void visit(SingleFormParameter SingleFormParameter);
+    void visit(SingleFormParameterError SingleFormParameterError);
 
-    public void visit(FormPars FormPars);
+    void visit(SingleFormParameter SingleFormParameter);
 
-    public void visit(NoAbstractMethodParameters NoAbstractMethodParameters);
+    void visit(FormPars FormPars);
 
-    public void visit(AbstractMethodParameterss AbstractMethodParameterss);
+    void visit(NoAbstractMethodParameters NoAbstractMethodParameters);
 
-    public void visit(AbstractMethodWithoutReturn AbstractMethodWithoutReturn);
+    void visit(AbstractMethodParameterss AbstractMethodParameterss);
 
-    public void visit(AbstractMethodWithReturn AbstractMethodWithReturn);
+    void visit(AbstractMethodWithoutReturn AbstractMethodWithoutReturn);
 
-    public void visit(AbstractMethodName AbstractMethodName);
+    void visit(AbstractMethodWithReturn AbstractMethodWithReturn);
 
-    public void visit(AbstractMethodDeclarationError AbstractMethodDeclarationError);
+    void visit(AbstractMethodName AbstractMethodName);
 
-    public void visit(AbstractMethodDeclaration AbstractMethodDeclaration);
+    void visit(AbstractMethodDeclarationError AbstractMethodDeclarationError);
 
-    public void visit(NoMethodStatements NoMethodStatements);
+    void visit(AbstractMethodDeclaration AbstractMethodDeclaration);
 
-    public void visit(MethodStatementss MethodStatementss);
+    void visit(NoMethodStatements NoMethodStatements);
 
-    public void visit(NoMethodVarDeclList NoMethodVarDeclList);
+    void visit(MethodStatementss MethodStatementss);
 
-    public void visit(MethodVarDeclListt MethodVarDeclListt);
+    void visit(NoMethodVarDeclList NoMethodVarDeclList);
 
-    public void visit(NoMethodParameters NoMethodParameters);
+    void visit(MethodVarDeclListt MethodVarDeclListt);
 
-    public void visit(MethodParameterss MethodParameterss);
+    void visit(NoMethodParameters NoMethodParameters);
 
-    public void visit(MethodWithoutReturn MethodWithoutReturn);
+    void visit(MethodParameterss MethodParameterss);
 
-    public void visit(MethodWithReturn MethodWithReturn);
+    void visit(MethodWithoutReturn MethodWithoutReturn);
 
-    public void visit(MethodName MethodName);
+    void visit(MethodWithReturn MethodWithReturn);
 
-    public void visit(MethodSignature MethodSignature);
+    void visit(MethodName MethodName);
 
-    public void visit(MethodDecl MethodDecl);
+    void visit(MethodSignature MethodSignature);
 
-    public void visit(AbstractClassMethodTypesAbstractMethodType AbstractClassMethodTypesAbstractMethodType);
+    void visit(MethodDecl MethodDecl);
 
-    public void visit(AbstractClassMethodTypesMethodType AbstractClassMethodTypesMethodType);
+    void visit(AbstractClassMethodTypesAbstractMethodType AbstractClassMethodTypesAbstractMethodType);
 
-    public void visit(NoAbstractClassMultipleMethodTypes NoAbstractClassMultipleMethodTypes);
+    void visit(AbstractClassMethodTypesMethodType AbstractClassMethodTypesMethodType);
 
-    public void visit(AbstractClassMultipleMethodTypesClass AbstractClassMultipleMethodTypesClass);
+    void visit(NoAbstractClassMultipleMethodTypes NoAbstractClassMultipleMethodTypes);
 
-    public void visit(NoAbstractClassMethodList NoAbstractClassMethodList);
+    void visit(AbstractClassMultipleMethodTypesClass AbstractClassMultipleMethodTypesClass);
 
-    public void visit(AbstractClassMethodListing AbstractClassMethodListing);
+    void visit(NoAbstractClassMethodList NoAbstractClassMethodList);
 
-    public void visit(NoAbstractClassVarList NoAbstractClassVarList);
+    void visit(AbstractClassMethodListing AbstractClassMethodListing);
 
-    public void visit(AbstractClassVariableList AbstractClassVariableList);
+    void visit(NoAbstractClassVarList NoAbstractClassVarList);
 
-    public void visit(NoAbstractExtends NoAbstractExtends);
+    void visit(AbstractClassVariableList AbstractClassVariableList);
 
-    public void visit(AbstractClassExtends AbstractClassExtends);
+    void visit(NoAbstractExtends NoAbstractExtends);
 
-    public void visit(AbstractClassName AbstractClassName);
+    void visit(AbstractClassExtends AbstractClassExtends);
 
-    public void visit(AbstractClassDecl AbstractClassDecl);
+    void visit(AbstractClassName AbstractClassName);
 
-    public void visit(NoClassMethod NoClassMethod);
+    void visit(AbstractClassDecl AbstractClassDecl);
 
-    public void visit(ClassMethodd ClassMethodd);
+    void visit(NoClassMethod NoClassMethod);
 
-    public void visit(NoClassMethodList NoClassMethodList);
+    void visit(ClassMethodd ClassMethodd);
 
-    public void visit(ClassMethodListt ClassMethodListt);
+    void visit(NoClassMethodList NoClassMethodList);
 
-    public void visit(NoClassVarList NoClassVarList);
+    void visit(ClassMethodListt ClassMethodListt);
 
-    public void visit(ClassVarListt ClassVarListt);
+    void visit(NoClassVarList NoClassVarList);
 
-    public void visit(NoClassExtends NoClassExtends);
+    void visit(ClassVarListt ClassVarListt);
 
-    public void visit(ClassDeclExtendsModifier ClassDeclExtendsModifier);
+    void visit(NoClassExtends NoClassExtends);
 
-    public void visit(ClassName ClassName);
+    void visit(ClassDeclExtendsModifier ClassDeclExtendsModifier);
 
-    public void visit(ClassDeclarationErrorBeforeExtends ClassDeclarationErrorBeforeExtends);
+    void visit(ClassName ClassName);
 
-    public void visit(ClassDeclarationErrorInExtends ClassDeclarationErrorInExtends);
+    void visit(ClassDeclarationErrorBeforeExtends ClassDeclarationErrorBeforeExtends);
 
-    public void visit(ClassDeclaration ClassDeclaration);
+    void visit(ClassDeclarationErrorInExtends ClassDeclarationErrorInExtends);
 
-    public void visit(SingleVarArray SingleVarArray);
+    void visit(ClassDeclaration ClassDeclaration);
 
-    public void visit(SingleVarNoArray SingleVarNoArray);
+    void visit(SingleVarArray SingleVarArray);
 
-    public void visit(SingleVarError SingleVarError);
+    void visit(SingleVarNoArray SingleVarNoArray);
 
-    public void visit(SingleVariableDeclaration SingleVariableDeclaration);
+    void visit(SingleVarError SingleVarError);
 
-    public void visit(SingleVarDecl SingleVarDecl);
+    void visit(SingleVariableDeclaration SingleVariableDeclaration);
 
-    public void visit(MultipleVariablesDeclaration MultipleVariablesDeclaration);
+    void visit(SingleVarDecl SingleVarDecl);
 
-    public void visit(VarDeclError VarDeclError);
+    void visit(MultipleVariablesDeclaration MultipleVariablesDeclaration);
 
-    public void visit(VarDeclarationRoot VarDeclarationRoot);
+    void visit(VarDeclError VarDeclError);
 
-    public void visit(BooleanConst BooleanConst);
+    void visit(VarDeclarationRoot VarDeclarationRoot);
 
-    public void visit(CharacterConst CharacterConst);
+    void visit(BooleanConst BooleanConst);
 
-    public void visit(NumericalConst NumericalConst);
+    void visit(CharacterConst CharacterConst);
 
-    public void visit(SingleConst SingleConst);
+    void visit(NumericalConst NumericalConst);
 
-    public void visit(NoAditionalConstDeclaration NoAditionalConstDeclaration);
+    void visit(SingleConst SingleConst);
 
-    public void visit(AdditionalConstantDeclaration AdditionalConstantDeclaration);
+    void visit(NoAditionalConstDeclaration NoAditionalConstDeclaration);
 
-    public void visit(ConstDecl ConstDecl);
+    void visit(AdditionalConstantDeclaration AdditionalConstantDeclaration);
 
-    public void visit(NoProgramMethodList NoProgramMethodList);
+    void visit(ConstDecl ConstDecl);
 
-    public void visit(ProgramMethodDeclList ProgramMethodDeclList);
+    void visit(NoProgramMethodList NoProgramMethodList);
 
-    public void visit(SingleProgramClass SingleProgramClass);
+    void visit(ProgramMethodDeclList ProgramMethodDeclList);
 
-    public void visit(SingleProgramAbstractClass SingleProgramAbstractClass);
+    void visit(SingleProgramClass SingleProgramClass);
 
-    public void visit(SingleProgramVar SingleProgramVar);
+    void visit(SingleProgramAbstractClass SingleProgramAbstractClass);
 
-    public void visit(SingleProgramConst SingleProgramConst);
+    void visit(SingleProgramVar SingleProgramVar);
 
-    public void visit(NoProgramElements NoProgramElements);
+    void visit(SingleProgramConst SingleProgramConst);
 
-    public void visit(ProgramElementsDeclarationList ProgramElementsDeclarationList);
+    void visit(NoProgramElements NoProgramElements);
 
-    public void visit(ProgramName ProgramName);
+    void visit(ProgramElementsDeclarationList ProgramElementsDeclarationList);
 
-    public void visit(Program Program);
+    void visit(ProgramName ProgramName);
+
+    void visit(Program Program);
 
 }
