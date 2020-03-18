@@ -12,6 +12,7 @@ public class ExpressionNode {
     protected ExpressionNode rightChild;
 
     public ExpressionNode(Obj variable) {
+        this.operation = ExpressionNodeOperation.VARIABLE;
         this.variable = variable;
     }
 
@@ -85,8 +86,8 @@ public class ExpressionNode {
         uniqueId = 0;
     }
 
-    public void assignId() {
-        id = uniqueId++;
+    public int assignId() {
+        return id = uniqueId++;
     }
 
     @Override
