@@ -1,5 +1,6 @@
 package cvetkovic;
 
+import cvetkovic.ir.IRCodeGenerator;
 import cvetkovic.lexer.Yylex;
 import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
@@ -95,10 +96,11 @@ public class Compiler {
             if (dumpSymbolTable)
                 SymbolTable.dump();
 
-            System.out.println("================ INTERMEDIATE CODE GENERATOR ================");
-
             if (!parser.isErrorDetected() && !semanticCheck.isErrorDetected()) {
+                System.out.println("================ INTERMEDIATE CODE GENERATOR ================");
 
+                IRCodeGenerator irCodeGenerator = new IRCodeGenerator();
+                syntaxNode.traverseBottomUp(irCodeGenerator);
             }
             else if (parser.isErrorDetected())
                 System.out.println("Error during syntax analysis. Semantic analyze and code generation aborted.");

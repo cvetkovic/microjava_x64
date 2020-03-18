@@ -62,6 +62,10 @@ terminal String IDENT;
 terminal Character CHAR;
 terminal Boolean BOOLEAN;
 
+//////////////////////////////////////////////
+// struct nodes
+//////////////////////////////////////////////
+
 non terminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgramName;
 non terminal rs.etf.pp1.symboltable.concepts.Obj ClassDecl, ClassName;
 non terminal rs.etf.pp1.symboltable.concepts.Obj Designator;
@@ -70,6 +74,10 @@ non terminal rs.etf.pp1.symboltable.concepts.Obj SingleFormalParameter;
 non terminal rs.etf.pp1.symboltable.concepts.Obj ActPars;
 non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractClassDecl, AbstractClassName;
 non terminal rs.etf.pp1.symboltable.concepts.Obj AbstractMethodName, AbstractMethodDecl;
+
+//////////////////////////////////////////////
+// struct nodes
+//////////////////////////////////////////////
 
 non terminal rs.etf.pp1.symboltable.concepts.Struct ConstValue;
 non terminal rs.etf.pp1.symboltable.concepts.Struct Type;
@@ -142,6 +150,9 @@ nonterminal FactorFunctionCallParametersSingle FactorFunctionCallParametersSingl
 nonterminal FactorArrayDecl FactorArrayDecl;
 non terminal DesignatorInvokeMethodName DesignatorInvokeMethodName;
 nonterminal DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd;
+
+// for expression DAG
+non terminal DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf;
 
 // {} - zero or more
 // [] - optional
@@ -372,10 +383,12 @@ MultipleStatement ::= (MultipleStatements) MultipleStatement:M1 Statement:S2 {: 
 // designator statement
 //////////////////////////////////////////////
 
-DesignatorStatement ::= (DesignatorAssign) Designator:D1 Assignop:A2 Expr:E3 {: RESULT=new DesignatorAssign(D1, A2, E3); RESULT.setLine(D1left); :} |
+DesignatorStatement ::= (DesignatorAssign) Designator:D1 DesignatorAssignMakeLeaf:D2 Assignop:A3 Expr:E4 {: RESULT=new DesignatorAssign(D1, D2, A3, E4); RESULT.setLine(D1left); :} |
 						(DesignatorInvoke) Designator:D1 LEFT_ROUND_BRACKET DesignatorParams:D2 RIGHT_ROUND_BRACKET {: RESULT=new DesignatorInvoke(D1, D2); RESULT.setLine(D1left); :} |
 						(DesignatorIncrement) Designator:D1 INCREMENT {: RESULT=new DesignatorIncrement(D1); RESULT.setLine(D1left); :} |
 						(DesignatorDecrement) Designator:D1 DECREMENT {: RESULT=new DesignatorDecrement(D1); RESULT.setLine(D1left); :};
+
+DesignatorAssignMakeLeaf ::= (DesignatorAssignMakeLeaf) {: RESULT=new DesignatorAssignMakeLeaf(); :} /* epsilon */;
 
 DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) {: RESULT=new DesignatorInvokeMethodName(); :} /* epsilon */;
 DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) {: RESULT=new DesignatorInvokeMethodNameEnd(); :} /* epsilon */;

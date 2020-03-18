@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 17/2/2020 22:24:19
+// 18/2/2020 17:24:49
 
 
 package cvetkovic.parser.ast;
@@ -8,12 +8,15 @@ package cvetkovic.parser.ast;
 public class DesignatorAssign extends DesignatorStatement {
 
     private Designator Designator;
+    private DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf;
     private Assignop Assignop;
     private Expr Expr;
 
-    public DesignatorAssign(Designator Designator, Assignop Assignop, Expr Expr) {
+    public DesignatorAssign(Designator Designator, DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf, Assignop Assignop, Expr Expr) {
         this.Designator = Designator;
         if (Designator != null) Designator.setParent(this);
+        this.DesignatorAssignMakeLeaf = DesignatorAssignMakeLeaf;
+        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.setParent(this);
         this.Assignop = Assignop;
         if (Assignop != null) Assignop.setParent(this);
         this.Expr = Expr;
@@ -26,6 +29,14 @@ public class DesignatorAssign extends DesignatorStatement {
 
     public void setDesignator(Designator Designator) {
         this.Designator = Designator;
+    }
+
+    public DesignatorAssignMakeLeaf getDesignatorAssignMakeLeaf() {
+        return DesignatorAssignMakeLeaf;
+    }
+
+    public void setDesignatorAssignMakeLeaf(DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf) {
+        this.DesignatorAssignMakeLeaf = DesignatorAssignMakeLeaf;
     }
 
     public Assignop getAssignop() {
@@ -50,6 +61,7 @@ public class DesignatorAssign extends DesignatorStatement {
 
     public void childrenAccept(Visitor visitor) {
         if (Designator != null) Designator.accept(visitor);
+        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.accept(visitor);
         if (Assignop != null) Assignop.accept(visitor);
         if (Expr != null) Expr.accept(visitor);
     }
@@ -57,12 +69,14 @@ public class DesignatorAssign extends DesignatorStatement {
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
         if (Designator != null) Designator.traverseTopDown(visitor);
+        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.traverseTopDown(visitor);
         if (Assignop != null) Assignop.traverseTopDown(visitor);
         if (Expr != null) Expr.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
         if (Designator != null) Designator.traverseBottomUp(visitor);
+        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.traverseBottomUp(visitor);
         if (Assignop != null) Assignop.traverseBottomUp(visitor);
         if (Expr != null) Expr.traverseBottomUp(visitor);
         accept(visitor);
@@ -75,6 +89,12 @@ public class DesignatorAssign extends DesignatorStatement {
 
         if (Designator != null)
             buffer.append(Designator.toString("  " + tab));
+        else
+            buffer.append(tab + "  null");
+        buffer.append("\n");
+
+        if (DesignatorAssignMakeLeaf != null)
+            buffer.append(DesignatorAssignMakeLeaf.toString("  " + tab));
         else
             buffer.append(tab + "  null");
         buffer.append("\n");
