@@ -1,5 +1,7 @@
 package cvetkovic.ir;
 
+import cvetkovic.ir.expression.ExpressionNodeOperation;
+
 public enum IRInstruction {
     ADD,    // addition
     SUB,    // subtraction
@@ -9,6 +11,9 @@ public enum IRInstruction {
     NEG,    // negation
 
     COPY,   // copy
+
+    ENTER,  // allocate stack frame     => enter procedure
+    LEAVE,  // deallocate stack frame   => exit procedure
 
     SCANF,   // scan from stdin
     PRINTF,  // print to stdout
@@ -28,5 +33,28 @@ public enum IRInstruction {
     JG,     // jump if greater
     JGE,    // jump if greater or equal
     JE,     // jump if equal
-    JNE     // jump if not equal
+    JNE;     // jump if not equal
+
+    public static IRInstruction dagToQuadrupleInstruction(ExpressionNodeOperation operation) {
+        switch (operation) {
+            case ADDITION:
+                return ADD;
+            case SUBTRACTION:
+                return SUB;
+            case MULTIPLICATION:
+                return MUL;
+            case DIVISION:
+                return DIV;
+            case MODULO:
+                return REM;
+
+            case ASSIGNMENT:
+                return COPY;
+            case UNARY_MINUS:
+                return NEG;
+
+            default:
+                throw new RuntimeException("Expression node operation cannot be mapped into an intermediate language instruction.");
+        }
+    }
 }

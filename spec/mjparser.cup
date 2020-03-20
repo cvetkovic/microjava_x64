@@ -109,7 +109,7 @@ non terminal FactorFunctionCallParameters, FactorFunctionCallParametersSingle, F
 non terminal DesignatorInvokeMethodName, DesignatorInvokeMethodNameEnd;
 
 // for expression DAG
-non terminal DesignatorAssignMakeLeaf;
+non terminal MakeNewExpressionDAG;
 
 // {} - zero or more
 // [] - optional
@@ -287,7 +287,7 @@ Statement ::= (StatementDesignator) DesignatorStatement DELIMITER |
 			  (ContinueStatement) CONTINUE:continueSt DELIMITER |
 			  (ReturnStatementt) RETURN ReturnStatement DELIMITER |
 			  (ReadStatement) READ LEFT_ROUND_BRACKET Designator RIGHT_ROUND_BRACKET DELIMITER |
-			  (PrintStatement) PRINT LEFT_ROUND_BRACKET Expr MultiplePrint RIGHT_ROUND_BRACKET DELIMITER |
+			  (PrintStatement) PRINT LEFT_ROUND_BRACKET MakeNewExpressionDAG Expr RIGHT_ROUND_BRACKET DELIMITER |
 			  (MultipleStatementt) LEFT_CURLY_BRACKET MultipleStatement RIGHT_CURLY_BRACKET |
 			  (ErrorStatement) error:e {: parser.report_error("Recovered from invalid statement error.", null); :};
 
@@ -327,7 +327,7 @@ ForUpdateVarList ::= (SingleForUpdateVarList) DesignatorStatement |
 // added because of non-conditional jump
 EndOfForStatement ::= (EndOfForStatement) /* epsilon */;
 
-ReturnStatement ::= (ExprReturnStatement) Expr |
+ReturnStatement ::= (ExprReturnStatement) MakeNewExpressionDAG Expr |
 					(BlankReturnStatement) /* epsilon */;
 			   
 MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst |
@@ -340,12 +340,12 @@ MultipleStatement ::= (MultipleStatements) MultipleStatement Statement |
 // designator statement
 //////////////////////////////////////////////
 
-DesignatorStatement ::= (DesignatorAssign) Designator DesignatorAssignMakeLeaf Assignop Expr |
+DesignatorStatement ::= (DesignatorAssign) Designator Assignop MakeNewExpressionDAG Expr |
 						(DesignatorInvoke) Designator LEFT_ROUND_BRACKET DesignatorParams RIGHT_ROUND_BRACKET |
 						(DesignatorIncrement) Designator INCREMENT |
 						(DesignatorDecrement) Designator DECREMENT;
 
-DesignatorAssignMakeLeaf ::= (DesignatorAssignMakeLeaf) /* epsilon */;
+MakeNewExpressionDAG ::= (MakeNewExpressionDAG) /* epsilon */;
 
 DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) /* epsilon */;
 DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) /* epsilon */;
@@ -357,8 +357,8 @@ DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName
 // method call parameters
 //////////////////////////////////////////////
 
-ActPars ::= (ActParsSingle) Expr |
-            (ActParsMultiple) Expr COMMA ActPars;
+ActPars ::= (ActParsSingle) MakeNewExpressionDAG Expr |
+            (ActParsMultiple) MakeNewExpressionDAG Expr COMMA ActPars;
 
 //////////////////////////////////////////////
 // condition calculation
@@ -376,8 +376,8 @@ CondTerm ::= (CondTerm) CondFact CondTermRight;
 CondTermRight ::= (CondTermRightt) CondTermRight LOGICAL_AND CondFact |
 				 (NoCondTermRight) /* epsilon */;
 
-CondFact ::= (CondFactUnary) Expr |
-             (CondFactBinary) Expr:ExprLeft Relop Expr:ExprRight;
+CondFact ::= (CondFactUnary) MakeNewExpressionDAG Expr |
+             (CondFactBinary) MakeNewExpressionDAG Expr:ExprLeft Relop MakeNewExpressionDAG Expr:ExprRight;
 
 //////////////////////////////////////////////
 // expression
@@ -413,7 +413,7 @@ FactorFunctionCallParameters ::= (FactorFunctionCallParameter) LEFT_ROUND_BRACKE
 FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName ActPars DesignatorInvokeMethodNameEnd |
 									   (NoFactorFunctionCallParameterSingle) /* epsilon */;
 
-FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET Expr RIGHT_SQUARE_BRACKET |
+FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET MakeNewExpressionDAG Expr RIGHT_SQUARE_BRACKET |
 					(NoArrayDeclaration) /* epsilon */;
 
 //////////////////////////////////////////////
@@ -421,7 +421,7 @@ FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET Expr RIGHT_SQUARE_BRA
 //////////////////////////////////////////////
 
 Designator ::= (DesignatorRoot) IDENT:designatorNameSingle |
-               (DesignatorArrayAccess) Designator LEFT_SQUARE_BRACKET Expr:designatorArrayIndex RIGHT_SQUARE_BRACKET |
+               (DesignatorArrayAccess) Designator LEFT_SQUARE_BRACKET MakeNewExpressionDAG Expr:designatorArrayIndex RIGHT_SQUARE_BRACKET |
                (DesignatorNonArrayAccess) Designator DOT IDENT:designatorName;
 
 //////////////////////////////////////////////

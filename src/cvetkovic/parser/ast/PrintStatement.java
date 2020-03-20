@@ -1,20 +1,28 @@
 // generated with ast extension for cup
 // version 0.8
-// 18/2/2020 17:24:49
+// 20/2/2020 20:30:18
 
 
 package cvetkovic.parser.ast;
 
 public class PrintStatement extends Statement {
 
+    private MakeNewExpressionDAG MakeNewExpressionDAG;
     private Expr Expr;
-    private MultiplePrint MultiplePrint;
 
-    public PrintStatement(Expr Expr, MultiplePrint MultiplePrint) {
+    public PrintStatement(MakeNewExpressionDAG MakeNewExpressionDAG, Expr Expr) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.setParent(this);
         this.Expr = Expr;
         if (Expr != null) Expr.setParent(this);
-        this.MultiplePrint = MultiplePrint;
-        if (MultiplePrint != null) MultiplePrint.setParent(this);
+    }
+
+    public MakeNewExpressionDAG getMakeNewExpressionDAG() {
+        return MakeNewExpressionDAG;
+    }
+
+    public void setMakeNewExpressionDAG(MakeNewExpressionDAG MakeNewExpressionDAG) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
     }
 
     public Expr getExpr() {
@@ -25,32 +33,24 @@ public class PrintStatement extends Statement {
         this.Expr = Expr;
     }
 
-    public MultiplePrint getMultiplePrint() {
-        return MultiplePrint;
-    }
-
-    public void setMultiplePrint(MultiplePrint MultiplePrint) {
-        this.MultiplePrint = MultiplePrint;
-    }
-
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
 
     public void childrenAccept(Visitor visitor) {
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.accept(visitor);
         if (Expr != null) Expr.accept(visitor);
-        if (MultiplePrint != null) MultiplePrint.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseTopDown(visitor);
         if (Expr != null) Expr.traverseTopDown(visitor);
-        if (MultiplePrint != null) MultiplePrint.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseBottomUp(visitor);
         if (Expr != null) Expr.traverseBottomUp(visitor);
-        if (MultiplePrint != null) MultiplePrint.traverseBottomUp(visitor);
         accept(visitor);
     }
 
@@ -59,14 +59,14 @@ public class PrintStatement extends Statement {
         buffer.append(tab);
         buffer.append("PrintStatement(\n");
 
-        if (Expr != null)
-            buffer.append(Expr.toString("  " + tab));
+        if (MakeNewExpressionDAG != null)
+            buffer.append(MakeNewExpressionDAG.toString("  " + tab));
         else
             buffer.append(tab + "  null");
         buffer.append("\n");
 
-        if (MultiplePrint != null)
-            buffer.append(MultiplePrint.toString("  " + tab));
+        if (Expr != null)
+            buffer.append(Expr.toString("  " + tab));
         else
             buffer.append(tab + "  null");
         buffer.append("\n");

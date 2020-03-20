@@ -1,23 +1,37 @@
 // generated with ast extension for cup
 // version 0.8
-// 18/2/2020 17:24:49
+// 20/2/2020 20:30:18
 
 
 package cvetkovic.parser.ast;
 
 public class CondFactBinary extends CondFact {
 
+    private MakeNewExpressionDAG MakeNewExpressionDAG;
     private Expr Expr;
     private Relop Relop;
-    private Expr Expr1;
+    private MakeNewExpressionDAG MakeNewExpressionDAG1;
+    private Expr Expr2;
 
-    public CondFactBinary(Expr Expr, Relop Relop, Expr Expr1) {
+    public CondFactBinary(MakeNewExpressionDAG MakeNewExpressionDAG, Expr Expr, Relop Relop, MakeNewExpressionDAG MakeNewExpressionDAG1, Expr Expr2) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.setParent(this);
         this.Expr = Expr;
         if (Expr != null) Expr.setParent(this);
         this.Relop = Relop;
         if (Relop != null) Relop.setParent(this);
-        this.Expr1 = Expr1;
-        if (Expr1 != null) Expr1.setParent(this);
+        this.MakeNewExpressionDAG1 = MakeNewExpressionDAG1;
+        if (MakeNewExpressionDAG1 != null) MakeNewExpressionDAG1.setParent(this);
+        this.Expr2 = Expr2;
+        if (Expr2 != null) Expr2.setParent(this);
+    }
+
+    public MakeNewExpressionDAG getMakeNewExpressionDAG() {
+        return MakeNewExpressionDAG;
+    }
+
+    public void setMakeNewExpressionDAG(MakeNewExpressionDAG MakeNewExpressionDAG) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
     }
 
     public Expr getExpr() {
@@ -36,12 +50,20 @@ public class CondFactBinary extends CondFact {
         this.Relop = Relop;
     }
 
-    public Expr getExpr1() {
-        return Expr1;
+    public MakeNewExpressionDAG getMakeNewExpressionDAG1() {
+        return MakeNewExpressionDAG1;
     }
 
-    public void setExpr1(Expr Expr1) {
-        this.Expr1 = Expr1;
+    public void setMakeNewExpressionDAG1(MakeNewExpressionDAG MakeNewExpressionDAG1) {
+        this.MakeNewExpressionDAG1 = MakeNewExpressionDAG1;
+    }
+
+    public Expr getExpr2() {
+        return Expr2;
+    }
+
+    public void setExpr2(Expr Expr2) {
+        this.Expr2 = Expr2;
     }
 
     public void accept(Visitor visitor) {
@@ -49,22 +71,28 @@ public class CondFactBinary extends CondFact {
     }
 
     public void childrenAccept(Visitor visitor) {
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.accept(visitor);
         if (Expr != null) Expr.accept(visitor);
         if (Relop != null) Relop.accept(visitor);
-        if (Expr1 != null) Expr1.accept(visitor);
+        if (MakeNewExpressionDAG1 != null) MakeNewExpressionDAG1.accept(visitor);
+        if (Expr2 != null) Expr2.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseTopDown(visitor);
         if (Expr != null) Expr.traverseTopDown(visitor);
         if (Relop != null) Relop.traverseTopDown(visitor);
-        if (Expr1 != null) Expr1.traverseTopDown(visitor);
+        if (MakeNewExpressionDAG1 != null) MakeNewExpressionDAG1.traverseTopDown(visitor);
+        if (Expr2 != null) Expr2.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseBottomUp(visitor);
         if (Expr != null) Expr.traverseBottomUp(visitor);
         if (Relop != null) Relop.traverseBottomUp(visitor);
-        if (Expr1 != null) Expr1.traverseBottomUp(visitor);
+        if (MakeNewExpressionDAG1 != null) MakeNewExpressionDAG1.traverseBottomUp(visitor);
+        if (Expr2 != null) Expr2.traverseBottomUp(visitor);
         accept(visitor);
     }
 
@@ -72,6 +100,12 @@ public class CondFactBinary extends CondFact {
         StringBuffer buffer = new StringBuffer();
         buffer.append(tab);
         buffer.append("CondFactBinary(\n");
+
+        if (MakeNewExpressionDAG != null)
+            buffer.append(MakeNewExpressionDAG.toString("  " + tab));
+        else
+            buffer.append(tab + "  null");
+        buffer.append("\n");
 
         if (Expr != null)
             buffer.append(Expr.toString("  " + tab));
@@ -85,8 +119,14 @@ public class CondFactBinary extends CondFact {
             buffer.append(tab + "  null");
         buffer.append("\n");
 
-        if (Expr1 != null)
-            buffer.append(Expr1.toString("  " + tab));
+        if (MakeNewExpressionDAG1 != null)
+            buffer.append(MakeNewExpressionDAG1.toString("  " + tab));
+        else
+            buffer.append(tab + "  null");
+        buffer.append("\n");
+
+        if (Expr2 != null)
+            buffer.append(Expr2.toString("  " + tab));
         else
             buffer.append(tab + "  null");
         buffer.append("\n");

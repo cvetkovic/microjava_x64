@@ -23,6 +23,7 @@ import cvetkovic.parser.sym;
 %}
 
 %xstate COMMENT
+%xstate MULTILINE_COMMENT
 
 %eofval{
 	return createSymbol(sym.EOF);
@@ -37,6 +38,10 @@ LineTerminator = "\r" | "\n" | "\r\n"
 <YYINITIAL> "//"             { yybegin(COMMENT); }
 <COMMENT> 	{LineTerminator} { yybegin(YYINITIAL); }
 <COMMENT>   .                { yybegin(COMMENT); }
+
+<YYINITIAL>         "/*"             { yybegin(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT> "*/"             { yybegin(YYINITIAL); }
+<MULTILINE_COMMENT> .                { yybegin(MULTILINE_COMMENT); }
 
 " "		{ }
 "\b"	{ }
