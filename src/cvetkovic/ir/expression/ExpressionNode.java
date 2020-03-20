@@ -6,8 +6,10 @@ public class ExpressionNode {
     protected static int uniqueId = 0;
 
     protected int id;
+    protected Obj destinationVariable;              // used if inner node
+
     protected ExpressionNodeOperation operation;
-    protected Obj variable;
+    protected Obj variable;                         // used if leaf node
     protected ExpressionNode leftChild;
     protected ExpressionNode rightChild;
 
@@ -47,7 +49,7 @@ public class ExpressionNode {
         return !isUnaryOperator() && !isBinaryOperator();
     }
 
-    public boolean isNode() {
+    public boolean isInnerNode() {
         return !isLeaf();
     }
 
@@ -141,5 +143,13 @@ public class ExpressionNode {
         }
 
         return builder.toString();
+    }
+
+    public Obj getDestinationVariable() {
+        return destinationVariable;
+    }
+
+    public void setDestinationVariable(Obj destinationVariable) {
+        this.destinationVariable = destinationVariable;
     }
 }

@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 18/2/2020 17:24:49
+// 20/2/2020 20:30:18
 
 
 package cvetkovic.parser.ast;
@@ -8,17 +8,17 @@ package cvetkovic.parser.ast;
 public class DesignatorAssign extends DesignatorStatement {
 
     private Designator Designator;
-    private DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf;
     private Assignop Assignop;
+    private MakeNewExpressionDAG MakeNewExpressionDAG;
     private Expr Expr;
 
-    public DesignatorAssign(Designator Designator, DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf, Assignop Assignop, Expr Expr) {
+    public DesignatorAssign(Designator Designator, Assignop Assignop, MakeNewExpressionDAG MakeNewExpressionDAG, Expr Expr) {
         this.Designator = Designator;
         if (Designator != null) Designator.setParent(this);
-        this.DesignatorAssignMakeLeaf = DesignatorAssignMakeLeaf;
-        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.setParent(this);
         this.Assignop = Assignop;
         if (Assignop != null) Assignop.setParent(this);
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.setParent(this);
         this.Expr = Expr;
         if (Expr != null) Expr.setParent(this);
     }
@@ -31,20 +31,20 @@ public class DesignatorAssign extends DesignatorStatement {
         this.Designator = Designator;
     }
 
-    public DesignatorAssignMakeLeaf getDesignatorAssignMakeLeaf() {
-        return DesignatorAssignMakeLeaf;
-    }
-
-    public void setDesignatorAssignMakeLeaf(DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf) {
-        this.DesignatorAssignMakeLeaf = DesignatorAssignMakeLeaf;
-    }
-
     public Assignop getAssignop() {
         return Assignop;
     }
 
     public void setAssignop(Assignop Assignop) {
         this.Assignop = Assignop;
+    }
+
+    public MakeNewExpressionDAG getMakeNewExpressionDAG() {
+        return MakeNewExpressionDAG;
+    }
+
+    public void setMakeNewExpressionDAG(MakeNewExpressionDAG MakeNewExpressionDAG) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
     }
 
     public Expr getExpr() {
@@ -61,23 +61,23 @@ public class DesignatorAssign extends DesignatorStatement {
 
     public void childrenAccept(Visitor visitor) {
         if (Designator != null) Designator.accept(visitor);
-        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.accept(visitor);
         if (Assignop != null) Assignop.accept(visitor);
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.accept(visitor);
         if (Expr != null) Expr.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
         if (Designator != null) Designator.traverseTopDown(visitor);
-        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.traverseTopDown(visitor);
         if (Assignop != null) Assignop.traverseTopDown(visitor);
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseTopDown(visitor);
         if (Expr != null) Expr.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
         if (Designator != null) Designator.traverseBottomUp(visitor);
-        if (DesignatorAssignMakeLeaf != null) DesignatorAssignMakeLeaf.traverseBottomUp(visitor);
         if (Assignop != null) Assignop.traverseBottomUp(visitor);
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseBottomUp(visitor);
         if (Expr != null) Expr.traverseBottomUp(visitor);
         accept(visitor);
     }
@@ -93,14 +93,14 @@ public class DesignatorAssign extends DesignatorStatement {
             buffer.append(tab + "  null");
         buffer.append("\n");
 
-        if (DesignatorAssignMakeLeaf != null)
-            buffer.append(DesignatorAssignMakeLeaf.toString("  " + tab));
+        if (Assignop != null)
+            buffer.append(Assignop.toString("  " + tab));
         else
             buffer.append(tab + "  null");
         buffer.append("\n");
 
-        if (Assignop != null)
-            buffer.append(Assignop.toString("  " + tab));
+        if (MakeNewExpressionDAG != null)
+            buffer.append(MakeNewExpressionDAG.toString("  " + tab));
         else
             buffer.append(tab + "  null");
         buffer.append("\n");

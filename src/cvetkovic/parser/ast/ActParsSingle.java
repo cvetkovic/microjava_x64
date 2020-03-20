@@ -1,17 +1,28 @@
 // generated with ast extension for cup
 // version 0.8
-// 18/2/2020 17:24:49
+// 20/2/2020 20:30:18
 
 
 package cvetkovic.parser.ast;
 
 public class ActParsSingle extends ActPars {
 
+    private MakeNewExpressionDAG MakeNewExpressionDAG;
     private Expr Expr;
 
-    public ActParsSingle(Expr Expr) {
+    public ActParsSingle(MakeNewExpressionDAG MakeNewExpressionDAG, Expr Expr) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.setParent(this);
         this.Expr = Expr;
         if (Expr != null) Expr.setParent(this);
+    }
+
+    public MakeNewExpressionDAG getMakeNewExpressionDAG() {
+        return MakeNewExpressionDAG;
+    }
+
+    public void setMakeNewExpressionDAG(MakeNewExpressionDAG MakeNewExpressionDAG) {
+        this.MakeNewExpressionDAG = MakeNewExpressionDAG;
     }
 
     public Expr getExpr() {
@@ -27,15 +38,18 @@ public class ActParsSingle extends ActPars {
     }
 
     public void childrenAccept(Visitor visitor) {
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.accept(visitor);
         if (Expr != null) Expr.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseTopDown(visitor);
         if (Expr != null) Expr.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
+        if (MakeNewExpressionDAG != null) MakeNewExpressionDAG.traverseBottomUp(visitor);
         if (Expr != null) Expr.traverseBottomUp(visitor);
         accept(visitor);
     }
@@ -44,6 +58,12 @@ public class ActParsSingle extends ActPars {
         StringBuffer buffer = new StringBuffer();
         buffer.append(tab);
         buffer.append("ActParsSingle(\n");
+
+        if (MakeNewExpressionDAG != null)
+            buffer.append(MakeNewExpressionDAG.toString("  " + tab));
+        else
+            buffer.append(tab + "  null");
+        buffer.append("\n");
 
         if (Expr != null)
             buffer.append(Expr.toString("  " + tab));

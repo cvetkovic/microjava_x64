@@ -152,7 +152,7 @@ non terminal DesignatorInvokeMethodName DesignatorInvokeMethodName;
 nonterminal DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd;
 
 // for expression DAG
-non terminal DesignatorAssignMakeLeaf DesignatorAssignMakeLeaf;
+non terminal MakeNewExpressionDAG MakeNewExpressionDAG;
 
 // {} - zero or more
 // [] - optional
@@ -330,7 +330,7 @@ Statement ::= (StatementDesignator) DesignatorStatement:D1 DELIMITER {: RESULT=n
 			  (ContinueStatement) CONTINUE:continueSt DELIMITER {: RESULT=new ContinueStatement(); :} |
 			  (ReturnStatementt) RETURN ReturnStatement:R1 DELIMITER {: RESULT=new ReturnStatementt(R1); RESULT.setLine(R1left); :} |
 			  (ReadStatement) READ LEFT_ROUND_BRACKET Designator:D1 RIGHT_ROUND_BRACKET DELIMITER {: RESULT=new ReadStatement(D1); RESULT.setLine(D1left); :} |
-			  (PrintStatement) PRINT LEFT_ROUND_BRACKET Expr:E1 MultiplePrint:M2 RIGHT_ROUND_BRACKET DELIMITER {: RESULT=new PrintStatement(E1, M2); RESULT.setLine(E1left); :} |
+			  (PrintStatement) PRINT LEFT_ROUND_BRACKET MakeNewExpressionDAG:M1 Expr:E2 RIGHT_ROUND_BRACKET DELIMITER {: RESULT=new PrintStatement(M1, E2); RESULT.setLine(M1left); :} |
 			  (MultipleStatementt) LEFT_CURLY_BRACKET MultipleStatement:M1 RIGHT_CURLY_BRACKET {: RESULT=new MultipleStatementt(M1); RESULT.setLine(M1left); :} |
 			  (ErrorStatement) error:e {: parser.report_error("Recovered from invalid statement error.", null); :} {: RESULT=new ErrorStatement(); :};
 
@@ -370,7 +370,7 @@ ForUpdateVarList ::= (SingleForUpdateVarList) DesignatorStatement:D1 {: RESULT=n
 // added because of non-conditional jump
 EndOfForStatement ::= (EndOfForStatement) {: RESULT=new EndOfForStatement(); :} /* epsilon */;
 
-ReturnStatement ::= (ExprReturnStatement) Expr:E1 {: RESULT=new ExprReturnStatement(E1); RESULT.setLine(E1left); :} |
+ReturnStatement ::= (ExprReturnStatement) MakeNewExpressionDAG:M1 Expr:E2 {: RESULT=new ExprReturnStatement(M1, E2); RESULT.setLine(M1left); :} |
 					(BlankReturnStatement) {: RESULT=new BlankReturnStatement(); :} /* epsilon */;
 			   
 MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst {: RESULT=new MultiplePrintSt(multiplePrintConst); RESULT.setLine(multiplePrintConstleft); :} |
@@ -383,12 +383,12 @@ MultipleStatement ::= (MultipleStatements) MultipleStatement:M1 Statement:S2 {: 
 // designator statement
 //////////////////////////////////////////////
 
-DesignatorStatement ::= (DesignatorAssign) Designator:D1 DesignatorAssignMakeLeaf:D2 Assignop:A3 Expr:E4 {: RESULT=new DesignatorAssign(D1, D2, A3, E4); RESULT.setLine(D1left); :} |
+DesignatorStatement ::= (DesignatorAssign) Designator:D1 Assignop:A2 MakeNewExpressionDAG:M3 Expr:E4 {: RESULT=new DesignatorAssign(D1, A2, M3, E4); RESULT.setLine(D1left); :} |
 						(DesignatorInvoke) Designator:D1 LEFT_ROUND_BRACKET DesignatorParams:D2 RIGHT_ROUND_BRACKET {: RESULT=new DesignatorInvoke(D1, D2); RESULT.setLine(D1left); :} |
 						(DesignatorIncrement) Designator:D1 INCREMENT {: RESULT=new DesignatorIncrement(D1); RESULT.setLine(D1left); :} |
 						(DesignatorDecrement) Designator:D1 DECREMENT {: RESULT=new DesignatorDecrement(D1); RESULT.setLine(D1left); :};
 
-DesignatorAssignMakeLeaf ::= (DesignatorAssignMakeLeaf) {: RESULT=new DesignatorAssignMakeLeaf(); :} /* epsilon */;
+MakeNewExpressionDAG ::= (MakeNewExpressionDAG) {: RESULT=new MakeNewExpressionDAG(); :} /* epsilon */;
 
 DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) {: RESULT=new DesignatorInvokeMethodName(); :} /* epsilon */;
 DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) {: RESULT=new DesignatorInvokeMethodNameEnd(); :} /* epsilon */;
@@ -400,8 +400,8 @@ DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName
 // method call parameters
 //////////////////////////////////////////////
 
-ActPars ::= (ActParsSingle) Expr:E1 {: RESULT=new ActParsSingle(E1); RESULT.setLine(E1left); :} |
-            (ActParsMultiple) Expr:E1 COMMA ActPars:A2 {: RESULT=new ActParsMultiple(E1, A2); RESULT.setLine(E1left); :};
+ActPars ::= (ActParsSingle) MakeNewExpressionDAG:M1 Expr:E2 {: RESULT=new ActParsSingle(M1, E2); RESULT.setLine(M1left); :} |
+            (ActParsMultiple) MakeNewExpressionDAG:M1 Expr:E2 COMMA ActPars:A3 {: RESULT=new ActParsMultiple(M1, E2, A3); RESULT.setLine(M1left); :};
 
 //////////////////////////////////////////////
 // condition calculation
@@ -419,8 +419,8 @@ CondTerm ::= (CondTerm) CondFact:C1 CondTermRight:C2 {: RESULT=new CondTerm(C1, 
 CondTermRight ::= (CondTermRightt) CondTermRight:C1 LOGICAL_AND CondFact:C2 {: RESULT=new CondTermRightt(C1, C2); RESULT.setLine(C1left); :} |
 				 (NoCondTermRight) {: RESULT=new NoCondTermRight(); :} /* epsilon */;
 
-CondFact ::= (CondFactUnary) Expr:E1 {: RESULT=new CondFactUnary(E1); RESULT.setLine(E1left); :} |
-             (CondFactBinary) Expr:ExprLeft Relop:R1 Expr:ExprRight {: RESULT=new CondFactBinary(ExprLeft, R1, ExprRight); RESULT.setLine(ExprLeftleft); :};
+CondFact ::= (CondFactUnary) MakeNewExpressionDAG:M1 Expr:E2 {: RESULT=new CondFactUnary(M1, E2); RESULT.setLine(M1left); :} |
+             (CondFactBinary) MakeNewExpressionDAG:M1 Expr:ExprLeft Relop:R2 MakeNewExpressionDAG:M3 Expr:ExprRight {: RESULT=new CondFactBinary(M1, ExprLeft, R2, M3, ExprRight); RESULT.setLine(M1left); :};
 
 //////////////////////////////////////////////
 // expression
@@ -456,7 +456,7 @@ FactorFunctionCallParameters ::= (FactorFunctionCallParameter) LEFT_ROUND_BRACKE
 FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName:D1 ActPars:A2 DesignatorInvokeMethodNameEnd:D3 {: RESULT=new FactorFunctionCallParameterSingle(D1, A2, D3); RESULT.setLine(D1left); :} |
 									   (NoFactorFunctionCallParameterSingle) {: RESULT=new NoFactorFunctionCallParameterSingle(); :} /* epsilon */;
 
-FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET Expr:E1 RIGHT_SQUARE_BRACKET {: RESULT=new ArrayDeclaration(E1); RESULT.setLine(E1left); :} |
+FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET MakeNewExpressionDAG:M1 Expr:E2 RIGHT_SQUARE_BRACKET {: RESULT=new ArrayDeclaration(M1, E2); RESULT.setLine(M1left); :} |
 					(NoArrayDeclaration) {: RESULT=new NoArrayDeclaration(); :} /* epsilon */;
 
 //////////////////////////////////////////////
@@ -464,7 +464,7 @@ FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET Expr:E1 RIGHT_SQUARE_
 //////////////////////////////////////////////
 
 Designator ::= (DesignatorRoot) IDENT:designatorNameSingle {: RESULT=new DesignatorRoot(designatorNameSingle); RESULT.setLine(designatorNameSingleleft); :} |
-               (DesignatorArrayAccess) Designator:D1 LEFT_SQUARE_BRACKET Expr:designatorArrayIndex RIGHT_SQUARE_BRACKET {: RESULT=new DesignatorArrayAccess(D1, designatorArrayIndex); RESULT.setLine(D1left); :} |
+               (DesignatorArrayAccess) Designator:D1 LEFT_SQUARE_BRACKET MakeNewExpressionDAG:M2 Expr:designatorArrayIndex RIGHT_SQUARE_BRACKET {: RESULT=new DesignatorArrayAccess(D1, M2, designatorArrayIndex); RESULT.setLine(D1left); :} |
                (DesignatorNonArrayAccess) Designator:D1 DOT IDENT:designatorName {: RESULT=new DesignatorNonArrayAccess(D1, designatorName); RESULT.setLine(D1left); :};
 
 //////////////////////////////////////////////

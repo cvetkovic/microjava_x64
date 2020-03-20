@@ -169,10 +169,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         CharacterConst.struct = SymbolTable.charType;
     }
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // TERM
-    //////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public void visit(NumericalConst NumericalConst) {
         NumericalConst.struct = SymbolTable.intType;
@@ -767,7 +763,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(CondFactBinary CondFactBinary) {
         Struct left = CondFactBinary.getExpr().struct;
         Relop op = CondFactBinary.getRelop();
-        Struct right = CondFactBinary.getExpr1().struct;
+        Struct right = CondFactBinary.getExpr2().struct;
 
         if (left == null || right == null)
             return;

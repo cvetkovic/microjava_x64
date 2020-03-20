@@ -149,4 +149,12 @@ public class Obj {
     public void accept(SymbolTableVisitor stv) {
         stv.visitObjNode(this);
     }
+
+    @Override
+    public String toString() {
+        if (kind == Con)
+            return Integer.toString(adr);
+        else
+            return name;
+    }
 }
