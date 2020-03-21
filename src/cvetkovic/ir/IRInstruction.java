@@ -20,7 +20,7 @@ public enum IRInstruction {
 
     MALLOC,  // heap memory allocation
 
-    PARAMETER,      // push parameter
+    PARAM,      // push parameter
     CALL,           // function invocation
     RETURN,         // return from function
 

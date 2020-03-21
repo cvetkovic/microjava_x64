@@ -23,41 +23,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private ExpressionDAG currentExpressionDAG;
     private Stack<ExpressionNode> expressionNodeStack = new Stack<>();
 
-    @Override
-    public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
-        // make a new DAG
-        currentExpressionDAG = new ExpressionDAG();
-
-
-        if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof PrintStatement) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
-            Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
-            expressionNodeStack.push(currentExpressionDAG.getOrCreateLeaf(destination));
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ActParsMultiple) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof CondFactUnary) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof CondFactBinary) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ArrayDeclaration) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
-
-        }
-    }
+    private Stack<ParameterContainer> reverseParameterStack = new Stack<>();
 
     @Override
     public void visit(DesignatorAssign DesignatorAssign) {
@@ -184,7 +150,48 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     @Override
+    public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
+        // make a new DAG
+        currentExpressionDAG = new ExpressionDAG();
+
+        if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
+
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof PrintStatement) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
+            Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
+            expressionNodeStack.push(currentExpressionDAG.getOrCreateLeaf(destination));
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof ActParsMultiple) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof CondFactUnary) {
+
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof CondFactBinary) {
+
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof ArrayDeclaration) {
+
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
+
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // ACTUAL PARAMETERS
+    //////////////////////////////////////////////////////////////////////////////////
+
+    @Override
     public void visit(PrintStatement PrintStatement) {
+        code.addAll(currentExpressionDAG.emitQuadruples());
+
         Quadruple instruction = new Quadruple(IRInstruction.PRINTF);
 
         Struct targetStruct = PrintStatement.getExpr().struct;
@@ -200,6 +207,46 @@ public class IRCodeGenerator extends VisitorAdaptor {
         code.add(instruction);
     }
 
+    private void resolveActualParameters() {
+        ParameterContainer container = new ParameterContainer();
+
+        container.instructions.addAll(currentExpressionDAG.emitQuadruples());
+
+        Quadruple instruction = new Quadruple(IRInstruction.PARAM);
+        instruction.setArg1(new QuadrupleObjVar(currentExpressionDAG.getRootObj()));
+
+        container.instructions.add(instruction);
+        reverseParameterStack.push(container);
+    }
+
+    @Override
+    public void visit(ConcludeCurrentParameter ConcludeCurrentParameter) {
+        resolveActualParameters();
+    }
+
+    @Override
+    public void visit(ActParsSingle ActParsSingle) {
+        resolveActualParameters();
+    }
+
+    @Override
+    public void visit(ActParsStart ActParsStart) {
+        reverseParameterStack = new Stack<>();
+    }
+
+    @Override
+    public void visit(ActParsEnd ActParsEnd) {
+        while (!reverseParameterStack.empty())
+            code.addAll(reverseParameterStack.pop().instructions);
+    }
+
+    private static class ParameterContainer {
+        public List<Quadruple> instructions = new ArrayList<>();
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // DEBUG PURPOSE - FOR NOW
+    //////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void visit(Program Program) {

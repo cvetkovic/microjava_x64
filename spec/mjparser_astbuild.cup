@@ -154,6 +154,10 @@ nonterminal DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd;
 // for expression DAG
 non terminal MakeNewExpressionDAG MakeNewExpressionDAG;
 
+non terminal ConcludeCurrentParameter ConcludeCurrentParameter;
+non terminal ActParsStart ActParsStart;
+non terminal ActParsEnd ActParsEnd;
+
 // {} - zero or more
 // [] - optional
 // () - once
@@ -393,15 +397,20 @@ MakeNewExpressionDAG ::= (MakeNewExpressionDAG) {: RESULT=new MakeNewExpressionD
 DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) {: RESULT=new DesignatorInvokeMethodName(); :} /* epsilon */;
 DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) {: RESULT=new DesignatorInvokeMethodNameEnd(); :} /* epsilon */;
 
-DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName:D1 ActPars:A2 DesignatorInvokeMethodNameEnd:D3 {: RESULT=new DesignatorMethodCallParameters(D1, A2, D3); RESULT.setLine(D1left); :} |
+DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName:D1 ActParsStart:A2 ActPars:A3 ActParsEnd:A4 DesignatorInvokeMethodNameEnd:D5 {: RESULT=new DesignatorMethodCallParameters(D1, A2, A3, A4, D5); RESULT.setLine(D1left); :} |
 					 (NoDesignatorMethodCallParameters) {: RESULT=new NoDesignatorMethodCallParameters(); :} /* epsilon */;
 
 //////////////////////////////////////////////
 // method call parameters
 //////////////////////////////////////////////
 
+ActParsStart ::= (ActParsStart) {: RESULT=new ActParsStart(); :} /* epsilon */;
+ActParsEnd ::= (ActParsEnd) {: RESULT=new ActParsEnd(); :} /* epsilon */;
+
 ActPars ::= (ActParsSingle) MakeNewExpressionDAG:M1 Expr:E2 {: RESULT=new ActParsSingle(M1, E2); RESULT.setLine(M1left); :} |
-            (ActParsMultiple) MakeNewExpressionDAG:M1 Expr:E2 COMMA ActPars:A3 {: RESULT=new ActParsMultiple(M1, E2, A3); RESULT.setLine(M1left); :};
+            (ActParsMultiple) MakeNewExpressionDAG:M1 Expr:E2 ConcludeCurrentParameter:C3 COMMA ActPars:A4 {: RESULT=new ActParsMultiple(M1, E2, C3, A4); RESULT.setLine(M1left); :};
+
+ConcludeCurrentParameter ::= (ConcludeCurrentParameter) {: RESULT=new ConcludeCurrentParameter(); :} /* epsilon */;
 
 //////////////////////////////////////////////
 // condition calculation
@@ -453,7 +462,7 @@ Factor ::= (FactorFunctionCall) Designator:D1 FactorFunctionCallParameters:F2 {:
 FactorFunctionCallParameters ::= (FactorFunctionCallParameter) LEFT_ROUND_BRACKET FactorFunctionCallParametersSingle:F1 RIGHT_ROUND_BRACKET {: RESULT=new FactorFunctionCallParameter(F1); RESULT.setLine(F1left); :} |
 								 (NoFactorFunctionCallParameter) {: RESULT=new NoFactorFunctionCallParameter(); :} /* epsilon */;
 
-FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName:D1 ActPars:A2 DesignatorInvokeMethodNameEnd:D3 {: RESULT=new FactorFunctionCallParameterSingle(D1, A2, D3); RESULT.setLine(D1left); :} |
+FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName:D1 ActParsStart:A2 ActPars:A3 ActParsEnd:A4 DesignatorInvokeMethodNameEnd:D5 {: RESULT=new FactorFunctionCallParameterSingle(D1, A2, A3, A4, D5); RESULT.setLine(D1left); :} |
 									   (NoFactorFunctionCallParameterSingle) {: RESULT=new NoFactorFunctionCallParameterSingle(); :} /* epsilon */;
 
 FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET MakeNewExpressionDAG:M1 Expr:E2 RIGHT_SQUARE_BRACKET {: RESULT=new ArrayDeclaration(M1, E2); RESULT.setLine(M1left); :} |

@@ -122,6 +122,14 @@ public class ExpressionDAG {
     }
 
     public Obj getRootObj() {
-        return null;
+        if (rootNode == null) {
+            ExpressionNode node = arrayOfRecords.get(arrayOfRecords.size() - 1);
+            if (node.isLeaf())
+                return node.variable;
+            else
+                return node.destinationVariable;
+        }
+        else
+            return rootNode.destinationVariable;
     }
 }

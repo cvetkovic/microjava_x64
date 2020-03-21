@@ -111,6 +111,10 @@ non terminal DesignatorInvokeMethodName, DesignatorInvokeMethodNameEnd;
 // for expression DAG
 non terminal MakeNewExpressionDAG;
 
+non terminal ConcludeCurrentParameter;
+non terminal ActParsStart;
+non terminal ActParsEnd;
+
 // {} - zero or more
 // [] - optional
 // () - once
@@ -350,15 +354,20 @@ MakeNewExpressionDAG ::= (MakeNewExpressionDAG) /* epsilon */;
 DesignatorInvokeMethodName ::= (DesignatorInvokeMethodName) /* epsilon */;
 DesignatorInvokeMethodNameEnd ::= (DesignatorInvokeMethodNameEnd) /* epsilon */;
 
-DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName ActPars DesignatorInvokeMethodNameEnd |
+DesignatorParams ::= (DesignatorMethodCallParameters) DesignatorInvokeMethodName ActParsStart ActPars ActParsEnd DesignatorInvokeMethodNameEnd |
 					 (NoDesignatorMethodCallParameters) /* epsilon */;
 
 //////////////////////////////////////////////
 // method call parameters
 //////////////////////////////////////////////
 
+ActParsStart ::= (ActParsStart) /* epsilon */;
+ActParsEnd ::= (ActParsEnd) /* epsilon */;
+
 ActPars ::= (ActParsSingle) MakeNewExpressionDAG Expr |
-            (ActParsMultiple) MakeNewExpressionDAG Expr COMMA ActPars;
+            (ActParsMultiple) MakeNewExpressionDAG Expr ConcludeCurrentParameter COMMA ActPars;
+
+ConcludeCurrentParameter ::= (ConcludeCurrentParameter) /* epsilon */;
 
 //////////////////////////////////////////////
 // condition calculation
@@ -410,7 +419,7 @@ Factor ::= (FactorFunctionCall) Designator FactorFunctionCallParameters |
 FactorFunctionCallParameters ::= (FactorFunctionCallParameter) LEFT_ROUND_BRACKET FactorFunctionCallParametersSingle RIGHT_ROUND_BRACKET |
 								 (NoFactorFunctionCallParameter) /* epsilon */;
 
-FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName ActPars DesignatorInvokeMethodNameEnd |
+FactorFunctionCallParametersSingle ::= (FactorFunctionCallParameterSingle) DesignatorInvokeMethodName ActParsStart ActPars ActParsEnd DesignatorInvokeMethodNameEnd |
 									   (NoFactorFunctionCallParameterSingle) /* epsilon */;
 
 FactorArrayDecl ::= (ArrayDeclaration) LEFT_SQUARE_BRACKET MakeNewExpressionDAG Expr RIGHT_SQUARE_BRACKET |
