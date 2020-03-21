@@ -20,10 +20,14 @@ import java.util.Stack;
 public class IRCodeGenerator extends VisitorAdaptor {
     private List<Quadruple> code = new ArrayList<>();
 
-    private ExpressionDAG currentExpressionDAG;
+    private ExpressionDAG expressionDAG;
     private Stack<ExpressionNode> expressionNodeStack = new Stack<>();
 
     private Stack<ParameterContainer> reverseParameterStack = new Stack<>();
+
+    public IRCodeGenerator() {
+        expressionDAG = new ExpressionDAG();
+    }
 
     @Override
     public void visit(DesignatorAssign DesignatorAssign) {
@@ -34,37 +38,37 @@ public class IRCodeGenerator extends VisitorAdaptor {
         {
             allocateArray = false;
 
-            code.addAll(currentExpressionDAG.emitQuadruples());
+            code.addAll(expressionDAG.emitQuadruples());
 
             Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
-            instruction.setArg1(new QuadrupleObjVar(currentExpressionDAG.getRootObj()));
+            instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
             instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
 
             code.add(instruction);
         }
         else {
-            currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
+            expressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
 
-            code.addAll(currentExpressionDAG.emitQuadruples());
+            code.addAll(expressionDAG.emitQuadruples());
         }
 
-        System.out.println(currentExpressionDAG);
+        System.out.println(expressionDAG);
     }
 
     @Override
     public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
+        ExpressionNode rightChild = expressionNodeStack.pop();
+        ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
+
+        expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
 
 
-        /*ExpressionNode rightChild = expressionNodeStack.pop();
-        ExpressionNode leftChild = currentExpressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
-
-        expressionNodeStack.push(currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));*/
     }
 
     @Override
     public void visit(UnaryExpression UnaryExpression) {
         if (UnaryExpression.getExprNegative() instanceof ExpressionNegative)
-            expressionNodeStack.push(currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.UNARY_MINUS, expressionNodeStack.pop()));
+            expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.UNARY_MINUS, expressionNodeStack.pop()));
     }
 
     @Override
@@ -73,7 +77,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode rightChild = expressionNodeStack.pop();
         ExpressionNode leftChild = expressionNodeStack.pop();
 
-        expressionNodeStack.push(currentExpressionDAG.getOrCreateNode(operation, leftChild, rightChild));
+        expressionNodeStack.push(expressionDAG.getOrCreateNode(operation, leftChild, rightChild));
     }
 
     @Override
@@ -89,16 +93,19 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode rightChild = expressionNodeStack.pop();
         ExpressionNode leftChild = expressionNodeStack.pop();
 
-        expressionNodeStack.push(currentExpressionDAG.getOrCreateNode(operation, leftChild, rightChild));
+        expressionNodeStack.push(expressionDAG.getOrCreateNode(operation, leftChild, rightChild));
     }
 
     @Override
     public void visit(FactorFunctionCall FactorFunctionCall) {
+        if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
+            return;
+
         // not a function call but variable access
         if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
             Obj var = FactorFunctionCall.getDesignator().obj;
 
-            expressionNodeStack.push(currentExpressionDAG.getOrCreateLeaf(var));
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
         }
     }
 
@@ -107,7 +114,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Obj constValue = new Obj(Obj.Con, "", SymbolTable.intType);
         constValue.setAdr(FactorNumericalConst.getFactorNumConst());
 
-        expressionNodeStack.push(currentExpressionDAG.getOrCreateLeaf(constValue));
+        expressionNodeStack.push(expressionDAG.getOrCreateLeaf(constValue));
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +193,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
         // make a new DAG
-        currentExpressionDAG = new ExpressionDAG();
+        //expressionDAGStack.push(new ExpressionDAG());
 
         if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
 
@@ -196,7 +203,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
         else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
             Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
-            expressionNodeStack.push(currentExpressionDAG.getOrCreateLeaf(destination));
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
         }
         else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
             /* no need for action here */
@@ -224,7 +231,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(PrintStatement PrintStatement) {
-        code.addAll(currentExpressionDAG.emitQuadruples());
+        code.addAll(expressionDAG.emitQuadruples());
 
         Quadruple instruction = new Quadruple(IRInstruction.PRINTF);
 
@@ -236,7 +243,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         else
             throw new RuntimeException("IR instruction 'printf' not supported with other data types than integer or character types.");
 
-        instruction.setArg2(new QuadrupleObjVar(currentExpressionDAG.getRootObj()));
+        instruction.setArg2(new QuadrupleObjVar(expressionDAG.getRootObj()));
 
         code.add(instruction);
     }
@@ -244,10 +251,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private void resolveActualParameters() {
         ParameterContainer container = new ParameterContainer();
 
-        container.instructions.addAll(currentExpressionDAG.emitQuadruples());
+        container.instructions.addAll(expressionDAG.emitQuadruples());
 
         Quadruple instruction = new Quadruple(IRInstruction.PARAM);
-        instruction.setArg1(new QuadrupleObjVar(currentExpressionDAG.getRootObj()));
+        instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
 
         container.instructions.add(instruction);
         reverseParameterStack.push(container);
