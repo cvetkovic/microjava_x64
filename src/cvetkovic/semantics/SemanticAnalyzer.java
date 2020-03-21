@@ -324,7 +324,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         else if (DesignatorArrayAccess.getExpr().struct != SymbolTable.intType)
             throwError(DesignatorArrayAccess.getLine(), "Indexer of '" + parentName + "' has to be of type integer.");
         else
-            DesignatorArrayAccess.obj = new Obj(Obj.Elem, "ArrayAccess", DesignatorArrayAccess.getDesignator().obj.getType().getElemType());
+            DesignatorArrayAccess.obj = new Obj(Obj.Elem, "ArrayAccess_" + DesignatorArrayAccess.getDesignator().obj.getName(), DesignatorArrayAccess.getDesignator().obj.getType().getElemType());
     }
 
     //////////////////////////////////////////////////////////////////////////////////
