@@ -15,6 +15,9 @@ public class QuadrupleObjVar extends QuadrupleVariable {
 
     @Override
     public String toString() {
-        return obj.toString();
+        if (obj.getName().startsWith("ArrayAccess_"))
+            return obj.getName().substring(12);
+        else
+            return obj.toString();
     }
 }
