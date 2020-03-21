@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 20/2/2020 20:30:18
+// 21/2/2020 13:38:34
 
 
 package cvetkovic.parser.ast;
@@ -105,17 +105,35 @@ public interface Visitor {
     void visit(UnaryExpression UnaryExpression);
     void visit(CondFactBinary CondFactBinary);
     void visit(CondFactUnary CondFactUnary);
+
     void visit(NoCondTermRight NoCondTermRight);
+
     void visit(CondTermRightt CondTermRightt);
+
     void visit(CondTerm CondTerm);
+
     void visit(LogicalOrCondition LogicalOrCondition);
+
     void visit(NoConditionRight NoConditionRight);
+
     void visit(ConditionRightt ConditionRightt);
+
     void visit(Condition Condition);
+
+    void visit(ConcludeCurrentParameter ConcludeCurrentParameter);
+
     void visit(ActParsMultiple ActParsMultiple);
+
     void visit(ActParsSingle ActParsSingle);
+
+    void visit(ActParsEnd ActParsEnd);
+
+    void visit(ActParsStart ActParsStart);
+
     void visit(NoDesignatorMethodCallParameters NoDesignatorMethodCallParameters);
+
     void visit(DesignatorMethodCallParameters DesignatorMethodCallParameters);
+
     void visit(DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd);
 
     void visit(DesignatorInvokeMethodName DesignatorInvokeMethodName);
@@ -123,9 +141,13 @@ public interface Visitor {
     void visit(MakeNewExpressionDAG MakeNewExpressionDAG);
 
     void visit(DesignatorDecrement DesignatorDecrement);
+
     void visit(DesignatorIncrement DesignatorIncrement);
+
     void visit(DesignatorInvoke DesignatorInvoke);
+
     void visit(DesignatorAssign DesignatorAssign);
+
     void visit(NoMultipleStatement NoMultipleStatement);
     void visit(MultipleStatements MultipleStatements);
     void visit(NoMultiplePrint NoMultiplePrint);
