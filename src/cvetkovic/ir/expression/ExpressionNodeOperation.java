@@ -9,6 +9,9 @@ public enum ExpressionNodeOperation {
     MODULO,
     ASSIGNMENT,
 
+    ARRAY_LOAD,
+    ARRAY_STORE,
+
     // unary operators
     UNARY_MINUS,
 

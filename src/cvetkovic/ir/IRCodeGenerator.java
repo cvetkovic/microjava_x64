@@ -30,19 +30,41 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode src = expressionNodeStack.pop();
         ExpressionNode dest = expressionNodeStack.pop();
 
-        currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
+        if (allocateArray)
+        {
+            allocateArray = false;
 
-        code.addAll(currentExpressionDAG.emitQuadruples());
+            code.addAll(currentExpressionDAG.emitQuadruples());
+
+            Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
+            instruction.setArg1(new QuadrupleObjVar(currentExpressionDAG.getRootObj()));
+            instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
+
+            code.add(instruction);
+        }
+        else {
+            currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
+
+            code.addAll(currentExpressionDAG.emitQuadruples());
+        }
+
         System.out.println(currentExpressionDAG);
+    }
+
+    @Override
+    public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
+
+
+        /*ExpressionNode rightChild = expressionNodeStack.pop();
+        ExpressionNode leftChild = currentExpressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
+
+        expressionNodeStack.push(currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));*/
     }
 
     @Override
     public void visit(UnaryExpression UnaryExpression) {
         if (UnaryExpression.getExprNegative() instanceof ExpressionNegative)
             expressionNodeStack.push(currentExpressionDAG.getOrCreateNode(ExpressionNodeOperation.UNARY_MINUS, expressionNodeStack.pop()));
-
-        /*else
-            UnaryExpression.struct.setExpressionNode(currentExpressionDAG.getOrCreateLeaf(UnaryExpression.getTerm().struct.getExpressionNode()));*/
     }
 
     @Override
@@ -128,6 +150,18 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     //////////////////////////////////////////////////////////////////////////////////
+    // ARRAYS
+    //////////////////////////////////////////////////////////////////////////////////
+
+    private boolean allocateArray = false;
+
+    @Override
+    public void visit(FactorArrayDeclaration FactorArrayDeclaration) {
+        // 'malloc' will be done in 'Designator' visitor
+        allocateArray = true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
     // INPUT / OUTPUT
     //////////////////////////////////////////////////////////////////////////////////
 
@@ -177,7 +211,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         }
         else if (MakeNewExpressionDAG.getParent() instanceof ArrayDeclaration) {
-
+            /* no need for action here */
         }
         else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
 

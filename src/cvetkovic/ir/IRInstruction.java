@@ -20,12 +20,12 @@ public enum IRInstruction {
 
     MALLOC,  // heap memory allocation
 
-    PARAM,      // push parameter
+    PARAM,          // push parameter
     CALL,           // function invocation
     RETURN,         // return from function
 
-    ARRAY_LOAD,     // array laod
-    ARRAY_STORE,    // array store
+    ALOAD,     // array laod
+    ASTORE,    // array store
 
     JMP,    // jump unconditionally
     JL,     // jump if less
@@ -33,7 +33,7 @@ public enum IRInstruction {
     JG,     // jump if greater
     JGE,    // jump if greater or equal
     JE,     // jump if equal
-    JNE;     // jump if not equal
+    JNE;    // jump if not equal
 
     public static IRInstruction dagToQuadrupleInstruction(ExpressionNodeOperation operation) {
         switch (operation) {
@@ -47,6 +47,9 @@ public enum IRInstruction {
                 return DIV;
             case MODULO:
                 return REM;
+
+            case ARRAY_LOAD:
+                return ALOAD;
 
             case ASSIGNMENT:
                 return COPY;

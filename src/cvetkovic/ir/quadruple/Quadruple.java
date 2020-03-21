@@ -57,15 +57,18 @@ public class Quadruple {
         StringBuilder builder = new StringBuilder();
 
         builder.append(instruction);
-        builder.append(" ");
-        if (arg1 != null)
+        if (arg1 != null) {
+            builder.append(" ");
             builder.append(arg1);
-        builder.append(" ");
-        if (arg2 != null)
+        }
+        if (arg2 != null) {
+            builder.append(" ");
             builder.append(arg2);
-        builder.append(" ");
-        if (result != null)
+        }
+        if (result != null) {
+            builder.append(" ");
             builder.append(result);
+        }
 
         return builder.toString();
     }

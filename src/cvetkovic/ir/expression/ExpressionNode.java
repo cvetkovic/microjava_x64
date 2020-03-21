@@ -101,8 +101,12 @@ public class ExpressionNode {
 
         if (isLeaf()) {
             builder.append(", ");
-            if (variable.getKind() != Obj.Con)
-                builder.append(variable.getName());
+            if (variable.getKind() != Obj.Con) {
+                if (variable.getName().startsWith("ArrayAccess_"))
+                    builder.append(variable.getName().substring(12));
+                else
+                    builder.append(variable.getName());
+            }
             else
                 builder.append(variable.getAdr());
 
@@ -132,6 +136,9 @@ public class ExpressionNode {
                     break;
                 case ASSIGNMENT:
                     builder.append(", =");
+                    break;
+                case ARRAY_LOAD:
+                    builder.append(", =[]");
                     break;
             }
 
