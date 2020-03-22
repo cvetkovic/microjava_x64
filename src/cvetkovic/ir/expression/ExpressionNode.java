@@ -140,6 +140,9 @@ public class ExpressionNode {
                 case ARRAY_LOAD:
                     builder.append(", =[]");
                     break;
+                case ARRAY_STORE:
+                    builder.append(", []=");
+                    break;
             }
 
             builder.append(", ");

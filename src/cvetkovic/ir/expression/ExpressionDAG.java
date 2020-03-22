@@ -84,7 +84,13 @@ public class ExpressionDAG {
                 Quadruple instruction = new Quadruple(irInstruction);
 
                 if (node.operation == ExpressionNodeOperation.ASSIGNMENT) {
-                    instruction.setResult(new QuadrupleObjVar(node.getLeftChild().variable));
+                    Obj resultVar;
+                    if (node.getLeftChild().isInnerNode())
+                        resultVar = node.getLeftChild().destinationVariable;
+                    else
+                        resultVar = node.getLeftChild().variable;
+
+                    instruction.setResult(new QuadrupleObjVar(resultVar));
 
                     ExpressionNode arg1 = node.getRightChild();
                     if (arg1.isLeaf())
@@ -117,6 +123,12 @@ public class ExpressionDAG {
                 result.add(instruction);
             }
         }
+
+        /*arrayOfRecords.clear();
+        accessByReference.clear();
+        accessByIndex.clear();
+        rootNode = null;
+        ExpressionNode.resetId();*/
 
         return result;
     }
