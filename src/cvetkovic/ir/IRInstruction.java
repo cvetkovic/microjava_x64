@@ -50,6 +50,8 @@ public enum IRInstruction {
 
             case ARRAY_LOAD:
                 return ALOAD;
+            case ARRAY_STORE:
+                return ASTORE;
 
             case ASSIGNMENT:
                 return COPY;

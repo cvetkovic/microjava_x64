@@ -34,8 +34,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode src = expressionNodeStack.pop();
         ExpressionNode dest = expressionNodeStack.pop();
 
-        if (allocateArray)
-        {
+        System.out.println(expressionDAG);
+
+        if (allocateArray) {
             allocateArray = false;
 
             code.addAll(expressionDAG.emitQuadruples());
@@ -52,7 +53,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.addAll(expressionDAG.emitQuadruples());
         }
 
-        System.out.println(expressionDAG);
+        expressionDAG = new ExpressionDAG();
     }
 
     @Override
@@ -60,9 +61,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode rightChild = expressionNodeStack.pop();
         ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
 
-        expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
-
-
+        if (DesignatorArrayAccess.getParent() instanceof DesignatorAssign)
+            // this means that array access is on the left side of '=' operator
+            expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_STORE, leftChild, rightChild));
+        else
+            expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
     }
 
     @Override
@@ -156,6 +159,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
         code.add(instruction);
     }
 
+    @Override
+    public void visit(ExprReturnStatement ExprReturnStatement) {
+        Quadruple instruction = new Quadruple(IRInstruction.RETURN);
+
+        code.addAll(expressionDAG.emitQuadruples());
+        instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
+
+        code.add(instruction);
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     // ARRAYS
     //////////////////////////////////////////////////////////////////////////////////
@@ -202,6 +215,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
             /* no need for action here */
         }
         else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
+            if (((DesignatorAssign)MakeNewExpressionDAG.getParent()).getDesignator() instanceof DesignatorArrayAccess)
+                return;
+
             Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
         }
