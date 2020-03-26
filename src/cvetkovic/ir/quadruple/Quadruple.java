@@ -3,10 +3,10 @@ package cvetkovic.ir.quadruple;
 import cvetkovic.ir.IRInstruction;
 
 public class Quadruple {
-    private IRInstruction instruction;
-    private QuadrupleVariable arg1;
-    private QuadrupleVariable arg2;
-    private QuadrupleVariable result;
+    protected IRInstruction instruction;
+    protected QuadrupleVariable arg1;
+    protected QuadrupleVariable arg2;
+    protected QuadrupleVariable result;
 
     public Quadruple(IRInstruction instruction) {
         this.instruction = instruction;

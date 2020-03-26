@@ -1,6 +1,7 @@
 package cvetkovic.ir;
 
 import cvetkovic.ir.expression.ExpressionNodeOperation;
+import cvetkovic.parser.ast.*;
 
 public enum IRInstruction {
     ADD,    // addition
@@ -33,7 +34,9 @@ public enum IRInstruction {
     JG,     // jump if greater
     JGE,    // jump if greater or equal
     JE,     // jump if equal
-    JNE;    // jump if not equal
+    JNE,    // jump if not equal
+
+    GEN_LABEL;  // generate label
 
     public static IRInstruction dagToQuadrupleInstruction(ExpressionNodeOperation operation) {
         switch (operation) {
@@ -61,5 +64,42 @@ public enum IRInstruction {
             default:
                 throw new RuntimeException("Expression node operation cannot be mapped into an intermediate language instruction.");
         }
+    }
+
+    public static IRInstruction negateJumpInstruction(IRInstruction instruction) {
+        switch (instruction) {
+            case JE:
+                return JNE;
+            case JNE:
+                return JE;
+            case JL:
+                return JGE;
+            case JLE:
+                return JG;
+            case JG:
+                return JLE;
+            case JGE:
+                return JL;
+
+            default:
+                throw new RuntimeException("Provided argument is not a jump instruction and cannot be negated.");
+        }
+    }
+
+    public static IRInstruction determineJumpInstruction(Relop relop) {
+        if (relop instanceof OperatorEqual)
+            return IRInstruction.JE;
+        else if (relop instanceof OperatorNotEqual)
+            return IRInstruction.JNE;
+        else if (relop instanceof OperatorGreater)
+            return IRInstruction.JG;
+        else if (relop instanceof OperatorGreaterOrEqual)
+            return IRInstruction.JGE;
+        else if (relop instanceof OperatorLess)
+            return IRInstruction.JL;
+        else if (relop instanceof OperatorLessOrEqual)
+            return IRInstruction.JLE;
+
+        throw new RuntimeException("Not allowed relation operator.");
     }
 }
