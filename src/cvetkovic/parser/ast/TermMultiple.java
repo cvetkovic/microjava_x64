@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -11,13 +11,13 @@ public class TermMultiple extends Term {
     private Mulop Mulop;
     private Factor Factor;
 
-    public TermMultiple(Term Term, Mulop Mulop, Factor Factor) {
-        this.Term = Term;
-        if (Term != null) Term.setParent(this);
-        this.Mulop = Mulop;
-        if (Mulop != null) Mulop.setParent(this);
-        this.Factor = Factor;
-        if (Factor != null) Factor.setParent(this);
+    public TermMultiple (Term Term, Mulop Mulop, Factor Factor) {
+        this.Term=Term;
+        if(Term!=null) Term.setParent(this);
+        this.Mulop=Mulop;
+        if(Mulop!=null) Mulop.setParent(this);
+        this.Factor=Factor;
+        if(Factor!=null) Factor.setParent(this);
     }
 
     public Term getTerm() {
@@ -25,7 +25,7 @@ public class TermMultiple extends Term {
     }
 
     public void setTerm(Term Term) {
-        this.Term = Term;
+        this.Term=Term;
     }
 
     public Mulop getMulop() {
@@ -33,7 +33,7 @@ public class TermMultiple extends Term {
     }
 
     public void setMulop(Mulop Mulop) {
-        this.Mulop = Mulop;
+        this.Mulop=Mulop;
     }
 
     public Factor getFactor() {
@@ -41,7 +41,7 @@ public class TermMultiple extends Term {
     }
 
     public void setFactor(Factor Factor) {
-        this.Factor = Factor;
+        this.Factor=Factor;
     }
 
     public void accept(Visitor visitor) {
@@ -49,46 +49,46 @@ public class TermMultiple extends Term {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (Term != null) Term.accept(visitor);
-        if (Mulop != null) Mulop.accept(visitor);
-        if (Factor != null) Factor.accept(visitor);
+        if(Term!=null) Term.accept(visitor);
+        if(Mulop!=null) Mulop.accept(visitor);
+        if(Factor!=null) Factor.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (Term != null) Term.traverseTopDown(visitor);
-        if (Mulop != null) Mulop.traverseTopDown(visitor);
-        if (Factor != null) Factor.traverseTopDown(visitor);
+        if(Term!=null) Term.traverseTopDown(visitor);
+        if(Mulop!=null) Mulop.traverseTopDown(visitor);
+        if(Factor!=null) Factor.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (Term != null) Term.traverseBottomUp(visitor);
-        if (Mulop != null) Mulop.traverseBottomUp(visitor);
-        if (Factor != null) Factor.traverseBottomUp(visitor);
+        if(Term!=null) Term.traverseBottomUp(visitor);
+        if(Mulop!=null) Mulop.traverseBottomUp(visitor);
+        if(Factor!=null) Factor.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("TermMultiple(\n");
 
-        if (Term != null)
-            buffer.append(Term.toString("  " + tab));
+        if(Term!=null)
+            buffer.append(Term.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (Mulop != null)
-            buffer.append(Mulop.toString("  " + tab));
+        if(Mulop!=null)
+            buffer.append(Mulop.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (Factor != null)
-            buffer.append(Factor.toString("  " + tab));
+        if(Factor!=null)
+            buffer.append(Factor.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

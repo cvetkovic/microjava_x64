@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,8 +9,7 @@ public class SingleVarArray implements SyntaxNode {
 
     private SyntaxNode parent;
     private int line;
-
-    public SingleVarArray() {
+    public SingleVarArray () {
     }
 
     public SyntaxNode getParent() {
@@ -18,7 +17,7 @@ public class SingleVarArray implements SyntaxNode {
     }
 
     public void setParent(SyntaxNode parent) {
-        this.parent = parent;
+        this.parent=parent;
     }
 
     public int getLine() {
@@ -26,7 +25,7 @@ public class SingleVarArray implements SyntaxNode {
     }
 
     public void setLine(int line) {
-        this.line = line;
+        this.line=line;
     }
 
     public void accept(Visitor visitor) {
@@ -45,7 +44,7 @@ public class SingleVarArray implements SyntaxNode {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("SingleVarArray(\n");
 

@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,8 +9,8 @@ public class MultiplePrintSt extends MultiplePrint {
 
     private Integer multiplePrintConst;
 
-    public MultiplePrintSt(Integer multiplePrintConst) {
-        this.multiplePrintConst = multiplePrintConst;
+    public MultiplePrintSt (Integer multiplePrintConst) {
+        this.multiplePrintConst=multiplePrintConst;
     }
 
     public Integer getMultiplePrintConst() {
@@ -18,7 +18,7 @@ public class MultiplePrintSt extends MultiplePrint {
     }
 
     public void setMultiplePrintConst(Integer multiplePrintConst) {
-        this.multiplePrintConst = multiplePrintConst;
+        this.multiplePrintConst=multiplePrintConst;
     }
 
     public void accept(Visitor visitor) {
@@ -37,11 +37,11 @@ public class MultiplePrintSt extends MultiplePrint {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("MultiplePrintSt(\n");
 
-        buffer.append(" " + tab + multiplePrintConst);
+        buffer.append(" "+tab+multiplePrintConst);
         buffer.append("\n");
 
         buffer.append(tab);

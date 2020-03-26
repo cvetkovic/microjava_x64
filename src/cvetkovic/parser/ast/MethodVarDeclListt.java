@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -10,11 +10,11 @@ public class MethodVarDeclListt extends MethodVarDeclList {
     private MethodVarDeclList MethodVarDeclList;
     private VarDecl VarDecl;
 
-    public MethodVarDeclListt(MethodVarDeclList MethodVarDeclList, VarDecl VarDecl) {
-        this.MethodVarDeclList = MethodVarDeclList;
-        if (MethodVarDeclList != null) MethodVarDeclList.setParent(this);
-        this.VarDecl = VarDecl;
-        if (VarDecl != null) VarDecl.setParent(this);
+    public MethodVarDeclListt (MethodVarDeclList MethodVarDeclList, VarDecl VarDecl) {
+        this.MethodVarDeclList=MethodVarDeclList;
+        if(MethodVarDeclList!=null) MethodVarDeclList.setParent(this);
+        this.VarDecl=VarDecl;
+        if(VarDecl!=null) VarDecl.setParent(this);
     }
 
     public MethodVarDeclList getMethodVarDeclList() {
@@ -22,7 +22,7 @@ public class MethodVarDeclListt extends MethodVarDeclList {
     }
 
     public void setMethodVarDeclList(MethodVarDeclList MethodVarDeclList) {
-        this.MethodVarDeclList = MethodVarDeclList;
+        this.MethodVarDeclList=MethodVarDeclList;
     }
 
     public VarDecl getVarDecl() {
@@ -30,7 +30,7 @@ public class MethodVarDeclListt extends MethodVarDeclList {
     }
 
     public void setVarDecl(VarDecl VarDecl) {
-        this.VarDecl = VarDecl;
+        this.VarDecl=VarDecl;
     }
 
     public void accept(Visitor visitor) {
@@ -38,37 +38,37 @@ public class MethodVarDeclListt extends MethodVarDeclList {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (MethodVarDeclList != null) MethodVarDeclList.accept(visitor);
-        if (VarDecl != null) VarDecl.accept(visitor);
+        if(MethodVarDeclList!=null) MethodVarDeclList.accept(visitor);
+        if(VarDecl!=null) VarDecl.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (MethodVarDeclList != null) MethodVarDeclList.traverseTopDown(visitor);
-        if (VarDecl != null) VarDecl.traverseTopDown(visitor);
+        if(MethodVarDeclList!=null) MethodVarDeclList.traverseTopDown(visitor);
+        if(VarDecl!=null) VarDecl.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (MethodVarDeclList != null) MethodVarDeclList.traverseBottomUp(visitor);
-        if (VarDecl != null) VarDecl.traverseBottomUp(visitor);
+        if(MethodVarDeclList!=null) MethodVarDeclList.traverseBottomUp(visitor);
+        if(VarDecl!=null) VarDecl.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("MethodVarDeclListt(\n");
 
-        if (MethodVarDeclList != null)
-            buffer.append(MethodVarDeclList.toString("  " + tab));
+        if(MethodVarDeclList!=null)
+            buffer.append(MethodVarDeclList.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (VarDecl != null)
-            buffer.append(VarDecl.toString("  " + tab));
+        if(VarDecl!=null)
+            buffer.append(VarDecl.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

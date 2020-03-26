@@ -31,6 +31,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(DesignatorAssign DesignatorAssign) {
+        if (callWIthReturnValue) {
+            callWIthReturnValue = false;
+            return;
+        }
+
         ExpressionNode src = expressionNodeStack.pop();
         ExpressionNode dest = expressionNodeStack.pop();
 
@@ -99,16 +104,38 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.push(expressionDAG.getOrCreateNode(operation, leftChild, rightChild));
     }
 
+    private boolean callWIthReturnValue = false;
+
     @Override
     public void visit(FactorFunctionCall FactorFunctionCall) {
         if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
             return;
 
-        // not a function call but variable access
         if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
+            // not a function call but variable access
             Obj var = FactorFunctionCall.getDesignator().obj;
 
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
+        }
+        else
+        {
+            Obj methodToInvoke = FactorFunctionCall.getDesignator().obj;
+
+            Quadruple instruction = new Quadruple(IRInstruction.CALL);
+            instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
+
+            // function call with return value
+            /*Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
+            Obj returnValue = new Obj(Obj.Var, "ttttt", returnType);
+
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));*/
+
+            ExpressionNode putResultTo =  expressionNodeStack.pop();
+            instruction.setResult(new QuadrupleObjVar(putResultTo.getObj()));
+
+            code.add(instruction);
+
+            callWIthReturnValue = true;
         }
     }
 
@@ -139,10 +166,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
             if (i >= MethodName.obj.getLevel()) {
                 Struct type = current.getType();
 
-                if (type.getKind() == Struct.Int)
-                    numberOfBytes += 4;
+                if (type.getKind() == Struct.Bool)
+                    numberOfBytes += 1;
                 else if (type.getKind() == Struct.Char)
                     numberOfBytes += 1;
+                else if (type.getKind() == Struct.Int)
+                    numberOfBytes += 4;
+                else if (type.getKind() == Struct.Array)
+                    numberOfBytes += 8; // sizeof(pointer) in x86-64 is 8 bytes
+                else
+                    throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
             }
 
             i++;
@@ -167,7 +200,21 @@ public class IRCodeGenerator extends VisitorAdaptor {
         instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
 
         code.add(instruction);
+
+        expressionDAG = new ExpressionDAG();
+        expressionNodeStack.pop();
     }
+
+    @Override
+    public void visit(DesignatorInvoke DesignatorInvoke) {
+        Obj methodToInvoke = DesignatorInvoke.getDesignator().obj;
+
+        Quadruple instruction = new Quadruple(IRInstruction.CALL);
+        instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
+        code.add(instruction);
+    }
+
+
 
     //////////////////////////////////////////////////////////////////////////////////
     // ARRAYS
@@ -195,10 +242,33 @@ public class IRCodeGenerator extends VisitorAdaptor {
             instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.WORD));
         else if (targetObj.getType().getKind() == Struct.Char)
             instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
+        else if (targetObj.getType().getKind() == Struct.Bool)
+            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));     // shall print 0 or 1
         else
-            throw new RuntimeException("IR instruction 'scanf' not supported with other data types than integer or character types.");
+            throw new RuntimeException("IR instruction 'scanf' is not supported with other data types than integer, character or boolean.");
 
         instruction.setResult(new QuadrupleObjVar(targetObj));
+
+        code.add(instruction);
+    }
+
+    @Override
+    public void visit(PrintStatement PrintStatement) {
+        code.addAll(expressionDAG.emitQuadruples());
+
+        Quadruple instruction = new Quadruple(IRInstruction.PRINTF);
+
+        Struct targetStruct = PrintStatement.getExpr().struct;
+        if (targetStruct.getKind() == Struct.Int)
+            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.WORD));
+        else if (targetStruct.getKind() == Struct.Char)
+            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
+        else if (targetStruct.getKind() == Struct.Bool)
+            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE)); // shall print 0 or 1
+        else
+            throw new RuntimeException("IR instruction 'printf' is not supported with other data types than integer, character or boolean.");
+
+        instruction.setArg2(new QuadrupleObjVar(expressionDAG.getRootObj()));
 
         code.add(instruction);
     }
@@ -209,7 +279,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         //expressionDAGStack.push(new ExpressionDAG());
 
         if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
-
+            /* no need for action here */
         }
         else if (MakeNewExpressionDAG.getParent() instanceof PrintStatement) {
             /* no need for action here */
@@ -245,25 +315,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
     // ACTUAL PARAMETERS
     //////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void visit(PrintStatement PrintStatement) {
-        code.addAll(expressionDAG.emitQuadruples());
-
-        Quadruple instruction = new Quadruple(IRInstruction.PRINTF);
-
-        Struct targetStruct = PrintStatement.getExpr().struct;
-        if (targetStruct.getKind() == Struct.Int)
-            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.WORD));
-        else if (targetStruct.getKind() == Struct.Char)
-            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
-        else
-            throw new RuntimeException("IR instruction 'printf' not supported with other data types than integer or character types.");
-
-        instruction.setArg2(new QuadrupleObjVar(expressionDAG.getRootObj()));
-
-        code.add(instruction);
-    }
-
     private void resolveActualParameters() {
         ParameterContainer container = new ParameterContainer();
 
@@ -272,8 +323,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Quadruple instruction = new Quadruple(IRInstruction.PARAM);
         instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
 
+        expressionNodeStack.pop();
+
         container.instructions.add(instruction);
         reverseParameterStack.push(container);
+        expressionDAG = new ExpressionDAG();
     }
 
     @Override

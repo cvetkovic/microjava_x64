@@ -4,7 +4,6 @@ import cvetkovic.misc.ConditionalStatementActions;
 import cvetkovic.misc.ForStatementActions;
 import cvetkovic.parser.ast.*;
 import cvetkovic.util.SymbolTable;
-import org.apache.log4j.Logger;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -24,7 +23,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     //////////////////////////////////////////////////////////////////////////////////
     private static final int LOCAL_VARIABLES_MAX = 256;
     private static final int CLASS_FIELDS_MAX = 65536;
-    private Logger log = Logger.getLogger(getClass());
     private DataType currentDataType = null;
     private boolean errorDetected = false;
     private int numberOfGlobalVariables = 0;
@@ -90,9 +88,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         errorDetected = true;
 
         if (line == null)
-            log.error("Error: " + message);
+            System.err.println("Error: " + message);
         else
-            log.error("Error at line " + line + ": " + message);
+            System.err.println("Error at line " + line + ": " + message);
     }
 
     public boolean isErrorDetected() {

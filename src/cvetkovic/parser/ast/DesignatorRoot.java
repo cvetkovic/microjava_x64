@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,8 +9,8 @@ public class DesignatorRoot extends Designator {
 
     private String designatorNameSingle;
 
-    public DesignatorRoot(String designatorNameSingle) {
-        this.designatorNameSingle = designatorNameSingle;
+    public DesignatorRoot (String designatorNameSingle) {
+        this.designatorNameSingle=designatorNameSingle;
     }
 
     public String getDesignatorNameSingle() {
@@ -18,7 +18,7 @@ public class DesignatorRoot extends Designator {
     }
 
     public void setDesignatorNameSingle(String designatorNameSingle) {
-        this.designatorNameSingle = designatorNameSingle;
+        this.designatorNameSingle=designatorNameSingle;
     }
 
     public void accept(Visitor visitor) {
@@ -37,11 +37,11 @@ public class DesignatorRoot extends Designator {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("DesignatorRoot(\n");
 
-        buffer.append(" " + tab + designatorNameSingle);
+        buffer.append(" "+tab+designatorNameSingle);
         buffer.append("\n");
 
         buffer.append(tab);

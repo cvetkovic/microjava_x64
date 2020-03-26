@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -11,13 +11,13 @@ public class AbstractMethodDeclaration extends AbstractMethodDecl {
     private AbstractMethodName AbstractMethodName;
     private AbstractMethodParameters AbstractMethodParameters;
 
-    public AbstractMethodDeclaration(AbstractMethodReturnType AbstractMethodReturnType, AbstractMethodName AbstractMethodName, AbstractMethodParameters AbstractMethodParameters) {
-        this.AbstractMethodReturnType = AbstractMethodReturnType;
-        if (AbstractMethodReturnType != null) AbstractMethodReturnType.setParent(this);
-        this.AbstractMethodName = AbstractMethodName;
-        if (AbstractMethodName != null) AbstractMethodName.setParent(this);
-        this.AbstractMethodParameters = AbstractMethodParameters;
-        if (AbstractMethodParameters != null) AbstractMethodParameters.setParent(this);
+    public AbstractMethodDeclaration (AbstractMethodReturnType AbstractMethodReturnType, AbstractMethodName AbstractMethodName, AbstractMethodParameters AbstractMethodParameters) {
+        this.AbstractMethodReturnType=AbstractMethodReturnType;
+        if(AbstractMethodReturnType!=null) AbstractMethodReturnType.setParent(this);
+        this.AbstractMethodName=AbstractMethodName;
+        if(AbstractMethodName!=null) AbstractMethodName.setParent(this);
+        this.AbstractMethodParameters=AbstractMethodParameters;
+        if(AbstractMethodParameters!=null) AbstractMethodParameters.setParent(this);
     }
 
     public AbstractMethodReturnType getAbstractMethodReturnType() {
@@ -25,7 +25,7 @@ public class AbstractMethodDeclaration extends AbstractMethodDecl {
     }
 
     public void setAbstractMethodReturnType(AbstractMethodReturnType AbstractMethodReturnType) {
-        this.AbstractMethodReturnType = AbstractMethodReturnType;
+        this.AbstractMethodReturnType=AbstractMethodReturnType;
     }
 
     public AbstractMethodName getAbstractMethodName() {
@@ -33,7 +33,7 @@ public class AbstractMethodDeclaration extends AbstractMethodDecl {
     }
 
     public void setAbstractMethodName(AbstractMethodName AbstractMethodName) {
-        this.AbstractMethodName = AbstractMethodName;
+        this.AbstractMethodName=AbstractMethodName;
     }
 
     public AbstractMethodParameters getAbstractMethodParameters() {
@@ -41,7 +41,7 @@ public class AbstractMethodDeclaration extends AbstractMethodDecl {
     }
 
     public void setAbstractMethodParameters(AbstractMethodParameters AbstractMethodParameters) {
-        this.AbstractMethodParameters = AbstractMethodParameters;
+        this.AbstractMethodParameters=AbstractMethodParameters;
     }
 
     public void accept(Visitor visitor) {
@@ -49,46 +49,46 @@ public class AbstractMethodDeclaration extends AbstractMethodDecl {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (AbstractMethodReturnType != null) AbstractMethodReturnType.accept(visitor);
-        if (AbstractMethodName != null) AbstractMethodName.accept(visitor);
-        if (AbstractMethodParameters != null) AbstractMethodParameters.accept(visitor);
+        if(AbstractMethodReturnType!=null) AbstractMethodReturnType.accept(visitor);
+        if(AbstractMethodName!=null) AbstractMethodName.accept(visitor);
+        if(AbstractMethodParameters!=null) AbstractMethodParameters.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (AbstractMethodReturnType != null) AbstractMethodReturnType.traverseTopDown(visitor);
-        if (AbstractMethodName != null) AbstractMethodName.traverseTopDown(visitor);
-        if (AbstractMethodParameters != null) AbstractMethodParameters.traverseTopDown(visitor);
+        if(AbstractMethodReturnType!=null) AbstractMethodReturnType.traverseTopDown(visitor);
+        if(AbstractMethodName!=null) AbstractMethodName.traverseTopDown(visitor);
+        if(AbstractMethodParameters!=null) AbstractMethodParameters.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (AbstractMethodReturnType != null) AbstractMethodReturnType.traverseBottomUp(visitor);
-        if (AbstractMethodName != null) AbstractMethodName.traverseBottomUp(visitor);
-        if (AbstractMethodParameters != null) AbstractMethodParameters.traverseBottomUp(visitor);
+        if(AbstractMethodReturnType!=null) AbstractMethodReturnType.traverseBottomUp(visitor);
+        if(AbstractMethodName!=null) AbstractMethodName.traverseBottomUp(visitor);
+        if(AbstractMethodParameters!=null) AbstractMethodParameters.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("AbstractMethodDeclaration(\n");
 
-        if (AbstractMethodReturnType != null)
-            buffer.append(AbstractMethodReturnType.toString("  " + tab));
+        if(AbstractMethodReturnType!=null)
+            buffer.append(AbstractMethodReturnType.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (AbstractMethodName != null)
-            buffer.append(AbstractMethodName.toString("  " + tab));
+        if(AbstractMethodName!=null)
+            buffer.append(AbstractMethodName.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (AbstractMethodParameters != null)
-            buffer.append(AbstractMethodParameters.toString("  " + tab));
+        if(AbstractMethodParameters!=null)
+            buffer.append(AbstractMethodParameters.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

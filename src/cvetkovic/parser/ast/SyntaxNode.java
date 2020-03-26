@@ -1,24 +1,20 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
 
-public interface SyntaxNode {
+public interface SyntaxNode { 
 
-    void accept(Visitor visitor);
+    public void accept(Visitor visitor); 
 
-    void childrenAccept(Visitor visitor);
+    public void childrenAccept(Visitor visitor); 
+    public void traverseBottomUp(Visitor visitor); 
+    public void traverseTopDown(Visitor visitor); 
 
-    void traverseBottomUp(Visitor visitor);
-
-    void traverseTopDown(Visitor visitor);
-
-    SyntaxNode getParent();
-
-    void setParent(SyntaxNode parent);
-
-    int getLine();
-    void setLine(int line);
+    public SyntaxNode getParent(); 
+    public void setParent(SyntaxNode parent); 
+    public int getLine(); 
+    public void setLine(int line); 
 }

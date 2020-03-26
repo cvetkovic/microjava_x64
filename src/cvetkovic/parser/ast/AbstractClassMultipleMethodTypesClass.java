@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -10,11 +10,11 @@ public class AbstractClassMultipleMethodTypesClass extends AbstractClassMultiple
     private AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes;
     private AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed;
 
-    public AbstractClassMultipleMethodTypesClass(AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes, AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed) {
-        this.AbstractClassMultipleMethodTypes = AbstractClassMultipleMethodTypes;
-        if (AbstractClassMultipleMethodTypes != null) AbstractClassMultipleMethodTypes.setParent(this);
-        this.AbstractClassMethodTypesAllowed = AbstractClassMethodTypesAllowed;
-        if (AbstractClassMethodTypesAllowed != null) AbstractClassMethodTypesAllowed.setParent(this);
+    public AbstractClassMultipleMethodTypesClass (AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes, AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed) {
+        this.AbstractClassMultipleMethodTypes=AbstractClassMultipleMethodTypes;
+        if(AbstractClassMultipleMethodTypes!=null) AbstractClassMultipleMethodTypes.setParent(this);
+        this.AbstractClassMethodTypesAllowed=AbstractClassMethodTypesAllowed;
+        if(AbstractClassMethodTypesAllowed!=null) AbstractClassMethodTypesAllowed.setParent(this);
     }
 
     public AbstractClassMultipleMethodTypes getAbstractClassMultipleMethodTypes() {
@@ -22,7 +22,7 @@ public class AbstractClassMultipleMethodTypesClass extends AbstractClassMultiple
     }
 
     public void setAbstractClassMultipleMethodTypes(AbstractClassMultipleMethodTypes AbstractClassMultipleMethodTypes) {
-        this.AbstractClassMultipleMethodTypes = AbstractClassMultipleMethodTypes;
+        this.AbstractClassMultipleMethodTypes=AbstractClassMultipleMethodTypes;
     }
 
     public AbstractClassMethodTypesAllowed getAbstractClassMethodTypesAllowed() {
@@ -30,7 +30,7 @@ public class AbstractClassMultipleMethodTypesClass extends AbstractClassMultiple
     }
 
     public void setAbstractClassMethodTypesAllowed(AbstractClassMethodTypesAllowed AbstractClassMethodTypesAllowed) {
-        this.AbstractClassMethodTypesAllowed = AbstractClassMethodTypesAllowed;
+        this.AbstractClassMethodTypesAllowed=AbstractClassMethodTypesAllowed;
     }
 
     public void accept(Visitor visitor) {
@@ -38,37 +38,37 @@ public class AbstractClassMultipleMethodTypesClass extends AbstractClassMultiple
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (AbstractClassMultipleMethodTypes != null) AbstractClassMultipleMethodTypes.accept(visitor);
-        if (AbstractClassMethodTypesAllowed != null) AbstractClassMethodTypesAllowed.accept(visitor);
+        if(AbstractClassMultipleMethodTypes!=null) AbstractClassMultipleMethodTypes.accept(visitor);
+        if(AbstractClassMethodTypesAllowed!=null) AbstractClassMethodTypesAllowed.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (AbstractClassMultipleMethodTypes != null) AbstractClassMultipleMethodTypes.traverseTopDown(visitor);
-        if (AbstractClassMethodTypesAllowed != null) AbstractClassMethodTypesAllowed.traverseTopDown(visitor);
+        if(AbstractClassMultipleMethodTypes!=null) AbstractClassMultipleMethodTypes.traverseTopDown(visitor);
+        if(AbstractClassMethodTypesAllowed!=null) AbstractClassMethodTypesAllowed.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (AbstractClassMultipleMethodTypes != null) AbstractClassMultipleMethodTypes.traverseBottomUp(visitor);
-        if (AbstractClassMethodTypesAllowed != null) AbstractClassMethodTypesAllowed.traverseBottomUp(visitor);
+        if(AbstractClassMultipleMethodTypes!=null) AbstractClassMultipleMethodTypes.traverseBottomUp(visitor);
+        if(AbstractClassMethodTypesAllowed!=null) AbstractClassMethodTypesAllowed.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("AbstractClassMultipleMethodTypesClass(\n");
 
-        if (AbstractClassMultipleMethodTypes != null)
-            buffer.append(AbstractClassMultipleMethodTypes.toString("  " + tab));
+        if(AbstractClassMultipleMethodTypes!=null)
+            buffer.append(AbstractClassMultipleMethodTypes.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (AbstractClassMethodTypesAllowed != null)
-            buffer.append(AbstractClassMethodTypesAllowed.toString("  " + tab));
+        if(AbstractClassMethodTypesAllowed!=null)
+            buffer.append(AbstractClassMethodTypesAllowed.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

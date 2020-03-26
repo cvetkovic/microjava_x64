@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,9 +9,9 @@ public class FactorFunctionCallParameter extends FactorFunctionCallParameters {
 
     private FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle;
 
-    public FactorFunctionCallParameter(FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle) {
-        this.FactorFunctionCallParametersSingle = FactorFunctionCallParametersSingle;
-        if (FactorFunctionCallParametersSingle != null) FactorFunctionCallParametersSingle.setParent(this);
+    public FactorFunctionCallParameter (FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle) {
+        this.FactorFunctionCallParametersSingle=FactorFunctionCallParametersSingle;
+        if(FactorFunctionCallParametersSingle!=null) FactorFunctionCallParametersSingle.setParent(this);
     }
 
     public FactorFunctionCallParametersSingle getFactorFunctionCallParametersSingle() {
@@ -19,7 +19,7 @@ public class FactorFunctionCallParameter extends FactorFunctionCallParameters {
     }
 
     public void setFactorFunctionCallParametersSingle(FactorFunctionCallParametersSingle FactorFunctionCallParametersSingle) {
-        this.FactorFunctionCallParametersSingle = FactorFunctionCallParametersSingle;
+        this.FactorFunctionCallParametersSingle=FactorFunctionCallParametersSingle;
     }
 
     public void accept(Visitor visitor) {
@@ -27,28 +27,28 @@ public class FactorFunctionCallParameter extends FactorFunctionCallParameters {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (FactorFunctionCallParametersSingle != null) FactorFunctionCallParametersSingle.accept(visitor);
+        if(FactorFunctionCallParametersSingle!=null) FactorFunctionCallParametersSingle.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (FactorFunctionCallParametersSingle != null) FactorFunctionCallParametersSingle.traverseTopDown(visitor);
+        if(FactorFunctionCallParametersSingle!=null) FactorFunctionCallParametersSingle.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (FactorFunctionCallParametersSingle != null) FactorFunctionCallParametersSingle.traverseBottomUp(visitor);
+        if(FactorFunctionCallParametersSingle!=null) FactorFunctionCallParametersSingle.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("FactorFunctionCallParameter(\n");
 
-        if (FactorFunctionCallParametersSingle != null)
-            buffer.append(FactorFunctionCallParametersSingle.toString("  " + tab));
+        if(FactorFunctionCallParametersSingle!=null)
+            buffer.append(FactorFunctionCallParametersSingle.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

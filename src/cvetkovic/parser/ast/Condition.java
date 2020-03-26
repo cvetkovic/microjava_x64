@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -12,11 +12,11 @@ public class Condition implements SyntaxNode {
     private CondTerm CondTerm;
     private ConditionRight ConditionRight;
 
-    public Condition(CondTerm CondTerm, ConditionRight ConditionRight) {
-        this.CondTerm = CondTerm;
-        if (CondTerm != null) CondTerm.setParent(this);
-        this.ConditionRight = ConditionRight;
-        if (ConditionRight != null) ConditionRight.setParent(this);
+    public Condition (CondTerm CondTerm, ConditionRight ConditionRight) {
+        this.CondTerm=CondTerm;
+        if(CondTerm!=null) CondTerm.setParent(this);
+        this.ConditionRight=ConditionRight;
+        if(ConditionRight!=null) ConditionRight.setParent(this);
     }
 
     public CondTerm getCondTerm() {
@@ -24,7 +24,7 @@ public class Condition implements SyntaxNode {
     }
 
     public void setCondTerm(CondTerm CondTerm) {
-        this.CondTerm = CondTerm;
+        this.CondTerm=CondTerm;
     }
 
     public ConditionRight getConditionRight() {
@@ -32,7 +32,7 @@ public class Condition implements SyntaxNode {
     }
 
     public void setConditionRight(ConditionRight ConditionRight) {
-        this.ConditionRight = ConditionRight;
+        this.ConditionRight=ConditionRight;
     }
 
     public SyntaxNode getParent() {
@@ -40,7 +40,7 @@ public class Condition implements SyntaxNode {
     }
 
     public void setParent(SyntaxNode parent) {
-        this.parent = parent;
+        this.parent=parent;
     }
 
     public int getLine() {
@@ -48,7 +48,7 @@ public class Condition implements SyntaxNode {
     }
 
     public void setLine(int line) {
-        this.line = line;
+        this.line=line;
     }
 
     public void accept(Visitor visitor) {
@@ -56,37 +56,37 @@ public class Condition implements SyntaxNode {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (CondTerm != null) CondTerm.accept(visitor);
-        if (ConditionRight != null) ConditionRight.accept(visitor);
+        if(CondTerm!=null) CondTerm.accept(visitor);
+        if(ConditionRight!=null) ConditionRight.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (CondTerm != null) CondTerm.traverseTopDown(visitor);
-        if (ConditionRight != null) ConditionRight.traverseTopDown(visitor);
+        if(CondTerm!=null) CondTerm.traverseTopDown(visitor);
+        if(ConditionRight!=null) ConditionRight.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (CondTerm != null) CondTerm.traverseBottomUp(visitor);
-        if (ConditionRight != null) ConditionRight.traverseBottomUp(visitor);
+        if(CondTerm!=null) CondTerm.traverseBottomUp(visitor);
+        if(ConditionRight!=null) ConditionRight.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("Condition(\n");
 
-        if (CondTerm != null)
-            buffer.append(CondTerm.toString("  " + tab));
+        if(CondTerm!=null)
+            buffer.append(CondTerm.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (ConditionRight != null)
-            buffer.append(ConditionRight.toString("  " + tab));
+        if(ConditionRight!=null)
+            buffer.append(ConditionRight.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

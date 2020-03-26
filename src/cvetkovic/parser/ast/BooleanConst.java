@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,8 +9,8 @@ public class BooleanConst extends ConstValue {
 
     private Boolean constBoolValue;
 
-    public BooleanConst(Boolean constBoolValue) {
-        this.constBoolValue = constBoolValue;
+    public BooleanConst (Boolean constBoolValue) {
+        this.constBoolValue=constBoolValue;
     }
 
     public Boolean getConstBoolValue() {
@@ -18,7 +18,7 @@ public class BooleanConst extends ConstValue {
     }
 
     public void setConstBoolValue(Boolean constBoolValue) {
-        this.constBoolValue = constBoolValue;
+        this.constBoolValue=constBoolValue;
     }
 
     public void accept(Visitor visitor) {
@@ -37,11 +37,11 @@ public class BooleanConst extends ConstValue {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("BooleanConst(\n");
 
-        buffer.append(" " + tab + constBoolValue);
+        buffer.append(" "+tab+constBoolValue);
         buffer.append("\n");
 
         buffer.append(tab);

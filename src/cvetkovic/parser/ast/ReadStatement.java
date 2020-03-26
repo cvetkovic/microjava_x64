@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,9 +9,9 @@ public class ReadStatement extends Statement {
 
     private Designator Designator;
 
-    public ReadStatement(Designator Designator) {
-        this.Designator = Designator;
-        if (Designator != null) Designator.setParent(this);
+    public ReadStatement (Designator Designator) {
+        this.Designator=Designator;
+        if(Designator!=null) Designator.setParent(this);
     }
 
     public Designator getDesignator() {
@@ -19,7 +19,7 @@ public class ReadStatement extends Statement {
     }
 
     public void setDesignator(Designator Designator) {
-        this.Designator = Designator;
+        this.Designator=Designator;
     }
 
     public void accept(Visitor visitor) {
@@ -27,28 +27,28 @@ public class ReadStatement extends Statement {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (Designator != null) Designator.accept(visitor);
+        if(Designator!=null) Designator.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (Designator != null) Designator.traverseTopDown(visitor);
+        if(Designator!=null) Designator.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (Designator != null) Designator.traverseBottomUp(visitor);
+        if(Designator!=null) Designator.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("ReadStatement(\n");
 
-        if (Designator != null)
-            buffer.append(Designator.toString("  " + tab));
+        if(Designator!=null)
+            buffer.append(Designator.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

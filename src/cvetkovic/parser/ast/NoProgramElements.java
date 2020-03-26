@@ -1,13 +1,13 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
 
 public class NoProgramElements extends ProgramElementsDeclList {
 
-    public NoProgramElements() {
+    public NoProgramElements () {
     }
 
     public void accept(Visitor visitor) {
@@ -26,7 +26,7 @@ public class NoProgramElements extends ProgramElementsDeclList {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("NoProgramElements(\n");
 

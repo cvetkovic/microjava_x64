@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -11,12 +11,12 @@ public class SingleFormParameter extends SingleFormalParameter {
     private String formParamName;
     private FormParamArray FormParamArray;
 
-    public SingleFormParameter(Type Type, String formParamName, FormParamArray FormParamArray) {
-        this.Type = Type;
-        if (Type != null) Type.setParent(this);
-        this.formParamName = formParamName;
-        this.FormParamArray = FormParamArray;
-        if (FormParamArray != null) FormParamArray.setParent(this);
+    public SingleFormParameter (Type Type, String formParamName, FormParamArray FormParamArray) {
+        this.Type=Type;
+        if(Type!=null) Type.setParent(this);
+        this.formParamName=formParamName;
+        this.FormParamArray=FormParamArray;
+        if(FormParamArray!=null) FormParamArray.setParent(this);
     }
 
     public Type getType() {
@@ -24,7 +24,7 @@ public class SingleFormParameter extends SingleFormalParameter {
     }
 
     public void setType(Type Type) {
-        this.Type = Type;
+        this.Type=Type;
     }
 
     public String getFormParamName() {
@@ -32,7 +32,7 @@ public class SingleFormParameter extends SingleFormalParameter {
     }
 
     public void setFormParamName(String formParamName) {
-        this.formParamName = formParamName;
+        this.formParamName=formParamName;
     }
 
     public FormParamArray getFormParamArray() {
@@ -40,7 +40,7 @@ public class SingleFormParameter extends SingleFormalParameter {
     }
 
     public void setFormParamArray(FormParamArray FormParamArray) {
-        this.FormParamArray = FormParamArray;
+        this.FormParamArray=FormParamArray;
     }
 
     public void accept(Visitor visitor) {
@@ -48,40 +48,40 @@ public class SingleFormParameter extends SingleFormalParameter {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (Type != null) Type.accept(visitor);
-        if (FormParamArray != null) FormParamArray.accept(visitor);
+        if(Type!=null) Type.accept(visitor);
+        if(FormParamArray!=null) FormParamArray.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (Type != null) Type.traverseTopDown(visitor);
-        if (FormParamArray != null) FormParamArray.traverseTopDown(visitor);
+        if(Type!=null) Type.traverseTopDown(visitor);
+        if(FormParamArray!=null) FormParamArray.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (Type != null) Type.traverseBottomUp(visitor);
-        if (FormParamArray != null) FormParamArray.traverseBottomUp(visitor);
+        if(Type!=null) Type.traverseBottomUp(visitor);
+        if(FormParamArray!=null) FormParamArray.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("SingleFormParameter(\n");
 
-        if (Type != null)
-            buffer.append(Type.toString("  " + tab));
+        if(Type!=null)
+            buffer.append(Type.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        buffer.append(" " + tab + formParamName);
+        buffer.append(" "+tab+formParamName);
         buffer.append("\n");
 
-        if (FormParamArray != null)
-            buffer.append(FormParamArray.toString("  " + tab));
+        if(FormParamArray!=null)
+            buffer.append(FormParamArray.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

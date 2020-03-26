@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -10,10 +10,10 @@ public class SingleVariableDeclaration extends SingleVarDeclaration {
     private String variableName;
     private SingleVarArray SingleVarArray;
 
-    public SingleVariableDeclaration(String variableName, SingleVarArray SingleVarArray) {
-        this.variableName = variableName;
-        this.SingleVarArray = SingleVarArray;
-        if (SingleVarArray != null) SingleVarArray.setParent(this);
+    public SingleVariableDeclaration (String variableName, SingleVarArray SingleVarArray) {
+        this.variableName=variableName;
+        this.SingleVarArray=SingleVarArray;
+        if(SingleVarArray!=null) SingleVarArray.setParent(this);
     }
 
     public String getVariableName() {
@@ -21,7 +21,7 @@ public class SingleVariableDeclaration extends SingleVarDeclaration {
     }
 
     public void setVariableName(String variableName) {
-        this.variableName = variableName;
+        this.variableName=variableName;
     }
 
     public SingleVarArray getSingleVarArray() {
@@ -29,7 +29,7 @@ public class SingleVariableDeclaration extends SingleVarDeclaration {
     }
 
     public void setSingleVarArray(SingleVarArray SingleVarArray) {
-        this.SingleVarArray = SingleVarArray;
+        this.SingleVarArray=SingleVarArray;
     }
 
     public void accept(Visitor visitor) {
@@ -37,31 +37,31 @@ public class SingleVariableDeclaration extends SingleVarDeclaration {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (SingleVarArray != null) SingleVarArray.accept(visitor);
+        if(SingleVarArray!=null) SingleVarArray.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (SingleVarArray != null) SingleVarArray.traverseTopDown(visitor);
+        if(SingleVarArray!=null) SingleVarArray.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (SingleVarArray != null) SingleVarArray.traverseBottomUp(visitor);
+        if(SingleVarArray!=null) SingleVarArray.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("SingleVariableDeclaration(\n");
 
-        buffer.append(" " + tab + variableName);
+        buffer.append(" "+tab+variableName);
         buffer.append("\n");
 
-        if (SingleVarArray != null)
-            buffer.append(SingleVarArray.toString("  " + tab));
+        if(SingleVarArray!=null)
+            buffer.append(SingleVarArray.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);
