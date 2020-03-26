@@ -13,7 +13,6 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
@@ -31,18 +30,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(DesignatorAssign DesignatorAssign) {
-        if (callWIthReturnValue) {
-            callWIthReturnValue = false;
-            return;
-        }
-
-        ExpressionNode src = expressionNodeStack.pop();
-        ExpressionNode dest = expressionNodeStack.pop();
+        ExpressionNode src;
+        ExpressionNode dest;
 
         System.out.println(expressionDAG);
 
         if (allocateArray) {
             allocateArray = false;
+
+            expressionNodeStack.pop();
+            dest = expressionNodeStack.pop();
 
             code.addAll(expressionDAG.emitQuadruples());
 
@@ -52,7 +49,28 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
         }
+        else if (callWIthReturnValue) {
+            callWIthReturnValue = false;
+        }
+        else if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
+            Quadruple instruction = new Quadruple(IRInstruction.ASTORE);
+
+            code.addAll(expressionDAG.emitQuadruples());
+
+            ExpressionNode rightSide = expressionNodeStack.pop();
+            ExpressionNode indexer = expressionNodeStack.pop();
+            ExpressionNode array = expressionNodeStack.pop();
+
+            instruction.setArg1(new QuadrupleObjVar(rightSide.getObj()));
+            instruction.setArg2(new QuadrupleObjVar(indexer.getObj()));
+            instruction.setResult(new QuadrupleObjVar(array.getObj()));
+
+            code.add(instruction);
+        }
         else {
+            src = expressionNodeStack.pop();
+            dest = expressionNodeStack.pop();
+
             expressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
 
             code.addAll(expressionDAG.emitQuadruples());
@@ -66,12 +84,18 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode rightChild = expressionNodeStack.pop();
         ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
 
-        if (DesignatorArrayAccess.getParent() instanceof DesignatorAssign)
-            // this means that array access is on the left side of '=' operator
-            expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_STORE, leftChild, rightChild));
-        else
+        if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign))
             expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
+        else {
+            // this means that array access is on the left side of '=' operator
+            expressionNodeStack.push(leftChild);
+            expressionNodeStack.push(rightChild);
+        }
     }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // ARITHMETIC OPERATIONS
+    //////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void visit(UnaryExpression UnaryExpression) {
@@ -111,18 +135,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
             return;
 
+        Obj var = FactorFunctionCall.getDesignator().obj;
         if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
             // not a function call but variable access
-            Obj var = FactorFunctionCall.getDesignator().obj;
 
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
         }
         else
         {
-            Obj methodToInvoke = FactorFunctionCall.getDesignator().obj;
-
             Quadruple instruction = new Quadruple(IRInstruction.CALL);
-            instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
+            instruction.setArg1(new QuadrupleObjVar(var));
 
             // function call with return value
             /*Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
@@ -147,6 +169,26 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.push(expressionDAG.getOrCreateLeaf(constValue));
     }
 
+    private void resolveIncDec(Obj var, Quadruple instruction) {
+        instruction.setArg1(new QuadrupleObjVar(var));
+        instruction.setArg2(new QuadrupleIntegerConst(1));
+        instruction.setResult(new QuadrupleObjVar(var));
+
+        code.add(instruction);
+    }
+
+    @Override
+    public void visit(DesignatorIncrement DesignatorIncrement) {
+        Quadruple instruction = new Quadruple(IRInstruction.ADD);
+        resolveIncDec(DesignatorIncrement.getDesignator().obj, instruction);
+    }
+
+    @Override
+    public void visit(DesignatorDecrement DesignatorDecrement) {
+        Quadruple instruction = new Quadruple(IRInstruction.SUB);
+        resolveIncDec(DesignatorDecrement.getDesignator().obj, instruction);
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     // METHOD
     //////////////////////////////////////////////////////////////////////////////////
@@ -158,10 +200,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         int i = 0;
 
         // determine number of bytes to allocate
-        Iterator<Obj> methodObj = MethodName.obj.getLocalSymbols().iterator();
-        while (methodObj.hasNext()) {
-            Obj current = methodObj.next();
-
+        for (Obj current : MethodName.obj.getLocalSymbols()) {
             // skip all parameters because space only for local variables shall be allocated
             if (i >= MethodName.obj.getLevel()) {
                 Struct type = current.getType();
@@ -213,8 +252,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
         instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
         code.add(instruction);
     }
-
-
 
     //////////////////////////////////////////////////////////////////////////////////
     // ARRAYS
@@ -273,6 +310,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
         code.add(instruction);
     }
 
+    //////////////////////////////////////////////////////////////////////////////////
+    // COMMON FOR DAGs
+    //////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
         // make a new DAG
@@ -307,7 +348,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             /* no need for action here */
         }
         else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
-
+            /* no need for action here */
         }
     }
 
