@@ -3,10 +3,7 @@ package cvetkovic.ir;
 import cvetkovic.ir.expression.ExpressionDAG;
 import cvetkovic.ir.expression.ExpressionNode;
 import cvetkovic.ir.expression.ExpressionNodeOperation;
-import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleIOVar;
-import cvetkovic.ir.quadruple.QuadrupleIntegerConst;
-import cvetkovic.ir.quadruple.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.*;
 import cvetkovic.parser.ast.*;
 import cvetkovic.util.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -15,6 +12,8 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
+import static cvetkovic.ir.IRInstruction.determineJumpInstruction;
 
 public class IRCodeGenerator extends VisitorAdaptor {
     private List<Quadruple> code = new ArrayList<>();
@@ -130,36 +129,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private boolean callWIthReturnValue = false;
 
-    @Override
-    public void visit(FactorFunctionCall FactorFunctionCall) {
-        if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
-            return;
-
-        Obj var = FactorFunctionCall.getDesignator().obj;
-        if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
-            // not a function call but variable access
-
-            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
-        }
-        else
-        {
-            Quadruple instruction = new Quadruple(IRInstruction.CALL);
-            instruction.setArg1(new QuadrupleObjVar(var));
-
-            // function call with return value
-            /*Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
-            Obj returnValue = new Obj(Obj.Var, "ttttt", returnType);
-
-            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));*/
-
-            ExpressionNode putResultTo =  expressionNodeStack.pop();
-            instruction.setResult(new QuadrupleObjVar(putResultTo.getObj()));
-
-            code.add(instruction);
-
-            callWIthReturnValue = true;
-        }
-    }
+    private static final QuadrupleIntegerConst alwaysTrueConstant;
 
     @Override
     public void visit(FactorNumericalConst FactorNumericalConst) {
@@ -193,37 +163,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
     // METHOD
     //////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void visit(MethodName MethodName) {
-        Quadruple instruction = new Quadruple(IRInstruction.ENTER);
-        int numberOfBytes = 0;
-        int i = 0;
-
-        // determine number of bytes to allocate
-        for (Obj current : MethodName.obj.getLocalSymbols()) {
-            // skip all parameters because space only for local variables shall be allocated
-            if (i >= MethodName.obj.getLevel()) {
-                Struct type = current.getType();
-
-                if (type.getKind() == Struct.Bool)
-                    numberOfBytes += 1;
-                else if (type.getKind() == Struct.Char)
-                    numberOfBytes += 1;
-                else if (type.getKind() == Struct.Int)
-                    numberOfBytes += 4;
-                else if (type.getKind() == Struct.Array)
-                    numberOfBytes += 8; // sizeof(pointer) in x86-64 is 8 bytes
-                else
-                    throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
-            }
-
-            i++;
-        }
-
-        instruction.setArg1(new QuadrupleIntegerConst(numberOfBytes));
-
-        code.add(instruction);
+    static {
+        alwaysTrueConstant = new QuadrupleIntegerConst(1);
     }
+
+    private Stack<ControlFlow.IfFixPoint> ifFixPointStack = new Stack<>();
 
     @Override
     public void visit(MethodDecl MethodDecl) {
@@ -313,44 +257,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     //////////////////////////////////////////////////////////////////////////////////
     // COMMON FOR DAGs
     //////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
-        // make a new DAG
-        //expressionDAGStack.push(new ExpressionDAG());
-
-        if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof PrintStatement) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
-            if (((DesignatorAssign)MakeNewExpressionDAG.getParent()).getDesignator() instanceof DesignatorArrayAccess)
-                return;
-
-            Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
-            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ActParsMultiple) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof CondFactUnary) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof CondFactBinary) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ArrayDeclaration) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
-            /* no need for action here */
-        }
-    }
+    private boolean inForLogicalOrCondition = false;
 
     //////////////////////////////////////////////////////////////////////////////////
     // ACTUAL PARAMETERS
@@ -394,6 +301,198 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private static class ParameterContainer {
         public List<Quadruple> instructions = new ArrayList<>();
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // IF STATEMENT
+    //////////////////////////////////////////////////////////////////////////////////
+    private boolean inForCondition = false;
+    private int ifStatementDepth = 0;
+
+    @Override
+    public void visit(FactorFunctionCall FactorFunctionCall) {
+        if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
+            return;
+
+        Obj var = FactorFunctionCall.getDesignator().obj;
+        if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
+            // not a function call but variable access
+
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
+        }
+        else {
+            Quadruple instruction = new Quadruple(IRInstruction.CALL);
+            instruction.setArg1(new QuadrupleObjVar(var));
+
+            // function call with return value
+            /*Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
+            Obj returnValue = new Obj(Obj.Var, "ttttt", returnType);
+
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));*/
+
+            ExpressionNode putResultTo = expressionNodeStack.pop();
+            instruction.setResult(new QuadrupleObjVar(putResultTo.getObj()));
+
+            code.add(instruction);
+
+            callWIthReturnValue = true;
+        }
+    }
+
+    private void generateLabel(String name) {
+        Quadruple label = new Quadruple(IRInstruction.GEN_LABEL);
+        label.setArg1(new QuadrupleLabel(name));
+        code.add(label);
+    }
+
+    @Override
+    public void visit(MethodName MethodName) {
+        generateLabel(MethodName.obj.getName());
+
+        Quadruple instruction = new Quadruple(IRInstruction.ENTER);
+        int numberOfBytes = 0;
+        int i = 0;
+
+        // determine number of bytes to allocate
+        for (Obj current : MethodName.obj.getLocalSymbols()) {
+            // skip all parameters because space only for local variables shall be allocated
+            if (i >= MethodName.obj.getLevel()) {
+                Struct type = current.getType();
+
+                if (type.getKind() == Struct.Bool)
+                    numberOfBytes += 1;
+                else if (type.getKind() == Struct.Char)
+                    numberOfBytes += 1;
+                else if (type.getKind() == Struct.Int)
+                    numberOfBytes += 4;
+                else if (type.getKind() == Struct.Array)
+                    numberOfBytes += 8; // sizeof(pointer) in x86-64 is 8 bytes
+                else
+                    throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
+            }
+
+            i++;
+        }
+
+        instruction.setArg1(new QuadrupleIntegerConst(numberOfBytes));
+
+        code.add(instruction);
+    }
+
+    @Override
+    public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
+        // make a new DAG
+        //expressionDAGStack.push(new ExpressionDAG());
+
+        if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof PrintStatement) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
+            if (((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator() instanceof DesignatorArrayAccess)
+                return;
+
+            Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof ActParsMultiple) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof CondFactUnary) {
+
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof CondFactBinary) {
+
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof ArrayDeclaration) {
+            /* no need for action here */
+        }
+        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
+            /* no need for action here */
+        }
+    }
+
+    @Override
+    public void visit(IfKeyword IfKeyword) {
+        ifStatementDepth++;
+    }
+
+    @Override
+    public void visit(IfCondition IfCondition) {
+        // TODO: put something here
+    }
+
+    @Override
+    public void visit(CondFactUnary CondFactUnary) {
+        code.addAll(expressionDAG.emitQuadruples());
+
+        Quadruple instruction = new Quadruple(IRInstruction.JNE);
+        instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+        instruction.setArg2(alwaysTrueConstant);
+        code.add(instruction);
+
+        if (!inForCondition)
+            ifFixPointStack.push(new ControlFlow.IfFixPoint(instruction, ifStatementDepth));
+        else {
+            // TODO: peek edit forfixendpoint
+        }
+    }
+
+    @Override
+    public void visit(CondFactBinary CondFactBinary) {
+        code.addAll(expressionDAG.emitQuadruples());
+
+        IRInstruction instructionCode = IRInstruction.negateJumpInstruction(determineJumpInstruction(CondFactBinary.getRelop()));
+        Quadruple instruction = new Quadruple(instructionCode);
+        instruction.setArg2(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+        instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+        code.add(instruction);
+
+        if (!inForCondition)
+            ifFixPointStack.push(new ControlFlow.IfFixPoint(instruction, ifStatementDepth));
+        else {
+            // TODO: peek edit forfixendpoint
+        }
+    }
+
+    @Override
+    public void visit(ElseStatementKeyword ElseStatementKeyword) {
+        // end of if-true branch
+        Quadruple unconditionalJump = new Quadruple(IRInstruction.JMP);
+        code.add(unconditionalJump);
+
+        // generate label for beginning of else branch
+        String labelName = ControlFlow.generateUniqueLabelName();
+        generateLabel(labelName);
+
+        // backpatch all conditionals in if-true branch
+        while (!ifFixPointStack.empty() && ifFixPointStack.peek().depth == ifStatementDepth) {
+            ControlFlow.IfFixPoint fix = ifFixPointStack.pop();
+            fix.fixPoint.setResult(new QuadrupleLabel(labelName));
+        }
+
+        // schedule unconditional jump to be backpatched upon finishing current if-then-else structure
+        ifFixPointStack.push(new ControlFlow.IfFixPoint(unconditionalJump, ifStatementDepth));
+    }
+
+    @Override
+    public void visit(IfStatement IfStatement) {
+        // generate label
+        String labelName = ControlFlow.generateUniqueLabelName();
+        generateLabel(labelName);
+
+        // backpatching
+        while (!ifFixPointStack.empty() && ifFixPointStack.peek().depth == ifStatementDepth) {
+            ControlFlow.IfFixPoint fix = ifFixPointStack.pop();
+            fix.fixPoint.setResult(new QuadrupleLabel(labelName));
+        }
+
+        ifStatementDepth--;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
