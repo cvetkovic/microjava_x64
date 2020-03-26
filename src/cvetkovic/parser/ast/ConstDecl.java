@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -13,13 +13,13 @@ public class ConstDecl implements SyntaxNode {
     private SingleConstDeclaration SingleConstDeclaration;
     private AdditionalConstDeclaration AdditionalConstDeclaration;
 
-    public ConstDecl(Type Type, SingleConstDeclaration SingleConstDeclaration, AdditionalConstDeclaration AdditionalConstDeclaration) {
-        this.Type = Type;
-        if (Type != null) Type.setParent(this);
-        this.SingleConstDeclaration = SingleConstDeclaration;
-        if (SingleConstDeclaration != null) SingleConstDeclaration.setParent(this);
-        this.AdditionalConstDeclaration = AdditionalConstDeclaration;
-        if (AdditionalConstDeclaration != null) AdditionalConstDeclaration.setParent(this);
+    public ConstDecl (Type Type, SingleConstDeclaration SingleConstDeclaration, AdditionalConstDeclaration AdditionalConstDeclaration) {
+        this.Type=Type;
+        if(Type!=null) Type.setParent(this);
+        this.SingleConstDeclaration=SingleConstDeclaration;
+        if(SingleConstDeclaration!=null) SingleConstDeclaration.setParent(this);
+        this.AdditionalConstDeclaration=AdditionalConstDeclaration;
+        if(AdditionalConstDeclaration!=null) AdditionalConstDeclaration.setParent(this);
     }
 
     public Type getType() {
@@ -27,7 +27,7 @@ public class ConstDecl implements SyntaxNode {
     }
 
     public void setType(Type Type) {
-        this.Type = Type;
+        this.Type=Type;
     }
 
     public SingleConstDeclaration getSingleConstDeclaration() {
@@ -35,7 +35,7 @@ public class ConstDecl implements SyntaxNode {
     }
 
     public void setSingleConstDeclaration(SingleConstDeclaration SingleConstDeclaration) {
-        this.SingleConstDeclaration = SingleConstDeclaration;
+        this.SingleConstDeclaration=SingleConstDeclaration;
     }
 
     public AdditionalConstDeclaration getAdditionalConstDeclaration() {
@@ -43,7 +43,7 @@ public class ConstDecl implements SyntaxNode {
     }
 
     public void setAdditionalConstDeclaration(AdditionalConstDeclaration AdditionalConstDeclaration) {
-        this.AdditionalConstDeclaration = AdditionalConstDeclaration;
+        this.AdditionalConstDeclaration=AdditionalConstDeclaration;
     }
 
     public SyntaxNode getParent() {
@@ -51,7 +51,7 @@ public class ConstDecl implements SyntaxNode {
     }
 
     public void setParent(SyntaxNode parent) {
-        this.parent = parent;
+        this.parent=parent;
     }
 
     public int getLine() {
@@ -59,7 +59,7 @@ public class ConstDecl implements SyntaxNode {
     }
 
     public void setLine(int line) {
-        this.line = line;
+        this.line=line;
     }
 
     public void accept(Visitor visitor) {
@@ -67,46 +67,46 @@ public class ConstDecl implements SyntaxNode {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (Type != null) Type.accept(visitor);
-        if (SingleConstDeclaration != null) SingleConstDeclaration.accept(visitor);
-        if (AdditionalConstDeclaration != null) AdditionalConstDeclaration.accept(visitor);
+        if(Type!=null) Type.accept(visitor);
+        if(SingleConstDeclaration!=null) SingleConstDeclaration.accept(visitor);
+        if(AdditionalConstDeclaration!=null) AdditionalConstDeclaration.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (Type != null) Type.traverseTopDown(visitor);
-        if (SingleConstDeclaration != null) SingleConstDeclaration.traverseTopDown(visitor);
-        if (AdditionalConstDeclaration != null) AdditionalConstDeclaration.traverseTopDown(visitor);
+        if(Type!=null) Type.traverseTopDown(visitor);
+        if(SingleConstDeclaration!=null) SingleConstDeclaration.traverseTopDown(visitor);
+        if(AdditionalConstDeclaration!=null) AdditionalConstDeclaration.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (Type != null) Type.traverseBottomUp(visitor);
-        if (SingleConstDeclaration != null) SingleConstDeclaration.traverseBottomUp(visitor);
-        if (AdditionalConstDeclaration != null) AdditionalConstDeclaration.traverseBottomUp(visitor);
+        if(Type!=null) Type.traverseBottomUp(visitor);
+        if(SingleConstDeclaration!=null) SingleConstDeclaration.traverseBottomUp(visitor);
+        if(AdditionalConstDeclaration!=null) AdditionalConstDeclaration.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("ConstDecl(\n");
 
-        if (Type != null)
-            buffer.append(Type.toString("  " + tab));
+        if(Type!=null)
+            buffer.append(Type.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (SingleConstDeclaration != null)
-            buffer.append(SingleConstDeclaration.toString("  " + tab));
+        if(SingleConstDeclaration!=null)
+            buffer.append(SingleConstDeclaration.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (AdditionalConstDeclaration != null)
-            buffer.append(AdditionalConstDeclaration.toString("  " + tab));
+        if(AdditionalConstDeclaration!=null)
+            buffer.append(AdditionalConstDeclaration.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

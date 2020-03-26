@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,9 +9,9 @@ public class TermSingle extends Term {
 
     private Factor Factor;
 
-    public TermSingle(Factor Factor) {
-        this.Factor = Factor;
-        if (Factor != null) Factor.setParent(this);
+    public TermSingle (Factor Factor) {
+        this.Factor=Factor;
+        if(Factor!=null) Factor.setParent(this);
     }
 
     public Factor getFactor() {
@@ -19,7 +19,7 @@ public class TermSingle extends Term {
     }
 
     public void setFactor(Factor Factor) {
-        this.Factor = Factor;
+        this.Factor=Factor;
     }
 
     public void accept(Visitor visitor) {
@@ -27,28 +27,28 @@ public class TermSingle extends Term {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (Factor != null) Factor.accept(visitor);
+        if(Factor!=null) Factor.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (Factor != null) Factor.traverseTopDown(visitor);
+        if(Factor!=null) Factor.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (Factor != null) Factor.traverseBottomUp(visitor);
+        if(Factor!=null) Factor.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("TermSingle(\n");
 
-        if (Factor != null)
-            buffer.append(Factor.toString("  " + tab));
+        if(Factor!=null)
+            buffer.append(Factor.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

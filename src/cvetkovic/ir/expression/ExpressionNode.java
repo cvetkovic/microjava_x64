@@ -162,4 +162,14 @@ public class ExpressionNode {
     public void setDestinationVariable(Obj destinationVariable) {
         this.destinationVariable = destinationVariable;
     }
+
+    public Obj getObj()
+    {
+        if (isLeaf())
+            return variable;
+        else if (isInnerNode())
+            return destinationVariable;
+        else
+            throw new RuntimeException("This method cannot be outside of leaf or inner node.");
+    }
 }

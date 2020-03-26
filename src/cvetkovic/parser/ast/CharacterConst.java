@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,8 +9,8 @@ public class CharacterConst extends ConstValue {
 
     private Character constCharValue;
 
-    public CharacterConst(Character constCharValue) {
-        this.constCharValue = constCharValue;
+    public CharacterConst (Character constCharValue) {
+        this.constCharValue=constCharValue;
     }
 
     public Character getConstCharValue() {
@@ -18,7 +18,7 @@ public class CharacterConst extends ConstValue {
     }
 
     public void setConstCharValue(Character constCharValue) {
-        this.constCharValue = constCharValue;
+        this.constCharValue=constCharValue;
     }
 
     public void accept(Visitor visitor) {
@@ -37,11 +37,11 @@ public class CharacterConst extends ConstValue {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("CharacterConst(\n");
 
-        buffer.append(" " + tab + constCharValue);
+        buffer.append(" "+tab+constCharValue);
         buffer.append("\n");
 
         buffer.append(tab);

@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -15,13 +15,13 @@ public class Program implements SyntaxNode {
     private ProgramElementsDeclList ProgramElementsDeclList;
     private ProgramMethodsDeclList ProgramMethodsDeclList;
 
-    public Program(ProgramName ProgramName, ProgramElementsDeclList ProgramElementsDeclList, ProgramMethodsDeclList ProgramMethodsDeclList) {
-        this.ProgramName = ProgramName;
-        if (ProgramName != null) ProgramName.setParent(this);
-        this.ProgramElementsDeclList = ProgramElementsDeclList;
-        if (ProgramElementsDeclList != null) ProgramElementsDeclList.setParent(this);
-        this.ProgramMethodsDeclList = ProgramMethodsDeclList;
-        if (ProgramMethodsDeclList != null) ProgramMethodsDeclList.setParent(this);
+    public Program (ProgramName ProgramName, ProgramElementsDeclList ProgramElementsDeclList, ProgramMethodsDeclList ProgramMethodsDeclList) {
+        this.ProgramName=ProgramName;
+        if(ProgramName!=null) ProgramName.setParent(this);
+        this.ProgramElementsDeclList=ProgramElementsDeclList;
+        if(ProgramElementsDeclList!=null) ProgramElementsDeclList.setParent(this);
+        this.ProgramMethodsDeclList=ProgramMethodsDeclList;
+        if(ProgramMethodsDeclList!=null) ProgramMethodsDeclList.setParent(this);
     }
 
     public ProgramName getProgramName() {
@@ -29,7 +29,7 @@ public class Program implements SyntaxNode {
     }
 
     public void setProgramName(ProgramName ProgramName) {
-        this.ProgramName = ProgramName;
+        this.ProgramName=ProgramName;
     }
 
     public ProgramElementsDeclList getProgramElementsDeclList() {
@@ -37,7 +37,7 @@ public class Program implements SyntaxNode {
     }
 
     public void setProgramElementsDeclList(ProgramElementsDeclList ProgramElementsDeclList) {
-        this.ProgramElementsDeclList = ProgramElementsDeclList;
+        this.ProgramElementsDeclList=ProgramElementsDeclList;
     }
 
     public ProgramMethodsDeclList getProgramMethodsDeclList() {
@@ -45,7 +45,7 @@ public class Program implements SyntaxNode {
     }
 
     public void setProgramMethodsDeclList(ProgramMethodsDeclList ProgramMethodsDeclList) {
-        this.ProgramMethodsDeclList = ProgramMethodsDeclList;
+        this.ProgramMethodsDeclList=ProgramMethodsDeclList;
     }
 
     public SyntaxNode getParent() {
@@ -53,7 +53,7 @@ public class Program implements SyntaxNode {
     }
 
     public void setParent(SyntaxNode parent) {
-        this.parent = parent;
+        this.parent=parent;
     }
 
     public int getLine() {
@@ -61,7 +61,7 @@ public class Program implements SyntaxNode {
     }
 
     public void setLine(int line) {
-        this.line = line;
+        this.line=line;
     }
 
     public void accept(Visitor visitor) {
@@ -69,46 +69,46 @@ public class Program implements SyntaxNode {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (ProgramName != null) ProgramName.accept(visitor);
-        if (ProgramElementsDeclList != null) ProgramElementsDeclList.accept(visitor);
-        if (ProgramMethodsDeclList != null) ProgramMethodsDeclList.accept(visitor);
+        if(ProgramName!=null) ProgramName.accept(visitor);
+        if(ProgramElementsDeclList!=null) ProgramElementsDeclList.accept(visitor);
+        if(ProgramMethodsDeclList!=null) ProgramMethodsDeclList.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (ProgramName != null) ProgramName.traverseTopDown(visitor);
-        if (ProgramElementsDeclList != null) ProgramElementsDeclList.traverseTopDown(visitor);
-        if (ProgramMethodsDeclList != null) ProgramMethodsDeclList.traverseTopDown(visitor);
+        if(ProgramName!=null) ProgramName.traverseTopDown(visitor);
+        if(ProgramElementsDeclList!=null) ProgramElementsDeclList.traverseTopDown(visitor);
+        if(ProgramMethodsDeclList!=null) ProgramMethodsDeclList.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (ProgramName != null) ProgramName.traverseBottomUp(visitor);
-        if (ProgramElementsDeclList != null) ProgramElementsDeclList.traverseBottomUp(visitor);
-        if (ProgramMethodsDeclList != null) ProgramMethodsDeclList.traverseBottomUp(visitor);
+        if(ProgramName!=null) ProgramName.traverseBottomUp(visitor);
+        if(ProgramElementsDeclList!=null) ProgramElementsDeclList.traverseBottomUp(visitor);
+        if(ProgramMethodsDeclList!=null) ProgramMethodsDeclList.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("Program(\n");
 
-        if (ProgramName != null)
-            buffer.append(ProgramName.toString("  " + tab));
+        if(ProgramName!=null)
+            buffer.append(ProgramName.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (ProgramElementsDeclList != null)
-            buffer.append(ProgramElementsDeclList.toString("  " + tab));
+        if(ProgramElementsDeclList!=null)
+            buffer.append(ProgramElementsDeclList.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if (ProgramMethodsDeclList != null)
-            buffer.append(ProgramMethodsDeclList.toString("  " + tab));
+        if(ProgramMethodsDeclList!=null)
+            buffer.append(ProgramMethodsDeclList.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

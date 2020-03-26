@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -18,7 +18,7 @@ public abstract class AbstractMethodReturnType implements SyntaxNode {
     }
 
     public void setParent(SyntaxNode parent) {
-        this.parent = parent;
+        this.parent=parent;
     }
 
     public int getLine() {
@@ -26,7 +26,7 @@ public abstract class AbstractMethodReturnType implements SyntaxNode {
     }
 
     public void setLine(int line) {
-        this.line = line;
+        this.line=line;
     }
 
     public abstract void accept(Visitor visitor);
@@ -34,9 +34,6 @@ public abstract class AbstractMethodReturnType implements SyntaxNode {
     public abstract void traverseTopDown(Visitor visitor);
     public abstract void traverseBottomUp(Visitor visitor);
 
-    public String toString() {
-        return toString("");
-    }
-
+    public String toString() { return toString(""); }
     public abstract String toString(String tab);
 }

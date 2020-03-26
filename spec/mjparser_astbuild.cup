@@ -2,14 +2,11 @@ package rs.ac.bg.etf.pp1;
 
 import java.io.*;
 import java_cup.runtime.*;
-import org.apache.log4j.*;
 import cvetkovic.parser.ast.*;
 import cvetkovic.lexer.*;
 import rs.etf.pp1.symboltable.concepts.*;
 
 parser code {:
-	
-	Logger log = Logger.getLogger(getClass());
 
 	private boolean errorDetected = false;
 
@@ -18,7 +15,7 @@ parser code {:
     	StringBuilder msg = new StringBuilder(message); 
     	if (info instanceof Symbol)
             msg.append (" at line ").append(((Symbol)info).left);
-        log.error(msg.toString());
+        System.err.println(msg.toString());
     }
     
 	// overriding default error_sync_size() which returns 3
@@ -41,7 +38,7 @@ init with {:
 scan with {:
 	Symbol s = this.getScanner().next_token();
 	if (s != null && s.value != null) 
-		log.info(s.toString() + " " + s.value.toString());
+		System.out.println(s.toString() + " " + s.value.toString());
 	return s;
 :}
 

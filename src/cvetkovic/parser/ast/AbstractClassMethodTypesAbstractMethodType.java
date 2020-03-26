@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,9 +9,9 @@ public class AbstractClassMethodTypesAbstractMethodType extends AbstractClassMet
 
     private AbstractMethodDecl AbstractMethodDecl;
 
-    public AbstractClassMethodTypesAbstractMethodType(AbstractMethodDecl AbstractMethodDecl) {
-        this.AbstractMethodDecl = AbstractMethodDecl;
-        if (AbstractMethodDecl != null) AbstractMethodDecl.setParent(this);
+    public AbstractClassMethodTypesAbstractMethodType (AbstractMethodDecl AbstractMethodDecl) {
+        this.AbstractMethodDecl=AbstractMethodDecl;
+        if(AbstractMethodDecl!=null) AbstractMethodDecl.setParent(this);
     }
 
     public AbstractMethodDecl getAbstractMethodDecl() {
@@ -19,7 +19,7 @@ public class AbstractClassMethodTypesAbstractMethodType extends AbstractClassMet
     }
 
     public void setAbstractMethodDecl(AbstractMethodDecl AbstractMethodDecl) {
-        this.AbstractMethodDecl = AbstractMethodDecl;
+        this.AbstractMethodDecl=AbstractMethodDecl;
     }
 
     public void accept(Visitor visitor) {
@@ -27,28 +27,28 @@ public class AbstractClassMethodTypesAbstractMethodType extends AbstractClassMet
     }
 
     public void childrenAccept(Visitor visitor) {
-        if (AbstractMethodDecl != null) AbstractMethodDecl.accept(visitor);
+        if(AbstractMethodDecl!=null) AbstractMethodDecl.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if (AbstractMethodDecl != null) AbstractMethodDecl.traverseTopDown(visitor);
+        if(AbstractMethodDecl!=null) AbstractMethodDecl.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if (AbstractMethodDecl != null) AbstractMethodDecl.traverseBottomUp(visitor);
+        if(AbstractMethodDecl!=null) AbstractMethodDecl.traverseBottomUp(visitor);
         accept(visitor);
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("AbstractClassMethodTypesAbstractMethodType(\n");
 
-        if (AbstractMethodDecl != null)
-            buffer.append(AbstractMethodDecl.toString("  " + tab));
+        if(AbstractMethodDecl!=null)
+            buffer.append(AbstractMethodDecl.toString("  "+tab));
         else
-            buffer.append(tab + "  null");
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         buffer.append(tab);

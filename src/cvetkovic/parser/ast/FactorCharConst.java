@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 21/2/2020 13:38:34
+// 25/2/2020 20:23:2
 
 
 package cvetkovic.parser.ast;
@@ -9,8 +9,8 @@ public class FactorCharConst extends Factor {
 
     private Character factorChar;
 
-    public FactorCharConst(Character factorChar) {
-        this.factorChar = factorChar;
+    public FactorCharConst (Character factorChar) {
+        this.factorChar=factorChar;
     }
 
     public Character getFactorChar() {
@@ -18,7 +18,7 @@ public class FactorCharConst extends Factor {
     }
 
     public void setFactorChar(Character factorChar) {
-        this.factorChar = factorChar;
+        this.factorChar=factorChar;
     }
 
     public void accept(Visitor visitor) {
@@ -37,11 +37,11 @@ public class FactorCharConst extends Factor {
     }
 
     public String toString(String tab) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
         buffer.append("FactorCharConst(\n");
 
-        buffer.append(" " + tab + factorChar);
+        buffer.append(" "+tab+factorChar);
         buffer.append("\n");
 
         buffer.append(tab);
