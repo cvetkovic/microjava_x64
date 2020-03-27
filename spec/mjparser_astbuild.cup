@@ -136,7 +136,6 @@ nonterminal ForVarDecl ForVarDecl;
 nonterminal ForLoopCondition ForLoopCondition;
 nonterminal ForUpdateVarList ForUpdateVarList;
 nonterminal ReturnStatement ReturnStatement;
-nonterminal MultiplePrint MultiplePrint;
 nonterminal MultipleStatement MultipleStatement;
 non terminal DesignatorParams DesignatorParams;
 non terminal ConditionRight ConditionRight;
@@ -374,8 +373,8 @@ EndOfForStatement ::= (EndOfForStatement) {: RESULT=new EndOfForStatement(); :} 
 ReturnStatement ::= (ExprReturnStatement) MakeNewExpressionDAG:M1 Expr:E2 {: RESULT=new ExprReturnStatement(M1, E2); RESULT.setLine(M1left); :} |
 					(BlankReturnStatement) {: RESULT=new BlankReturnStatement(); :} /* epsilon */;
 			   
-MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst {: RESULT=new MultiplePrintSt(multiplePrintConst); RESULT.setLine(multiplePrintConstleft); :} |
-				  (NoMultiplePrint) {: RESULT=new NoMultiplePrint(); :} /* epsilon */;
+/*MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst |
+				  (NoMultiplePrint)          epsilon         ;*/
 			   
 MultipleStatement ::= (MultipleStatements) MultipleStatement:M1 Statement:S2 {: RESULT=new MultipleStatements(M1, S2); RESULT.setLine(M1left); :} |
 					  (NoMultipleStatement) {: RESULT=new NoMultipleStatement(); :} /* epsilon */;

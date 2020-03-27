@@ -97,7 +97,7 @@ non terminal AbstractExtends, AbstractClassVarList, AbstractClassMethodList, Abs
 non terminal MethodParameters, MethodVarDeclList, MethodStatements;
 non terminal AbstractMethodParameters;
 non terminal MultipleFormalParameter, FormParamArray;
-non terminal ElseStatement, ForVarDecl, ForLoopCondition, ForUpdateVarList, ReturnStatement, MultiplePrint, MultipleStatement;
+non terminal ElseStatement, ForVarDecl, ForLoopCondition, ForUpdateVarList, ReturnStatement, MultipleStatement;
 non terminal DesignatorParams;
 non terminal ConditionRight;
 non terminal CondTermRight;
@@ -331,8 +331,8 @@ EndOfForStatement ::= (EndOfForStatement) /* epsilon */;
 ReturnStatement ::= (ExprReturnStatement) MakeNewExpressionDAG Expr |
 					(BlankReturnStatement) /* epsilon */;
 			   
-MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst |
-				  (NoMultiplePrint) /* epsilon */;
+/*MultiplePrint ::= (MultiplePrintSt) COMMA NUM_CONST:multiplePrintConst |
+				  (NoMultiplePrint)          epsilon         ;*/
 			   
 MultipleStatement ::= (MultipleStatements) MultipleStatement Statement |
 					  (NoMultipleStatement) /* epsilon */;
