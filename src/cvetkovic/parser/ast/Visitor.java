@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 25/2/2020 20:23:2
+// 27/2/2020 19:41:35
 
 
 package cvetkovic.parser.ast;
@@ -54,7 +54,6 @@ public interface Visitor {
     public void visit(ExprNegative ExprNegative);
     public void visit(ConstValue ConstValue);
     public void visit(AbstractClassVarList AbstractClassVarList);
-    public void visit(MultiplePrint MultiplePrint);
     public void visit(ClassDeclExtends ClassDeclExtends);
     public void visit(ActPars ActPars);
     public void visit(AbstractExtends AbstractExtends);
@@ -120,8 +119,6 @@ public interface Visitor {
     public void visit(DesignatorAssign DesignatorAssign);
     public void visit(NoMultipleStatement NoMultipleStatement);
     public void visit(MultipleStatements MultipleStatements);
-    public void visit(NoMultiplePrint NoMultiplePrint);
-    public void visit(MultiplePrintSt MultiplePrintSt);
     public void visit(BlankReturnStatement BlankReturnStatement);
     public void visit(ExprReturnStatement ExprReturnStatement);
     public void visit(EndOfForStatement EndOfForStatement);
