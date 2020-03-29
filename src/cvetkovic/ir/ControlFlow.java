@@ -55,6 +55,7 @@ public class ControlFlow {
 
     public static class ForStatementFixPoint {
         public String conditionLabel;
+        public String updateVarLabel;
 
         public List<Quadruple> forEndFixPoint = new ArrayList<>();
         public List<Quadruple> unconditionalJumpForOrCondition = new ArrayList<>();
