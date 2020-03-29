@@ -12,6 +12,12 @@ public class Quadruple {
         this.instruction = instruction;
     }
 
+    public Quadruple(IRInstruction instruction, QuadrupleVariable arg1, QuadrupleVariable arg2) {
+        this.instruction = instruction;
+        this.arg1 = arg1;
+        this.arg2 = arg2;
+    }
+
     // TODO: add to setters RuntimeException if that parameter cannot be set because of instruction format specification
     // TODO: add explicit typechecking
 
