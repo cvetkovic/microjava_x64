@@ -57,8 +57,8 @@ public class ControlFlow {
         public String conditionLabel;
 
         public List<Quadruple> forEndFixPoint = new ArrayList<>();
-        public List<Integer> unconditionalJumpForOrCondition = new ArrayList<>();
+        public List<Quadruple> unconditionalJumpForOrCondition = new ArrayList<>();
 
-        public List<Quadruple> breakStatementFixPoints = new ArrayList<>();
+        public List<Quadruple> breakStatements = new ArrayList<>();
     }
 }
