@@ -1,7 +1,10 @@
 package cvetkovic;
 
 import cvetkovic.ir.IRCodeGenerator;
+import cvetkovic.ir.optimizations.IROptimizer;
+import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
@@ -12,10 +15,11 @@ import java_cup.runtime.Symbol;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.List;
 
 public class Compiler {
     private static String inputFile = "", outputFile = "";
-    private static boolean dumpAST = false, dumpSymbolTable = false, dumpDisassembly = false, run = false;
+    private static boolean dumpAST = false, dumpSymbolTable = false, dumpIR = false, run = false, optimize_ir = false;
     private static boolean showHelp;
 
     public static void main(String[] args) throws Exception {
@@ -38,8 +42,10 @@ public class Compiler {
                 dumpAST = true;
             else if (s.toLowerCase().equals("-dump_symbols"))
                 dumpSymbolTable = true;
-            else if (s.toLowerCase().equals("-dump_disassembly"))
-                dumpDisassembly = true;
+            else if (s.toLowerCase().equals("-dump_ir"))
+                dumpIR = true;
+            else if (s.toLowerCase().equals("-optimize_ir"))
+                optimize_ir = true;
             else if (s.toLowerCase().equals("-run"))
                 run = true;
             else {
@@ -61,7 +67,8 @@ public class Compiler {
                     "-output [PATH] - output MikroJava object file\n" +
                     "-dump_ast - dump abstract syntax tree\n" +
                     "-dump_symbols - dump symbol table\n" +
-                    "-dump_disassembly - dump disassembled code\n" +
+                    "-dump_ir - dump intermediate code\n" +
+                    "-optimize_ir - do optimizations on intermediate code\n" +
                     "-run - run generated object file upon compilation\n");
 
             return;
@@ -97,10 +104,29 @@ public class Compiler {
                 SymbolTable.dump();
 
             if (!parser.isErrorDetected() && !semanticCheck.isErrorDetected()) {
-                System.out.println("================ INTERMEDIATE CODE GENERATOR ================");
-
                 IRCodeGenerator irCodeGenerator = new IRCodeGenerator();
                 syntaxNode.traverseBottomUp(irCodeGenerator);
+
+                System.out.println("================ INTERMEDIATE CODE GENERATION ================");
+                List<Quadruple> irCode = irCodeGenerator.getIRCodeOutput();
+
+                if (optimize_ir) {
+                    System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
+
+                    Optimizer irCodeOptimizer = new IROptimizer(irCode);
+                    irCodeOptimizer.executeOptimizations();
+
+                    irCode = irCodeOptimizer.getOptimizationOutput();
+                }
+
+                if (dumpIR)
+                    System.out.println(irCodeGenerator);
+
+                /*System.out.println("================ MACHINE CODE GENERATION ================");
+
+                System.out.println("================ MACHINE CODE OPTIMIZATION ================");
+
+                System.out.println("================ COMPILATION DONE ================");*/
             }
             else if (parser.isErrorDetected())
                 System.out.println("Error during syntax analysis. Semantic analyze and code generation aborted.");
