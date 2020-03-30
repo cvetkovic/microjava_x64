@@ -713,14 +713,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     //////////////////////////////////////////////////////////////////////////////////
-    // DEBUG PURPOSE - FOR NOW
+    // LINK WITH FRONT-END
     //////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void visit(Program Program) {
-        // TODO: for DEBUG only (remove in production)
-        System.out.println(this);
-    }
 
     @Override
     public String toString() {
@@ -735,5 +729,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
 
         return builder.toString();
+    }
+
+    public List<Quadruple> getIRCodeOutput() {
+        return code;
     }
 }
