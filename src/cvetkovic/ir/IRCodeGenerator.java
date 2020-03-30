@@ -18,6 +18,19 @@ import static cvetkovic.ir.ControlFlow.generateUniqueLabelName;
 import static cvetkovic.ir.IRInstruction.*;
 
 public class IRCodeGenerator extends VisitorAdaptor {
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // LOCAL VARIABLES
+    //////////////////////////////////////////////////////////////////////////////////
+
+    private static final QuadrupleIntegerConst alwaysTrueConstant;
+
+    private Stack<ControlFlow.IfFixPoint> ifFixPointStack = new Stack<>();
+    private int ifStatementDepth = 0;
+    private List<ControlFlow.IfFixPoint> compilerAddedInstructionsToFix = new ArrayList<>();
+
+    private boolean inForCondition = false;
+
     private List<Quadruple> code = new ArrayList<>();
 
     private ExpressionDAG expressionDAG;
@@ -25,22 +38,25 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private Stack<Stack<ParameterContainer>> reverseParameterStack = new Stack<>();
 
-    public IRCodeGenerator() {
-        expressionDAG = new ExpressionDAG();
+    private Stack<ControlFlow.ForStatementFixPoint> jumpForFixPoints = new Stack<>();
+
+    private boolean allocateArray = false;
+
+    private boolean inForLogicalOrCondition = false;
+    private Stack<List<Quadruple>> forUpdateVarListInstructionStack = new Stack<>();
+
+    private boolean postponeUpdateVarList = false;
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // CONSTRUCTOR & STATIC INITIALIZATION
+    //////////////////////////////////////////////////////////////////////////////////
+
+    static {
+        alwaysTrueConstant = new QuadrupleIntegerConst(1);
     }
 
-    @Override
-    public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
-        ExpressionNode rightChild = expressionNodeStack.pop();
-        ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
-
-        if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign))
-            expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
-        else {
-            // this means that array access is on the left side of '=' operator
-            expressionNodeStack.push(leftChild);
-            expressionNodeStack.push(rightChild);
-        }
+    public IRCodeGenerator() {
+        expressionDAG = new ExpressionDAG();
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -78,10 +94,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.push(expressionDAG.getOrCreateNode(operation, leftChild, rightChild));
     }
 
-    private boolean callWIthReturnValue = false;
-
-    private static final QuadrupleIntegerConst alwaysTrueConstant;
-
     @Override
     public void visit(FactorNumericalConst FactorNumericalConst) {
         Obj constValue = new Obj(Obj.Con, "", SymbolTable.intType);
@@ -90,7 +102,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.push(expressionDAG.getOrCreateLeaf(constValue));
     }
 
-    private boolean inForCondition = false;
+    //////////////////////////////////////////////////////////////////////////////////
+    // DESIGNATOR
+    //////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void visit(DesignatorIncrement DesignatorIncrement) {
@@ -104,15 +118,23 @@ public class IRCodeGenerator extends VisitorAdaptor {
         resolveIncDec(DesignatorDecrement.getDesignator().obj, instruction);
     }
 
+    @Override
+    public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
+        ExpressionNode rightChild = expressionNodeStack.pop();
+        ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
+
+        if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign))
+            expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
+        else {
+            // this means that array access is on the left side of '=' operator
+            expressionNodeStack.push(leftChild);
+            expressionNodeStack.push(rightChild);
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     // METHOD
     //////////////////////////////////////////////////////////////////////////////////
-
-    static {
-        alwaysTrueConstant = new QuadrupleIntegerConst(1);
-    }
-
-    private Stack<ControlFlow.IfFixPoint> ifFixPointStack = new Stack<>();
 
     @Override
     public void visit(MethodDecl MethodDecl) {
@@ -133,13 +155,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.pop();
     }
 
-    private Stack<ControlFlow.ForStatementFixPoint> jumpForFixPoints = new Stack<>();
-
     //////////////////////////////////////////////////////////////////////////////////
     // ARRAYS
     //////////////////////////////////////////////////////////////////////////////////
-
-    private boolean allocateArray = false;
 
     @Override
     public void visit(FactorArrayDeclaration FactorArrayDeclaration) {
@@ -253,23 +271,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple instruction = new Quadruple(IRInstruction.CALL);
             instruction.setArg1(new QuadrupleObjVar(var));
 
-            // function call with return value
+            // generate temp variable for storing the result of a CALL
             Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
             Obj returnValue = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), returnType);
 
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));
             instruction.setResult(new QuadrupleObjVar(returnValue));
 
-            /*ExpressionNode putResultTo = expressionNodeStack.pop();
-            instruction.setResult(new QuadrupleObjVar(putResultTo.getObj()));*/
-
             code.add(instruction);
-
-            callWIthReturnValue = true;
         }
     }
-
-    private int forVarDeclFix = 0;
 
     //////////////////////////////////////////////////////////////////////////////////
     // COMMON FOR DAGs
@@ -309,11 +320,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
             /* no need for action here */
         }
     }
-
-    private boolean inForLogicalOrCondition = false;
-    private Stack<List<Quadruple>> forUpdateVarListInstructionStack = new Stack<>();
-
-    private boolean postponeUpdateVarList = false;
 
     private void generateLabelForContinueStatement(List<Quadruple> buffer) {
         // need to remember the name of label because of CONTINUE statement
@@ -450,8 +456,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
     //////////////////////////////////////////////////////////////////////////////////
     // IF STATEMENT
     //////////////////////////////////////////////////////////////////////////////////
-    private int ifStatementDepth = 0;
-    private List<ControlFlow.IfFixPoint> compilerAddedInstructionsToFix = new ArrayList<>();
 
     @Override
     public void visit(IfKeyword IfKeyword) {
@@ -540,7 +544,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         ifStatementDepth--;
     }
-
 
     @Override
     public void visit(ElseStatementKeyword ElseStatementKeyword) {
