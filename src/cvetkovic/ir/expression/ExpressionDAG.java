@@ -14,6 +14,8 @@ import java.util.Map;
 public class ExpressionDAG {
 
     private static int tmpObjCounter = 1;
+    private static String tmpVarPrefix = "t";
+
     //////////////////////////////////////////////////////////////////////////////////
     // ARRAY OF RECORDS
     //////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +103,7 @@ public class ExpressionDAG {
                 else {
                     int tmpId = tmpObjCounter++;
 
-                    Obj var = SymbolTable.insert(Obj.Var, "t" + tmpId, SymbolTable.intType);
+                    Obj var = SymbolTable.insert(Obj.Var, tmpVarPrefix + tmpId, SymbolTable.intType);
                     instruction.setResult(new QuadrupleObjVar(var));
                     node.setDestinationVariable(var);
 
@@ -143,5 +145,10 @@ public class ExpressionDAG {
         }
         else
             return rootNode.destinationVariable;
+    }
+
+    public static String generateTempVarOutside()
+    {
+        return tmpVarPrefix + tmpObjCounter++;
     }
 }

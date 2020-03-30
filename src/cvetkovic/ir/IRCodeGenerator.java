@@ -15,8 +15,7 @@ import java.util.Stack;
 
 import static cvetkovic.ir.ControlFlow.generateLabel;
 import static cvetkovic.ir.ControlFlow.generateUniqueLabelName;
-import static cvetkovic.ir.IRInstruction.determineJumpInstruction;
-import static cvetkovic.ir.IRInstruction.negateJumpInstruction;
+import static cvetkovic.ir.IRInstruction.*;
 
 public class IRCodeGenerator extends VisitorAdaptor {
     private List<Quadruple> code = new ArrayList<>();
@@ -24,7 +23,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private ExpressionDAG expressionDAG;
     private Stack<ExpressionNode> expressionNodeStack = new Stack<>();
 
-    private Stack<ParameterContainer> reverseParameterStack = new Stack<>();
+    private Stack<Stack<ParameterContainer>> reverseParameterStack = new Stack<>();
 
     public IRCodeGenerator() {
         expressionDAG = new ExpressionDAG();
@@ -208,8 +207,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.pop();
 
         container.instructions.add(instruction);
-        reverseParameterStack.push(container);
-        expressionDAG = new ExpressionDAG();
+        reverseParameterStack.peek().push(container);
+        //expressionDAG = new ExpressionDAG();
     }
 
     @Override
@@ -224,13 +223,15 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(ActParsStart ActParsStart) {
-        reverseParameterStack = new Stack<>();
+        reverseParameterStack.push(new Stack<>());
     }
 
     @Override
     public void visit(ActParsEnd ActParsEnd) {
-        while (!reverseParameterStack.empty())
-            code.addAll(reverseParameterStack.pop().instructions);
+        Stack<ParameterContainer> container = reverseParameterStack.pop();
+
+        while (!container.empty())
+            code.addAll(container.pop().instructions);
     }
 
     private static class ParameterContainer {
@@ -253,13 +254,14 @@ public class IRCodeGenerator extends VisitorAdaptor {
             instruction.setArg1(new QuadrupleObjVar(var));
 
             // function call with return value
-            /*Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
-            Obj returnValue = new Obj(Obj.Var, "ttttt", returnType);
+            Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
+            Obj returnValue = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), returnType);
 
-            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));*/
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));
+            instruction.setResult(new QuadrupleObjVar(returnValue));
 
-            ExpressionNode putResultTo = expressionNodeStack.pop();
-            instruction.setResult(new QuadrupleObjVar(putResultTo.getObj()));
+            /*ExpressionNode putResultTo = expressionNodeStack.pop();
+            instruction.setResult(new QuadrupleObjVar(putResultTo.getObj()));*/
 
             code.add(instruction);
 
@@ -340,9 +342,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
             instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
 
             code.add(instruction);
-        }
-        else if (callWIthReturnValue) {
-            callWIthReturnValue = false;
         }
         else if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
             Quadruple instruction = new Quadruple(IRInstruction.ASTORE);
@@ -726,6 +725,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         for (Quadruple instruction : code) {
             builder.append(instruction);
+            if (instruction.getInstruction() == LEAVE)
+                builder.append("\n");
+
             builder.append("\n");
         }
 
