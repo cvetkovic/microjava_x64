@@ -3,8 +3,8 @@
 This project is a part of final thesis at the School of Electrical Engineering, University of Belgrade
 
 
-Author:   Lazar M. Cvetković
+Author:   Lazar M. Cvetković (l.cvetkovic.997@gmail.com)
 
-Advisor:  Dragan Bojić, Prof. Dr.
+Advisor:  Dr Dragan Bojić (bojic@etf.bg.ac.rs)
 
 Date:     March 2020 - ongoing
