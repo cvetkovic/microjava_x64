@@ -38,6 +38,24 @@ public enum IRInstruction {
 
     GEN_LABEL;  // generate label
 
+    public static boolean isBasicBlockSplitInstruction(IRInstruction instruction)
+    {
+        // TODO: see here what to do with CALL instruction
+        switch (instruction){
+            case JMP:
+            case JL:
+            case JLE:
+            case JG:
+            case JGE:
+            case JE:
+            case JNE:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
     public static IRInstruction dagToQuadrupleInstruction(ExpressionNodeOperation operation) {
         switch (operation) {
             case ADDITION:

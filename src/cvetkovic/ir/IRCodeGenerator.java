@@ -360,8 +360,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode src;
         ExpressionNode dest;
 
-        //System.out.println(expressionDAG);
-
         if (allocateArray) {
             allocateArray = false;
 
