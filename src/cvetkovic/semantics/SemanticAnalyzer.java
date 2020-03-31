@@ -1,9 +1,7 @@
 package cvetkovic.semantics;
 
-import cvetkovic.misc.ConditionalStatementActions;
-import cvetkovic.misc.ForStatementActions;
 import cvetkovic.parser.ast.*;
-import cvetkovic.util.SymbolTable;
+import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;

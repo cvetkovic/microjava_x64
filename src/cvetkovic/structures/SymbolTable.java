@@ -1,4 +1,4 @@
-package cvetkovic.util;
+package cvetkovic.structures;
 
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;

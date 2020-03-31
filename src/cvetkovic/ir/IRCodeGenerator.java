@@ -5,7 +5,8 @@ import cvetkovic.ir.expression.ExpressionNode;
 import cvetkovic.ir.expression.ExpressionNodeOperation;
 import cvetkovic.ir.quadruple.*;
 import cvetkovic.parser.ast.*;
-import cvetkovic.util.SymbolTable;
+import cvetkovic.structures.SymbolTable;
+import cvetkovic.x64.DataStructures;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
@@ -41,6 +42,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private Stack<ControlFlow.ForStatementFixPoint> jumpForFixPoints = new Stack<>();
 
     private boolean allocateArray = false;
+    private boolean allocateClass = true;
 
     private boolean inForLogicalOrCondition = false;
     private Stack<List<Quadruple>> forUpdateVarListInstructionStack = new Stack<>();
@@ -162,7 +164,33 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(FactorArrayDeclaration FactorArrayDeclaration) {
         // 'malloc' will be done in 'Designator' visitor
-        allocateArray = true;
+        if (FactorArrayDeclaration.getFactorArrayDecl() instanceof NoArrayDeclaration) {
+            allocateClass = true;
+
+            // instantiating new class
+            Struct type = FactorArrayDeclaration.struct;
+            int classSize = 0;
+
+            for (Obj member : type.getMembers()) {
+                if (member.getName().equals("_vtp") || member.getName().equals("extends"))
+                    continue;
+                else if (member.getKind() == Obj.Meth)
+                    continue;
+
+                classSize += DataStructures.getX64VariableSize(member.getType());
+            }
+
+            Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
+            result.setAdr(classSize);
+            expressionNodeStack.push(new ExpressionNode(result));
+        }
+        else {
+            allocateArray = true;
+
+            Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
+            result.setAdr(DataStructures.getX64VariableSize(FactorArrayDeclaration.struct));
+            expressionNodeStack.push(new ExpressionNode(result));
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +292,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Obj var = FactorFunctionCall.getDesignator().obj;
         if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
             // not a function call but variable access
-
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
         }
         else {
@@ -338,13 +365,27 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (allocateArray) {
             allocateArray = false;
 
+            src = expressionNodeStack.pop();
             expressionNodeStack.pop();
             dest = expressionNodeStack.pop();
 
             code.addAll(expressionDAG.emitQuadruples());
 
             Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
-            instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
+            instruction.setArg1(new QuadrupleObjVar(src.getObj()));
+            instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
+
+            code.add(instruction);
+        }
+        else if (allocateClass)
+        {
+            allocateClass = false;
+
+            src = expressionNodeStack.pop();
+            dest = expressionNodeStack.pop();
+
+            Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
+            instruction.setArg1(new QuadrupleObjVar(src.getObj()));
             instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
 
             code.add(instruction);
@@ -432,17 +473,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             // skip all parameters because space only for local variables shall be allocated
             if (i >= MethodName.obj.getLevel()) {
                 Struct type = current.getType();
-
-                if (type.getKind() == Struct.Bool)
-                    numberOfBytes += 1;
-                else if (type.getKind() == Struct.Char)
-                    numberOfBytes += 1;
-                else if (type.getKind() == Struct.Int)
-                    numberOfBytes += 4;
-                else if (type.getKind() == Struct.Array)
-                    numberOfBytes += 8; // sizeof(pointer) in x86-64 is 8 bytes
-                else
-                    throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
+                numberOfBytes += DataStructures.getX64VariableSize(type);
             }
 
             i++;

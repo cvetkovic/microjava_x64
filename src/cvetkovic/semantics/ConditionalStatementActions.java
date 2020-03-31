@@ -1,4 +1,4 @@
-package cvetkovic.misc;
+package cvetkovic.semantics;
 
 import java.util.Stack;
 

@@ -3,7 +3,7 @@ package cvetkovic.ir.expression;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.QuadrupleObjVar;
-import cvetkovic.util.SymbolTable;
+import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.ArrayList;

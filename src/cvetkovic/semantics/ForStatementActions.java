@@ -1,4 +1,4 @@
-package cvetkovic.misc;
+package cvetkovic.semantics;
 
 public class ForStatementActions {
     private static int forStatementDepth = 0;

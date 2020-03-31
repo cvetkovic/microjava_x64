@@ -9,7 +9,7 @@ import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
 import cvetkovic.semantics.SemanticAnalyzer;
-import cvetkovic.util.SymbolTable;
+import cvetkovic.structures.SymbolTable;
 import java_cup.runtime.Symbol;
 
 import java.io.BufferedReader;

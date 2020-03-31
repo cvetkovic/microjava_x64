@@ -1,4 +1,4 @@
-package cvetkovic.misc;
+package cvetkovic.semantics;
 
 /**
  * Class that represents single IF/ELSE statement.
