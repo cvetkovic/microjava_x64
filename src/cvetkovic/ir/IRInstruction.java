@@ -11,22 +11,25 @@ public enum IRInstruction {
     REM,    // division remainder
     NEG,    // negation
 
-    COPY,   // copy
+    LOAD,   // load from memory
+    STORE,  // store to memory
 
     ENTER,  // allocate stack frame     => enter procedure
     LEAVE,  // deallocate stack frame   => exit procedure
 
-    SCANF,   // scan from stdin
-    PRINTF,  // print to stdout
+    SCANF,  // scan from stdin
+    PRINTF, // print to stdout
 
-    MALLOC,  // heap memory allocation
+    MALLOC, // heap memory allocation
 
-    PARAM,          // push parameter
-    CALL,           // function invocation
-    RETURN,         // return from function
+    PARAM,  // push parameter
+    CALL,   // function invocation
+    RETURN, // return from function
 
-    ALOAD,     // array laod
-    ASTORE,    // array store
+    ALOAD,  // array load
+    ASTORE, // array store
+
+    GET_PTR,// get pointer
 
     JMP,    // jump unconditionally
     JL,     // jump if less
@@ -36,7 +39,7 @@ public enum IRInstruction {
     JE,     // jump if equal
     JNE,    // jump if not equal
 
-    GEN_LABEL;  // generate label
+    GEN_LABEL;      // generate label
 
     public static boolean isBasicBlockSplitInstruction(IRInstruction instruction)
     {
@@ -75,7 +78,7 @@ public enum IRInstruction {
                 return ASTORE;
 
             case ASSIGNMENT:
-                return COPY;
+                return STORE;
             case UNARY_MINUS:
                 return NEG;
 

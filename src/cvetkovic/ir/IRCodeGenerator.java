@@ -42,7 +42,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private Stack<ControlFlow.ForStatementFixPoint> jumpForFixPoints = new Stack<>();
 
     private boolean allocateArray = false;
-    private boolean allocateClass = true;
+    private boolean allocateClass = false;
+    private boolean storeToMemory = false;
 
     private boolean inForLogicalOrCondition = false;
     private Stack<List<Quadruple>> forUpdateVarListInstructionStack = new Stack<>();
@@ -288,6 +289,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(FactorFunctionCall FactorFunctionCall) {
         if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
             return;
+        else if (FactorFunctionCall.getDesignator() instanceof DesignatorNonArrayAccess)
+            return;
 
         Obj var = FactorFunctionCall.getDesignator().obj;
         if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
@@ -322,11 +325,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
             /* no need for action here */
         }
         else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
-            if (((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator() instanceof DesignatorArrayAccess)
+            /*if (((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator() instanceof DesignatorArrayAccess)
                 return;
 
             Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
-            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
+            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));*/
         }
         else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
             /* no need for action here */
@@ -375,8 +378,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
         }
-        else if (allocateClass)
-        {
+        else if (allocateClass) {
             allocateClass = false;
 
             src = expressionNodeStack.pop();
@@ -388,6 +390,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
         }
+        /*else if (storeToMemory)
+        {
+
+        }*/
         else if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
             Quadruple instruction = new Quadruple(IRInstruction.ASTORE);
 
@@ -739,6 +745,57 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // CLASS
+    //////////////////////////////////////////////////////////////////////////////////
+
+    // MakeNewExpressionDAG
+    @Override
+    public void visit(DesignatorRoot DesignatorRoot) {
+        SyntaxNode parent = DesignatorRoot.getParent();
+
+        if (parent instanceof DesignatorAssign && ((DesignatorAssign) parent).getDesignator() instanceof DesignatorArrayAccess)
+            return;
+        else if (parent instanceof ExprReturnStatement)
+            return;
+        else if (parent instanceof ActParsSingle)
+            return;
+        else if (parent instanceof ActParsMultiple)
+            return;
+        else if (parent instanceof CondFactUnary)
+            return;
+        else if (parent instanceof CondFactBinary)
+            return;
+        else if (parent instanceof ArrayDeclaration)
+            return;
+        else if (parent instanceof DesignatorArrayAccess)
+            return;
+
+        Obj destination = DesignatorRoot.obj;
+        expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
+    }
+
+    @Override
+    public void visit(DesignatorNonArrayAccess DesignatorNonArrayAccess) {
+        Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+        Obj tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+
+        Quadruple getPtr = new Quadruple(GET_PTR);
+        getPtr.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+        getPtr.setArg2(new QuadrupleObjVar(DesignatorNonArrayAccess.obj));
+        getPtr.setResult(new QuadrupleObjVar(tmp));
+
+        Quadruple load = new Quadruple(LOAD);
+        load.setArg1(new QuadrupleObjVar(tmp));
+        load.setResult(new QuadrupleObjVar(tmp2));
+
+        code.add(getPtr);
+        code.add(load);
+        expressionNodeStack.push(new ExpressionNode(tmp2));
+
+        storeToMemory = true;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
