@@ -112,13 +112,23 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(DesignatorIncrement DesignatorIncrement) {
         Quadruple instruction = new Quadruple(IRInstruction.ADD);
-        resolveIncDec(DesignatorIncrement.getDesignator().obj, instruction);
+
+        Obj ptrDest = expressionNodeStack.pop().getObj();
+        if (expressionNodeStack.empty())    // not a PTR access
+            resolveIncDec(expressionNodeStack.pop().getObj(), instruction, null);
+        else
+            resolveIncDec(expressionNodeStack.pop().getObj(), instruction, ptrDest);
     }
 
     @Override
     public void visit(DesignatorDecrement DesignatorDecrement) {
         Quadruple instruction = new Quadruple(IRInstruction.SUB);
-        resolveIncDec(DesignatorDecrement.getDesignator().obj, instruction);
+
+        Obj ptrDest = expressionNodeStack.pop().getObj();
+        if (expressionNodeStack.empty())    // not a PTR access
+            resolveIncDec(expressionNodeStack.pop().getObj(), instruction, null);
+        else
+            resolveIncDec(expressionNodeStack.pop().getObj(), instruction, ptrDest);
     }
 
     @Override
@@ -184,6 +194,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
             result.setAdr(classSize);
             expressionNodeStack.push(new ExpressionNode(result));
+
+            if (code.size() > 0 && code.get(code.size() - 1).getInstruction() == GET_PTR)
+                storeToPtr = true;
         }
         else {
             allocateArray = true;
@@ -255,7 +268,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         container.instructions.add(instruction);
         reverseParameterStack.peek().push(container);
-        //expressionDAG = new ExpressionDAG();
     }
 
     @Override
@@ -312,45 +324,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // COMMON FOR DAGs
-    //////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void visit(MakeNewExpressionDAG MakeNewExpressionDAG) {
-        if (MakeNewExpressionDAG.getParent() instanceof ExprReturnStatement) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof PrintStatement) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorAssign) {
-            /*if (((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator() instanceof DesignatorArrayAccess)
-                return;
-
-            Obj destination = ((DesignatorAssign) MakeNewExpressionDAG.getParent()).getDesignator().obj;
-            expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));*/
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ActParsSingle) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ActParsMultiple) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof CondFactUnary) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof CondFactBinary) {
-
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof ArrayDeclaration) {
-            /* no need for action here */
-        }
-        else if (MakeNewExpressionDAG.getParent() instanceof DesignatorArrayAccess) {
-            /* no need for action here */
-        }
-    }
-
     private void generateLabelForContinueStatement(List<Quadruple> buffer) {
         // need to remember the name of label because of CONTINUE statement
         String updateVarListLabel = generateUniqueLabelName();
@@ -387,6 +360,12 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
             instruction.setArg1(new QuadrupleObjVar(src.getObj()));
             instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
+
+            // store to ptr
+            if (storeToPtr) {
+                instruction.setArg2(new QuadruplePTR());
+                storeToPtr = false;
+            }
 
             code.add(instruction);
         }
@@ -429,20 +408,39 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionDAG = new ExpressionDAG();
     }
 
-    private void resolveIncDec(Obj var, Quadruple instruction) {
+    private void resolveIncDec(Obj var, Quadruple instruction, Obj ptrDestination) {
         instruction.setArg1(new QuadrupleObjVar(var));
         instruction.setArg2(new QuadrupleIntegerConst(1));
-        instruction.setResult(new QuadrupleObjVar(var));
+
+        Quadruple storeInstruction = null;
+        if (storeToPtr) {
+            storeInstruction = new Quadruple(STORE);
+            storeInstruction.setArg2(new QuadruplePTR());
+            storeInstruction.setResult(new QuadrupleObjVar(ptrDestination));
+
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+            instruction.setResult(new QuadrupleObjVar(tmp));
+            storeInstruction.setArg1(new QuadrupleObjVar(tmp));
+
+            storeToPtr = false;
+        }
+        else
+            instruction.setResult(new QuadrupleObjVar(var));
 
         if (postponeUpdateVarList) {
             List<Quadruple> toAdd = new ArrayList<>();
 
             generateLabelForContinueStatement(toAdd);
             toAdd.add(instruction);
+            if (storeInstruction != null)
+                toAdd.add(storeInstruction);
             forUpdateVarListInstructionStack.push(toAdd);
         }
-        else
+        else {
             code.add(instruction);
+            if (storeInstruction != null)
+                code.add(storeInstruction);
+        }
     }
 
     @Override
@@ -787,6 +785,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Quadruple load = null;
 
+        // if not a left side of designator assign statement
         if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign)) {
             tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
 
@@ -796,6 +795,14 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             expressionNodeStack.push(new ExpressionNode(tmp2));
         }
+
+        // STORE PTR for designator increment and decrement
+        if (DesignatorNonArrayAccess.getParent() instanceof DesignatorIncrement ||
+                DesignatorNonArrayAccess.getParent() instanceof DesignatorDecrement) {
+            storeToPtr = true;
+            expressionNodeStack.push(new ExpressionNode(tmp));
+        }
+
         code.add(getPtr);
         if (load != null)
             code.add(load);
