@@ -888,11 +888,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(ReturnStatementt ReturnStatementt) {
         ReturnStatement ret = ReturnStatementt.getReturnStatement();
 
-        // method is VOID and doesn't return type
-        if (currentMethod.getType() == SymbolTable.noType)
-            throwError(ReturnStatementt.getLine(), "Method doesn't return any value, therefore 'return' statement cannot be used.");
-            // incompatible declared return type and type of return statement
-        else if (ret instanceof ExprReturnStatement && (((ExprReturnStatement) ret).getExpr().struct == null || !((ExprReturnStatement) ret).getExpr().struct.assignableTo(currentMethod.getType())))
+        if (ret instanceof ExprReturnStatement && (((ExprReturnStatement) ret).getExpr().struct == null || !((ExprReturnStatement) ret).getExpr().struct.assignableTo(currentMethod.getType())))
             throwError(ReturnStatementt.getLine(), "Expression in return statement cannot be casted to declared return type of function.");
             // invalid placement of 'return' statement
         else if (currentMethod == null)

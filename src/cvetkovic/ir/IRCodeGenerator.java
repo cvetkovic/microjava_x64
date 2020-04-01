@@ -50,6 +50,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private boolean postponeUpdateVarList = false;
 
+    private List<Quadruple> returnStatementJMPFixPoint = new ArrayList<>();
+
     //////////////////////////////////////////////////////////////////////////////////
     // CONSTRUCTOR & STATIC INITIALIZATION
     //////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +137,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Obj ptrDest = expressionNodeStack.pop().getObj();
         if (expressionNodeStack.empty())    // not a PTR access
-            resolveIncDec(expressionNodeStack.pop().getObj(), instruction, null);
+            resolveIncDec(ptrDest, instruction, null);
         else
             resolveIncDec(expressionNodeStack.pop().getObj(), instruction, ptrDest);
     }
@@ -172,21 +174,17 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(MethodDecl MethodDecl) {
+        if (returnStatementJMPFixPoint.size() != 0) {
+            String leavePoint = generateLabel(code);
+
+            for (Quadruple q : returnStatementJMPFixPoint)
+                q.setResult(new QuadrupleLabel(leavePoint));
+
+            returnStatementJMPFixPoint.clear();
+        }
+
         Quadruple instruction = new Quadruple(IRInstruction.LEAVE);
         code.add(instruction);
-    }
-
-    @Override
-    public void visit(ExprReturnStatement ExprReturnStatement) {
-        Quadruple instruction = new Quadruple(IRInstruction.RETURN);
-
-        code.addAll(expressionDAG.emitQuadruples());
-        instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
-
-        code.add(instruction);
-
-        expressionDAG = new ExpressionDAG();
-        expressionNodeStack.pop();
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +222,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
             result.setAdr(DataStructures.getX64VariableSize(FactorArrayDeclaration.struct));
-            expressionNodeStack.push(new ExpressionNode(result));
+            //expressionNodeStack.push(new ExpressionNode(result));
         }
     }
 
@@ -314,6 +312,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         container.instructions.add(instruction);
         reverseParameterStack.peek().push(container);
+        expressionDAG = new ExpressionDAG();
     }
 
     @Override
@@ -386,13 +385,14 @@ public class IRCodeGenerator extends VisitorAdaptor {
             allocateArray = false;
 
             src = expressionNodeStack.pop();
-            expressionNodeStack.pop();
+            //expressionNodeStack.pop();
             dest = expressionNodeStack.pop();
 
             code.addAll(expressionDAG.emitQuadruples());
 
             Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
             instruction.setArg1(new QuadrupleObjVar(src.getObj()));
+            instruction.setArg2(new QuadrupleARR());
             instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
 
             code.add(instruction);
@@ -834,8 +834,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Quadruple load = null;
 
 
-        if (DesignatorNonArrayAccess.getParent() instanceof ReadStatement)
-        {
+        if (DesignatorNonArrayAccess.getParent() instanceof ReadStatement) {
             expressionNodeStack.push(new ExpressionNode(tmp));
             code.add(getPtr);
             return;
@@ -867,6 +866,36 @@ public class IRCodeGenerator extends VisitorAdaptor {
             expressionNodeStack.push(new ExpressionNode(tmp));
             storeToPtr = true;
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // RETURN STATEMENT
+    //////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void visit(BlankReturnStatement BlankReturnStatement) {
+        Quadruple instruction = new Quadruple(IRInstruction.JMP);
+        code.add(instruction);
+
+        returnStatementJMPFixPoint.add(instruction);
+    }
+
+    @Override
+    public void visit(ExprReturnStatement ExprReturnStatement) {
+        Quadruple instruction = new Quadruple(IRInstruction.RETURN);
+
+        code.addAll(expressionDAG.emitQuadruples());
+        instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
+
+        code.add(instruction);
+
+        expressionDAG = new ExpressionDAG();
+        expressionNodeStack.pop();
+
+        Quadruple jmp = new Quadruple(IRInstruction.JMP);
+        code.add(jmp);
+
+        returnStatementJMPFixPoint.add(jmp);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
