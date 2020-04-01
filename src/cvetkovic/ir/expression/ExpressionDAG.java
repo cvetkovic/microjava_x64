@@ -126,12 +126,6 @@ public class ExpressionDAG {
             }
         }
 
-        /*arrayOfRecords.clear();
-        accessByReference.clear();
-        accessByIndex.clear();
-        rootNode = null;
-        ExpressionNode.resetId();*/
-
         return result;
     }
 

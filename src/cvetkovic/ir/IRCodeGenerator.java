@@ -43,7 +43,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private boolean allocateArray = false;
     private boolean allocateClass = false;
-    private boolean storeToMemory = false;
+    private boolean storeToPtr = false;
 
     private boolean inForLogicalOrCondition = false;
     private Stack<List<Quadruple>> forUpdateVarListInstructionStack = new Stack<>();
@@ -390,10 +390,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
         }
-        /*else if (storeToMemory)
-        {
-
-        }*/
         else if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
             Quadruple instruction = new Quadruple(IRInstruction.ASTORE);
 
@@ -414,8 +410,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
             dest = expressionNodeStack.pop();
 
             expressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
-
             List<Quadruple> toAdd = expressionDAG.emitQuadruples();
+
+            // store to ptr
+            if (storeToPtr)
+                toAdd.get(toAdd.size() - 1).setArg2(new QuadruplePTR());
 
             if (postponeUpdateVarList) {
                 generateLabelForContinueStatement(toAdd);
@@ -748,10 +747,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     //////////////////////////////////////////////////////////////////////////////////
-    // CLASS
+    // DESIGNATOR
     //////////////////////////////////////////////////////////////////////////////////
 
-    // MakeNewExpressionDAG
     @Override
     public void visit(DesignatorRoot DesignatorRoot) {
         SyntaxNode parent = DesignatorRoot.getParent();
@@ -780,22 +778,31 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(DesignatorNonArrayAccess DesignatorNonArrayAccess) {
         Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
-        Obj tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+        Obj tmp2 = null;
 
         Quadruple getPtr = new Quadruple(GET_PTR);
         getPtr.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
         getPtr.setArg2(new QuadrupleObjVar(DesignatorNonArrayAccess.obj));
         getPtr.setResult(new QuadrupleObjVar(tmp));
 
-        Quadruple load = new Quadruple(LOAD);
-        load.setArg1(new QuadrupleObjVar(tmp));
-        load.setResult(new QuadrupleObjVar(tmp2));
+        Quadruple load = null;
 
+        if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign)) {
+            tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+
+            load = new Quadruple(LOAD);
+            load.setArg1(new QuadrupleObjVar(tmp));
+            load.setResult(new QuadrupleObjVar(tmp2));
+
+            expressionNodeStack.push(new ExpressionNode(tmp2));
+        }
         code.add(getPtr);
-        code.add(load);
-        expressionNodeStack.push(new ExpressionNode(tmp2));
-
-        storeToMemory = true;
+        if (load != null)
+            code.add(load);
+        else {
+            expressionNodeStack.push(new ExpressionNode(tmp));
+            storeToPtr = true;
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////
