@@ -52,6 +52,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private List<Quadruple> returnStatementJMPFixPoint = new ArrayList<>();
 
+    private Obj currentMethod = null;
+    private boolean cancelFactorFunctionCall = false;
+
     //////////////////////////////////////////////////////////////////////////////////
     // CONSTRUCTOR & STATIC INITIALIZATION
     //////////////////////////////////////////////////////////////////////////////////
@@ -294,6 +297,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
         instruction.setArg2(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
         code.add(instruction);
+
+        expressionDAG = new ExpressionDAG();
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -306,9 +311,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         container.instructions.addAll(expressionDAG.emitQuadruples());
 
         Quadruple instruction = new Quadruple(IRInstruction.PARAM);
-        instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
-
-        expressionNodeStack.pop();
+        instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
         container.instructions.add(instruction);
         reverseParameterStack.peek().push(container);
@@ -328,6 +331,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(ActParsStart ActParsStart) {
         reverseParameterStack.push(new Stack<>());
+
+        // pushing implicit 'this'
+        if (!expressionNodeStack.empty()) {
+            Quadruple implicitThis = new Quadruple(PARAM);
+            implicitThis.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+
+            ParameterContainer container = new ParameterContainer();
+            container.instructions.add(implicitThis);
+            reverseParameterStack.peek().push(container);
+        }
     }
 
     @Override
@@ -346,8 +359,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(FactorFunctionCall FactorFunctionCall) {
         if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
             return;
-        else if (FactorFunctionCall.getDesignator() instanceof DesignatorNonArrayAccess)
+        else if (cancelFactorFunctionCall)
+        {
+            cancelFactorFunctionCall = false;
             return;
+        }
 
         Obj var = FactorFunctionCall.getDesignator().obj;
         if (FactorFunctionCall.getFactorFunctionCallParameters() instanceof NoFactorFunctionCallParameter) {
@@ -511,6 +527,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(MethodName MethodName) {
         generateLabel(code, MethodName.obj.getName());
 
+        currentMethod = MethodName.obj;
+
         Quadruple instruction = new Quadruple(IRInstruction.ENTER);
         int numberOfBytes = 0;
         int i = 0;
@@ -530,6 +548,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         code.add(instruction);
     }
+
+    // TODO: see what to do with abstract methods
 
     //////////////////////////////////////////////////////////////////////////////////
     // IF STATEMENT
@@ -798,6 +818,36 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(DesignatorRoot DesignatorRoot) {
         SyntaxNode parent = DesignatorRoot.getParent();
 
+        // adding implicit this
+        if (insideClass) {
+            Obj obj = DesignatorRoot.obj;
+
+            // TODO: maybe put this.method() invocation -> for regular and abstract methods
+            if (obj.getKind() == Obj.Fld) {
+                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+
+                Obj thisPointer = null;
+                for (Obj ptr : currentMethod.getLocalSymbols()) {
+                    if (ptr.getName().equals("this")) {
+                        thisPointer = ptr;
+                        break;
+                    }
+                }
+                if (thisPointer == null)
+                    throw new RuntimeException("Invalid function declaration inside class. No 'this' implicit parameter found.");
+
+                Quadruple getPtr = new Quadruple(GET_PTR);
+                getPtr.setArg1(new QuadrupleObjVar(thisPointer));
+                getPtr.setArg2(new QuadrupleObjVar(obj));
+                getPtr.setResult(new QuadrupleObjVar(tmp));
+
+                code.add(getPtr);
+                expressionNodeStack.push(new ExpressionNode(tmp));
+
+                cancelFactorFunctionCall = true;
+            }
+        }
+
         if (parent instanceof DesignatorAssign && ((DesignatorAssign) parent).getDesignator() instanceof DesignatorArrayAccess)
             return;
         else if (parent instanceof ExprReturnStatement)
@@ -818,11 +868,15 @@ public class IRCodeGenerator extends VisitorAdaptor {
             return;
 
         Obj destination = DesignatorRoot.obj;
-        expressionNodeStack.push(expressionDAG.getOrCreateLeaf(destination));
+        expressionNodeStack.push(expressionDAG.getOrCreateLeaf(DesignatorRoot.obj));
     }
 
     @Override
     public void visit(DesignatorNonArrayAccess DesignatorNonArrayAccess) {
+        if (DesignatorNonArrayAccess.obj.getKind() == Obj.Meth ||
+                DesignatorNonArrayAccess.obj.getKind() == SymbolTable.AbstractMethodObject)
+            return;
+
         Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
         Obj tmp2 = null;
 
@@ -833,15 +887,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Quadruple load = null;
 
-
         if (DesignatorNonArrayAccess.getParent() instanceof ReadStatement) {
             expressionNodeStack.push(new ExpressionNode(tmp));
             code.add(getPtr);
+
             return;
         }
 
         // if not a left side of designator assign statement
-        if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign)) {
+        if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign) &&
+                !(DesignatorNonArrayAccess.getParent() instanceof DesignatorInvoke)) {
 
             tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
 
@@ -885,17 +940,42 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Quadruple instruction = new Quadruple(IRInstruction.RETURN);
 
         code.addAll(expressionDAG.emitQuadruples());
-        instruction.setArg1(new QuadrupleObjVar(expressionDAG.getRootObj()));
+        instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
         code.add(instruction);
 
         expressionDAG = new ExpressionDAG();
-        expressionNodeStack.pop();
 
         Quadruple jmp = new Quadruple(IRInstruction.JMP);
         code.add(jmp);
 
         returnStatementJMPFixPoint.add(jmp);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // CLASS
+    //////////////////////////////////////////////////////////////////////////////////
+
+    private boolean insideClass = false;
+
+    @Override
+    public void visit(AbstractClassName AbstractClassName) {
+        insideClass = true;
+    }
+
+    @Override
+    public void visit(AbstractClassDecl AbstractClassDecl) {
+        insideClass = false;
+    }
+
+    @Override
+    public void visit(ClassName ClassName) {
+        insideClass = true;
+    }
+
+    @Override
+    public void visit(ClassDeclaration ClassDeclaration) {
+        insideClass = false;
     }
 
     //////////////////////////////////////////////////////////////////////////////////

@@ -129,18 +129,6 @@ public class ExpressionDAG {
         return result;
     }
 
-    public Obj getRootObj() {
-        if (rootNode == null) {
-            ExpressionNode node = arrayOfRecords.get(arrayOfRecords.size() - 1);
-            if (node.isLeaf())
-                return node.variable;
-            else
-                return node.destinationVariable;
-        }
-        else
-            return rootNode.destinationVariable;
-    }
-
     public static String generateTempVarOutside()
     {
         return tmpVarPrefix + tmpObjCounter++;
