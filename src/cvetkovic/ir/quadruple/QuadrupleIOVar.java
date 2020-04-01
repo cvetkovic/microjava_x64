@@ -1,5 +1,8 @@
 package cvetkovic.ir.quadruple;
 
+import cvetkovic.structures.SymbolTable;
+import rs.etf.pp1.symboltable.concepts.Struct;
+
 public class QuadrupleIOVar extends QuadrupleVariable {
     protected DataWidth width;
 
@@ -21,6 +24,21 @@ public class QuadrupleIOVar extends QuadrupleVariable {
                 return "%c";
             case WORD:
                 return "%d";
+
+            default:
+                throw new RuntimeException("Not supported I/O data width.");
+        }
+    }
+
+    public Struct ioVarToStruct() {
+        switch (width)
+        {
+            case BIT:
+                return SymbolTable.BooleanStruct;
+            case BYTE:
+                return SymbolTable.charType;
+            case WORD:
+                return SymbolTable.intType;
 
             default:
                 throw new RuntimeException("Not supported I/O data width.");

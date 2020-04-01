@@ -156,7 +156,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode rightChild = expressionNodeStack.pop();
         ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
 
-        if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign))
+        if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign) &&
+                !(DesignatorArrayAccess.getParent() instanceof ReadStatement))
             expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
         else {
             // this means that array access is on the left side of '=' operator
@@ -246,9 +247,22 @@ public class IRCodeGenerator extends VisitorAdaptor {
         else
             throw new RuntimeException("IR instruction 'scanf' is not supported with other data types than integer, character or boolean.");
 
-        instruction.setResult(new QuadrupleObjVar(targetObj));
+        if (ReadStatement.getDesignator() instanceof DesignatorArrayAccess) {
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIOVar) instruction.getArg2()).ioVarToStruct());
+            instruction.setResult(new QuadrupleObjVar(tmp));
 
-        code.add(instruction);
+            Quadruple astoreInstruction = new Quadruple(ASTORE);
+            astoreInstruction.setArg1(new QuadrupleObjVar(tmp));
+            astoreInstruction.setArg2(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+            astoreInstruction.setResult(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+
+            code.add(instruction);
+            code.add(astoreInstruction);
+        }
+        else {
+            instruction.setResult(new QuadrupleObjVar(targetObj));
+            code.add(instruction);
+        }
     }
 
     @Override
