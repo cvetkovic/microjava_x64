@@ -13,13 +13,22 @@ public class QuadrupleIOVar extends QuadrupleVariable {
 
     @Override
     public String toString() {
-        if (width == DataWidth.BYTE)
-            return "%c";
-        else
-            return "%d";
+        switch (width)
+        {
+            case BIT:
+                return "%b";
+            case BYTE:
+                return "%c";
+            case WORD:
+                return "%d";
+
+            default:
+                throw new RuntimeException("Not supported I/O data width.");
+        }
     }
 
     public enum DataWidth {
+        BIT,        // 8-bit -> minimum allocation size
         BYTE,       // 8-bit
         WORD        // 32-bit
     }

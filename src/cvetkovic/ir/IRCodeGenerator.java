@@ -97,10 +97,30 @@ public class IRCodeGenerator extends VisitorAdaptor {
         expressionNodeStack.push(expressionDAG.getOrCreateNode(operation, leftChild, rightChild));
     }
 
+    //////////////////////////////////////////////////////////////////////////////////
+    // CONSTANTS
+    //////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void visit(FactorNumericalConst FactorNumericalConst) {
         Obj constValue = new Obj(Obj.Con, "", SymbolTable.intType);
         constValue.setAdr(FactorNumericalConst.getFactorNumConst());
+
+        expressionNodeStack.push(expressionDAG.getOrCreateLeaf(constValue));
+    }
+
+    @Override
+    public void visit(FactorCharConst FactorCharConst) {
+        Obj constValue = new Obj(Obj.Con, "", SymbolTable.charType);
+        constValue.setAdr(FactorCharConst.getFactorChar());
+
+        expressionNodeStack.push(expressionDAG.getOrCreateLeaf(constValue));
+    }
+
+    @Override
+    public void visit(FactorBoolConst FactorBoolConst) {
+        Obj constValue = new Obj(Obj.Con, "", SymbolTable.BooleanStruct);
+        constValue.setAdr(FactorBoolConst.getFactorBoolean() ? 1 : 0);
 
         expressionNodeStack.push(expressionDAG.getOrCreateLeaf(constValue));
     }
@@ -222,7 +242,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         else if (targetObj.getType().getKind() == Struct.Char)
             instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
         else if (targetObj.getType().getKind() == Struct.Bool)
-            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));     // shall print 0 or 1
+            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BIT));
         else
             throw new RuntimeException("IR instruction 'scanf' is not supported with other data types than integer, character or boolean.");
 
@@ -243,11 +263,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
         else if (targetStruct.getKind() == Struct.Char)
             instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
         else if (targetStruct.getKind() == Struct.Bool)
-            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE)); // shall print 0 or 1
+            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BIT));
         else
             throw new RuntimeException("IR instruction 'printf' is not supported with other data types than integer, character or boolean.");
 
-        instruction.setArg2(new QuadrupleObjVar(expressionDAG.getRootObj()));
+        instruction.setArg2(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
         code.add(instruction);
     }
@@ -767,6 +787,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
         else if (parent instanceof ArrayDeclaration)
             return;
         else if (parent instanceof DesignatorArrayAccess)
+            return;
+        else if (parent instanceof FactorFunctionCall)
             return;
 
         Obj destination = DesignatorRoot.obj;
