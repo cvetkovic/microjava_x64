@@ -6,6 +6,7 @@ program Program
     {
 	    void main()
 	        bool i; char j;
+	        int[] niz;
 	    {
 	        read(y);
 	        read(i);
@@ -18,5 +19,6 @@ program Program
 	        print(true);
 	        print(' ');
 	        print(x);
+	        print(niz[x]);
         }
 	}

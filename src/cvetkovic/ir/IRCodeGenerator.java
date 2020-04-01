@@ -259,6 +259,18 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.add(instruction);
             code.add(astoreInstruction);
         }
+        else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess) {
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIOVar) instruction.getArg2()).ioVarToStruct());
+            instruction.setResult(new QuadrupleObjVar(tmp));
+
+            Quadruple astoreInstruction = new Quadruple(STORE);
+            astoreInstruction.setArg1(new QuadrupleObjVar(tmp));
+            astoreInstruction.setArg2(new QuadruplePTR());
+            astoreInstruction.setResult(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+
+            code.add(instruction);
+            code.add(astoreInstruction);
+        }
         else {
             instruction.setResult(new QuadrupleObjVar(targetObj));
             code.add(instruction);
@@ -821,8 +833,17 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Quadruple load = null;
 
+
+        if (DesignatorNonArrayAccess.getParent() instanceof ReadStatement)
+        {
+            expressionNodeStack.push(new ExpressionNode(tmp));
+            code.add(getPtr);
+            return;
+        }
+
         // if not a left side of designator assign statement
         if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign)) {
+
             tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
 
             load = new Quadruple(LOAD);

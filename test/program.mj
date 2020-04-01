@@ -1,38 +1,24 @@
 program Program
-    int x[];
+    const int k = 48;
     int y;
-    int z;
-    int t;
+    int x;
 
     {
-        int test()
-            int a;
-        {
-            a = 1;
-            return a;
-        }
-
 	    void main()
+	        bool i; char j;
+	        int niz[];
 	    {
-	        x = new int[2];
-	        read(x[0]);
-	        read(x[1]);
+	        read(y);
+	        read(i);
+	        read(j);
 
-	        y = x[0] + x[1];
-	        z = x[0] * x[1];
-	        t = test();
+	        x = y + 1;
 
-	        print(y);
+	        print(1);
+	        print(k);
+	        print(true);
 	        print(' ');
-	        print(z);
-	        print(' ');
-	        print(t);
-	        print(' ');
-	        print(y);
-	        print(' ');
-	        t = test();
-	        print(test());
-	        print(' ');
-	        print(t);
+	        print(x);
+	        print(niz[x]);
         }
 	}

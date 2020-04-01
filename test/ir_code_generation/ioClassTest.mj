@@ -1,0 +1,18 @@
+program Program
+    const int k = 48;
+    int y;
+    int x;
+
+    class Klasa
+    {
+        int polje;
+    }
+
+    {
+	    void main()
+	        Klasa k;
+	    {
+	        read(k.polje);
+	        print(k.polje);
+        }
+	}
