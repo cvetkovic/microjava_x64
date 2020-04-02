@@ -1,4 +1,7 @@
 program Program
+
+    int ax;
+
 	class C
 	{
 	    int b;
@@ -7,10 +10,11 @@ program Program
 	    {
 	        int ff(int a)
 	        {
-	            print(b + 1);
-	            print(polje);
+	            // invalid field access
+	            //print(this.b);
+	            print(this.polje + b + 8);
 
-	            return this.b;
+	            return b + 9;
 	        }
 	    }
 	}
@@ -20,11 +24,11 @@ program Program
 	{
 		void main()
 		{
-		    c = new C;
-		    c.b = 1;
+		    //c = new C;
+		    //c.b = 1;
 
-            print(c.ff(1) + 1);
-            print(c.b);
-            print(c.polje);
+            //print(c.ff(1) + 1);
+            //print(c.b);
+            //print(c.polje);
 		}
 	}

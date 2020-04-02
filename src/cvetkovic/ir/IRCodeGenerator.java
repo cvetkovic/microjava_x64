@@ -359,8 +359,19 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(FactorFunctionCall FactorFunctionCall) {
         if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
             return;
+        else if (FactorFunctionCall.getDesignator() instanceof DesignatorNonArrayAccess)
+            return;
         else if (cancelFactorFunctionCall)
         {
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), FactorFunctionCall.struct);
+
+            Quadruple load = new Quadruple(LOAD);
+            load.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+            load.setArg2(new QuadrupleObjVar(tmp));
+            code.add(load);
+
+            expressionNodeStack.push(new ExpressionNode(tmp));
+
             cancelFactorFunctionCall = false;
             return;
         }
