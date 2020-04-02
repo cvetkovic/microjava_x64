@@ -15,12 +15,13 @@ program MJProgram
 	}
 
 	Point shapes[];
+	Point s;
 {
 	void main()
 		int i;
 		int x, y;
 
 	{
-        shapes[i].toString();
+	    s.x++;
 	}
 }

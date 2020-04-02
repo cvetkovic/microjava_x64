@@ -330,7 +330,18 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(ActParsStart ActParsStart) {
+        pushImplicitThisForFunctionCall();
+    }
+
+    private void pushImplicitThisForFunctionCall()
+    {
         reverseParameterStack.push(new Stack<>());
+
+        // for case -> shapes[i].toString();
+        if (expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
+            code.addAll(expressionDAG.emitQuadruples());
+            expressionDAG = new ExpressionDAG();
+        }
 
         // pushing implicit 'this'
         if (!expressionNodeStack.empty()) {
@@ -343,12 +354,23 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
     }
 
-    @Override
-    public void visit(ActParsEnd ActParsEnd) {
+    private void endFunctionCall()
+    {
         Stack<ParameterContainer> container = reverseParameterStack.pop();
 
         while (!container.empty())
             code.addAll(container.pop().instructions);
+    }
+
+    @Override
+    public void visit(DesignatorMethodCallParameters DesignatorMethodCallParameters) {
+        endFunctionCall();
+    }
+
+    @Override
+    public void visit(NoDesignatorMethodCallParameters NoDesignatorMethodCallParameters) {
+        pushImplicitThisForFunctionCall();
+        endFunctionCall();
     }
 
     private static class ParameterContainer {
@@ -907,7 +929,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (DesignatorNonArrayAccess.obj.getKind() == Obj.Meth ||
                 DesignatorNonArrayAccess.obj.getKind() == SymbolTable.AbstractMethodObject)
             return;
-
 
         Quadruple getPtr = new Quadruple(GET_PTR);
         if (expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
