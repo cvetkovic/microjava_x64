@@ -151,7 +151,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Obj ptrDest = expressionNodeStack.pop().getObj();
         if (expressionNodeStack.empty())    // not a PTR access
-            resolveIncDec(expressionNodeStack.pop().getObj(), instruction, null);
+            resolveIncDec(ptrDest, instruction, null);
         else
             resolveIncDec(expressionNodeStack.pop().getObj(), instruction, ptrDest);
     }
@@ -166,7 +166,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
             expressionNodeStack.push(expressionDAG.getOrCreateNode(ExpressionNodeOperation.ARRAY_LOAD, leftChild, rightChild));
         else {
             // this means that array access is on the left side of '=' operator
-            expressionNodeStack.push(leftChild);
+            if (!(DesignatorArrayAccess.getDesignator() instanceof DesignatorNonArrayAccess))
+                expressionNodeStack.push(leftChild);
             expressionNodeStack.push(rightChild);
         }
     }
@@ -931,7 +932,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             return;
 
         Quadruple getPtr = new Quadruple(GET_PTR);
-        if (expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
+        if (expressionDAG.getLast() != null && expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
             code.addAll(expressionDAG.emitQuadruples());
             expressionDAG = new ExpressionDAG();
         }

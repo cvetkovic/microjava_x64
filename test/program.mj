@@ -1,27 +1,25 @@
-program MJProgram
-	const int size = 10;
+program TestProgram
+    class Klasa
+    {
+        bool bp;
+        char cp;
+        int ip;
+        Klasa kp;
+        int np[];
+        {
 
-	class Point
-	{
-		int x, y;
-		{
-			void toString()
-			{
-				print('(');
-				print(x); print(','); print(' '); print(y);
-				print(')');
-			}
-		}
-	}
+        }
+    }
 
-	Point shapes[];
-	Point s;
-{
-	void main()
-		int i;
-		int x, y;
-
-	{
-	    s.x++;
-	}
-}
+    {
+        void main()
+            bool b;
+            char c;
+            int i[];
+            Klasa k;
+            Klasa ni[];
+        {
+            i[1 + 5] = 2;
+            k.np[1] = 5;
+        }
+    }
