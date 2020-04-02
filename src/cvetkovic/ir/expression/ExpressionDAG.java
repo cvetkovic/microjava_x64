@@ -133,4 +133,12 @@ public class ExpressionDAG {
     {
         return tmpVarPrefix + tmpObjCounter++;
     }
+
+    public ExpressionNode getLast()
+    {
+        if (arrayOfRecords.size() > 0)
+            return arrayOfRecords.get(arrayOfRecords.size() - 1);
+        else
+            return null;
+    }
 }

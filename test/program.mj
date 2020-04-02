@@ -1,33 +1,26 @@
-program Program
+program MJProgram
+	const int size = 10;
 
-    int ax;
-
-	class C
+	class Point
 	{
-	    int b;
-	    int polje;
-
-	    {
-	        int ff(int a)
-	        {
-	            // invalid field access
-	            print(this.polje + b + 8);
-
-	            return b - polje;
-	        }
-	    }
-	}
-
-	C c;
-
-	{
-		void main()
+		int x, y;
 		{
-		    //c = new C;
-		    //c.b = 1;
-
-            print(c.ff(1) + 1);
-            //print(c.b);
-            //print(c.polje);
+			void toString()
+			{
+				print('(');
+				print(x); print(','); print(' '); print(y);
+				print(')');
+			}
 		}
 	}
+
+	Point shapes[];
+{
+	void main()
+		int i;
+		int x, y;
+
+	{
+        shapes[i].toString();
+	}
+}
