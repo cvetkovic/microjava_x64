@@ -359,7 +359,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(FactorFunctionCall FactorFunctionCall) {
         if (FactorFunctionCall.getDesignator() instanceof DesignatorArrayAccess)
             return;
-        else if (FactorFunctionCall.getDesignator() instanceof DesignatorNonArrayAccess)
+        else if (FactorFunctionCall.getDesignator() instanceof DesignatorNonArrayAccess && insideClass)
             return;
         else if (cancelFactorFunctionCall)
         {
