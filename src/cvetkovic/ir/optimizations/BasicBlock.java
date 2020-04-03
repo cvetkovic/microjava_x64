@@ -2,8 +2,6 @@ package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleLabel;
-import cvetkovic.ir.quadruple.QuadrupleVariable;
 
 import java.util.*;
 
@@ -38,32 +36,44 @@ public class BasicBlock {
         Set<Integer> leaders = new HashSet<>();
         leaders.add(0);
 
+        // find leaders
         for (int i = 0; i < code.size(); i++) {
-            if (IRInstruction.isBasicBlockSplitInstruction(code.get(i).getInstruction())) {
-                QuadrupleVariable destinationLabel = code.get(i).getResult();
-                if (!(destinationLabel instanceof QuadrupleLabel))
-                    throw new RuntimeException("Invalid format of branch instruction.");
+            Quadruple quadruple = code.get(i);
+
+            if (IRInstruction.isBasicBlockSplitInstruction(quadruple.getInstruction())) {
+                String destinationLabel;
+
+                /*if (quadruple.getInstruction() == IRInstruction.CALL)
+                    destinationLabel = quadruple.getArg1().toString();
+                else*/
+                    destinationLabel = quadruple.getResult().toString();
 
                 // adding destination of branch instruction to block leaders
-                leaders.add(labelIndices.get(((QuadrupleLabel) destinationLabel).getLabelName()));
+                leaders.add(labelIndices.get(destinationLabel));
 
                 // if it exists, add to leaders the first instruction after current branch
                 if (i != code.size() - 1)
-                    leaders.add(i);
+                    leaders.add(i + 1);
             }
         }
 
+        // extract basic blocks
         for (Integer l : leaders) {
             BasicBlock block = new BasicBlock();
             block.basicBlockStart = l;
 
             int end;
             for (end = l + 1; end < code.size() && !leaders.contains(end); end++);
-            block.basicBlockEnd = end;
+            block.basicBlockEnd = end - 1;
 
             basicBlocks.add(block);
         }
 
         return basicBlocks;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + basicBlockStart + ", " + basicBlockEnd + "]";
     }
 }

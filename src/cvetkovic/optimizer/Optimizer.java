@@ -8,7 +8,7 @@ import java.util.List;
 public abstract class Optimizer {
 
     private List<OptimizerPass> optimizationList = new ArrayList<>();
-    private List<Quadruple> code;
+    protected List<Quadruple> code;
 
     public Optimizer(List<Quadruple> code) {
         this.code = code;

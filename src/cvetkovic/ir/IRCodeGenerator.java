@@ -1044,8 +1044,12 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        int i = 0;
 
         for (Quadruple instruction : code) {
+            builder.append(i++);
+            builder.append(" - ");
+
             builder.append(instruction);
             if (instruction.getInstruction() == LEAVE)
                 builder.append("\n");

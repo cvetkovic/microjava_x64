@@ -1,25 +1,22 @@
 program TestProgram
-    class Klasa
     {
-        bool bp;
-        char cp;
-        int ip;
-        Klasa kp;
-        int np[];
+        void test()
         {
 
         }
-    }
 
-    {
         void main()
-            bool b;
-            char c;
-            int i[];
-            Klasa k;
-            Klasa ni[];
+            int i, j;
         {
-            i[1 + 5] = 2;
-            k.np[1] = 5;
+            i = 0;
+
+            if (j == 0)
+                i = 1;
+            else
+                i = -1;
+
+            test();
+
+            j = 5;
         }
     }

@@ -52,6 +52,8 @@ public enum IRInstruction {
             case JGE:
             case JE:
             case JNE:
+
+            //case CALL:
                 return true;
 
             default:
