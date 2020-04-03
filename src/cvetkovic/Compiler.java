@@ -4,7 +4,6 @@ import cvetkovic.ir.IRCodeGenerator;
 import cvetkovic.ir.optimizations.IROptimizer;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
-import cvetkovic.optimizer.Optimizer;
 import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
@@ -108,12 +107,12 @@ public class Compiler {
                 syntaxNode.traverseBottomUp(irCodeGenerator);
 
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
-                List<Quadruple> irCode = irCodeGenerator.getIRCodeOutput();
+                List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
 
                 if (optimize_ir) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
 
-                    Optimizer irCodeOptimizer = new IROptimizer(irCode);
+                    IROptimizer irCodeOptimizer = new IROptimizer(irCode);
                     irCodeOptimizer.executeOptimizations();
 
                     irCode = irCodeOptimizer.getOptimizationOutput();

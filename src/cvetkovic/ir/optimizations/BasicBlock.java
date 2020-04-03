@@ -9,6 +9,11 @@ public class BasicBlock {
     public int basicBlockStart;
     public int basicBlockEnd;
 
+    // this block is first in code sequence
+    public boolean enterBlock = false;
+    // this block is the last in code sequence and leads to exit
+    public boolean exitBlock = false;
+
     /**
      * Indexes labels in an instruction sequence MAP<LABEL_NAME, INDEX_IN_SEQUENCE>
      *
@@ -46,7 +51,7 @@ public class BasicBlock {
                 /*if (quadruple.getInstruction() == IRInstruction.CALL)
                     destinationLabel = quadruple.getArg1().toString();
                 else*/
-                    destinationLabel = quadruple.getResult().toString();
+                destinationLabel = quadruple.getResult().toString();
 
                 // adding destination of branch instruction to block leaders
                 leaders.add(labelIndices.get(destinationLabel));
@@ -63,8 +68,12 @@ public class BasicBlock {
             block.basicBlockStart = l;
 
             int end;
-            for (end = l + 1; end < code.size() && !leaders.contains(end); end++);
+            for (end = l + 1; end < code.size() && !leaders.contains(end); end++) ;
             block.basicBlockEnd = end - 1;
+
+            if (block.basicBlockStart + 1 < code.size())
+                block.enterBlock = (code.get(block.basicBlockStart + 1).getInstruction() == IRInstruction.ENTER);
+            block.exitBlock = (code.get(block.basicBlockEnd).getInstruction() == IRInstruction.LEAVE);
 
             basicBlocks.add(block);
         }
@@ -74,6 +83,6 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-        return "[" + basicBlockStart + ", " + basicBlockEnd + "]";
+        return "[" + basicBlockStart + ", " + basicBlockEnd + ", start = " + enterBlock + ", end = " + exitBlock + "]";
     }
 }

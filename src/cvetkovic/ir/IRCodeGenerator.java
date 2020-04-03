@@ -32,7 +32,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private boolean inForCondition = false;
 
-    private List<Quadruple> code = new ArrayList<>();
+    private List<Quadruple> code;
+    private List<List<Quadruple>> outputCode = new ArrayList<>();
 
     private ExpressionDAG expressionDAG;
     private Stack<ExpressionNode> expressionNodeStack = new Stack<>();
@@ -189,6 +190,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Quadruple instruction = new Quadruple(IRInstruction.LEAVE);
         code.add(instruction);
+
+        if (code != null) {
+            outputCode.add(code);
+            code = new ArrayList<>();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -334,8 +340,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         pushImplicitThisForFunctionCall();
     }
 
-    private void pushImplicitThisForFunctionCall()
-    {
+    private void pushImplicitThisForFunctionCall() {
         reverseParameterStack.push(new Stack<>());
 
         // for case -> shapes[i].toString();
@@ -355,8 +360,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
     }
 
-    private void endFunctionCall()
-    {
+    private void endFunctionCall() {
         Stack<ParameterContainer> container = reverseParameterStack.pop();
 
         while (!container.empty())
@@ -579,8 +583,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(MethodName MethodName) {
-        generateLabel(code, MethodName.obj.getName());
+        code = new ArrayList<>();
 
+        generateLabel(code, MethodName.obj.getName());
         currentMethod = MethodName.obj;
 
         Quadruple instruction = new Quadruple(IRInstruction.ENTER);
@@ -1044,15 +1049,17 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        int i = 0;
 
-        for (Quadruple instruction : code) {
-            builder.append(i++);
-            builder.append(" - ");
+        for (List<Quadruple> list : outputCode) {
+            int i = 0;
 
-            builder.append(instruction);
-            if (instruction.getInstruction() == LEAVE)
+            for (Quadruple instruction : list) {
+                builder.append(i++);
+                builder.append(" - ");
+
+                builder.append(instruction);
                 builder.append("\n");
+            }
 
             builder.append("\n");
         }
@@ -1060,7 +1067,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         return builder.toString();
     }
 
-    public List<Quadruple> getIRCodeOutput() {
-        return code;
+    public List<List<Quadruple>> getIRCodeOutput() {
+        return outputCode;
     }
 }

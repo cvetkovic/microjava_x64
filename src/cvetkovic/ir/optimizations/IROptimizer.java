@@ -4,27 +4,26 @@ import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.optimizer.Optimizer;
 
 import java.util.List;
-import java.util.Map;
 
 public class IROptimizer extends Optimizer {
 
-    private List<BasicBlock> basicBlocks;
-    private Map<String, Integer> labelIndices;
+    public IROptimizer(List<List<Quadruple>> code) {
+        for (List<Quadruple> quadrupleList : code) {
+            CodeSequence sequence = new CodeSequence();
 
-    public IROptimizer(List<Quadruple> code) {
-        super(code);
+            sequence.code = quadrupleList;
+            sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
+            sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(quadrupleList, sequence.labelIndices);
 
-        labelIndices = BasicBlock.generateMapOfLabels(code);
-        basicBlocks = BasicBlock.extractBasicBlocksFromSequence(code, labelIndices);
-
-        for (BasicBlock b : basicBlocks)
-            System.out.println(b);
+            for (BasicBlock b : sequence.basicBlocks)
+                System.out.println(b);
+            System.out.println("");
+        }
 
         createOptimizationList();
     }
 
-    private void createOptimizationList()
-    {
-        // TODO: instantiate classes thas implement OptimizerPass and add them to list of passes
+    private void createOptimizationList() {
+        // TODO: instantiate classes that implement OptimizerPass and add them to list of passes
     }
 }
