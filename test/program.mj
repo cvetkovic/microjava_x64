@@ -1,8 +1,12 @@
 program TestProgram
     {
         void test()
+            int i;
         {
-
+            for (i = 0; i < 100; i++)
+            {
+                print(i);
+            }
         }
 
         void main()
