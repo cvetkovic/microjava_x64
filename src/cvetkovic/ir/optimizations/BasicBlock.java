@@ -43,6 +43,45 @@ public class BasicBlock {
         }
     }
 
+    /**
+     * Applies loop detection criteria as in [ALSU06], pg. 531
+     */
+    public static List<Set<BasicBlock>> discoverLoops(List<Set<BasicBlock>> loops) {
+        List<Set<BasicBlock>> result = new ArrayList<>();
+
+        for (Set<BasicBlock> set : loops) {
+            BasicBlock entryNode = null;
+
+            if (set.size() <= 1)    // third criteria
+                continue;
+
+            int countWithoutPredecessorsOutsideL = 0;
+            for (BasicBlock b : set) {
+                int cnt = 0;
+
+                for (int i = 0; i < b.predecessor.size(); i++)
+                    if (set.contains(b.predecessor.get(i)))
+                        cnt++;
+                    else
+                        entryNode = b;
+
+                if (cnt == b.predecessor.size())
+                    countWithoutPredecessorsOutsideL++;
+            }
+
+            if (set.size() - 1 != countWithoutPredecessorsOutsideL) // second criteria
+                continue;
+
+            if (!entryNode.isEntryBlock())  // first criteria
+                result.add(set);
+        }
+
+        return result;
+    }
+
+    /**
+     * Eliminates edges vertices that are not in cycle
+     */
     private static Set<BasicBlock> traverseLoopToEliminateUnnecessaryVertices(BasicBlock beginFrom, Set<BasicBlock> blocks) {
         Set<BasicBlock> minimumSet = new HashSet<>();
         BasicBlock current = beginFrom;
@@ -67,7 +106,7 @@ public class BasicBlock {
     /**
      * Detection of cycles in control flow graph
      */
-    public static List<Set<BasicBlock>> discoverLoops(BasicBlock enterBlock) {
+    public static List<Set<BasicBlock>> discoverCycles(BasicBlock enterBlock) {
         List<Set<BasicBlock>> result = new ArrayList<>();
 
         Stack<BasicBlock> blocksToVisit = new Stack<>();
@@ -96,10 +135,58 @@ public class BasicBlock {
             }
         }
 
+        // so far all elementary cycles had been found
+        // we need to find non-elementary cycles as well
+
+        int lastAdd = 0;
+        int currentAdd = -1;
+        List<Set<BasicBlock>> toAdd = new ArrayList<>();
+
+        while (lastAdd != currentAdd) {
+            currentAdd = 0;
+            for (Set<BasicBlock> set1 : result) {
+                for (int i = 0; i < result.size(); i++) {
+                    Set<BasicBlock> set2 = result.get(i);
+
+                    if (set1 != set2) {
+                        for (BasicBlock b : set2) {
+                            if (set1.contains(b)) {
+                                // try merging if result doesn't contain this
+                                Set<BasicBlock> newSet = new HashSet<>();
+                                newSet.addAll(set1);
+                                newSet.addAll(set2);
+
+                                boolean add = true;
+                                for (int x = 0; x < result.size(); x++) {
+                                    if (result.get(x).equals(newSet) || toAdd.contains(newSet))
+                                        add = false;
+                                }
+
+                                if (add) {
+                                    toAdd.add(newSet);
+                                    currentAdd++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            result.addAll(toAdd);
+            toAdd = new ArrayList<>();
+            if (currentAdd != lastAdd) {
+                lastAdd = currentAdd;
+                currentAdd = -1;
+            }
+            else
+                break;
+        }
+
         return result;
     }
 
-    public static List<BasicBlock> extractBasicBlocksFromSequence(List<Quadruple> code, Map<String, Integer> labelIndices) {
+    public static List<BasicBlock> extractBasicBlocksFromSequence
+            (List<Quadruple> code, Map<String, Integer> labelIndices) {
         if (code.size() == 0)
             return null;
 
@@ -194,12 +281,12 @@ public class BasicBlock {
     public String toString() {
         final StringBuilder p = new StringBuilder();
         p.append("(");
-        predecessor.forEach(x -> p.append(x.blockId + ", "));
+        predecessor.forEach(x -> p.append(x.blockId).append(", "));
         p.append(")");
 
         final StringBuilder s = new StringBuilder();
         s.append("(");
-        successor.forEach(x -> s.append(x.blockId + ", "));
+        successor.forEach(x -> s.append(x.blockId).append(", "));
         s.append(")");
 
         return "[id = " + blockId +
