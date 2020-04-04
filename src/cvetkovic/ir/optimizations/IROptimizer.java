@@ -27,11 +27,14 @@ public class IROptimizer extends Optimizer {
             if (enterBlock == null)
                 throw new RuntimeException("Invalid code sequence for loop discovery as entry block has not been found.");
 
-            sequence.loops = BasicBlock.discoverCycles(enterBlock);
+            /*sequence.loops = BasicBlock.discoverCycles(enterBlock);
 
             System.out.println("");
             System.out.println("Cycles detected in function '" + quadrupleList.get(0).getArg1() + "':");
-            System.out.println(Utility.printCycle(sequence.loops));
+            System.out.println(Utility.printCycle(sequence.loops));*/
+
+            // TODO: remove this
+            BasicBlock.experimentalCycleDiscovery(enterBlock);
 
             sequence.loops = BasicBlock.discoverLoops(sequence.loops);
 

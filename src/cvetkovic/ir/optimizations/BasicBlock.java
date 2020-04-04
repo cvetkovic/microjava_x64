@@ -83,24 +83,104 @@ public class BasicBlock {
      * Eliminates edges vertices that are not in cycle
      */
     private static Set<BasicBlock> traverseLoopToEliminateUnnecessaryVertices(BasicBlock beginFrom, Set<BasicBlock> blocks) {
-        Set<BasicBlock> minimumSet = new HashSet<>();
-        BasicBlock current = beginFrom;
+        Set<BasicBlock> result = new HashSet<>();
 
-        while (true) {
-            for (int i = 0; i < current.successor.size(); i++) {
-                if (blocks.contains(current.successor.get(i))) {
-                    minimumSet.add(current);
-                    current = current.successor.get(i);
+        Stack<List<EulerPath>> stack = new Stack<>();
+        for (int i = 0; i < beginFrom.successor.size(); i++) {
+            List<EulerPath> path = new ArrayList<>();
+            path.add(new EulerPath(beginFrom, beginFrom.successor.get(i)));
 
-                    break;
+            stack.push(path);
+        }
+
+        while (!stack.empty()) {
+            List<EulerPath> currentPath = stack.pop();
+            BasicBlock lastBlock = currentPath.get(currentPath.size() - 1).to;
+
+            for (int i = 0; i < lastBlock.successor.size(); i++) {
+                EulerPath newPath = new EulerPath(lastBlock, lastBlock.successor.get(i));
+                if (!currentPath.contains(newPath) && blocks.contains(newPath.to)) {
+                    List<EulerPath> path = new ArrayList<>();
+                    path.addAll(currentPath);
+                    path.add(newPath);
+                    stack.push(path);
+                }
+                else {
+                    for (EulerPath eulerPath : currentPath) {
+                        result.add(eulerPath.from);
+                        result.add(eulerPath.to);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static class EulerPath
+    {
+        BasicBlock from;
+        BasicBlock to;
+
+        public EulerPath(BasicBlock from, BasicBlock to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            EulerPath e = (EulerPath)obj;
+
+            return e.from == from && e.to == to;
+        }
+
+        @Override
+        public String toString() {
+            return from.blockId + " -> " + to.blockId;
+        }
+    }
+
+    public static List<Set<BasicBlock>> experimentalCycleDiscovery(BasicBlock enterBlock)
+    {
+        List<Set<BasicBlock>> result = new ArrayList<>();
+
+        Stack<List<EulerPath>> stack = new Stack<>();
+        for (int i = 0; i < enterBlock.successor.size(); i++) {
+            List<EulerPath> path = new ArrayList<>();
+            path.add(new EulerPath(enterBlock, enterBlock.successor.get(i)));
+
+            stack.push(path);
+        }
+
+        while (!stack.empty()) {
+            List<EulerPath> currentPath = stack.pop();
+            BasicBlock lastBlock = currentPath.get(currentPath.size() - 1).to;
+
+            for (int i = 0; i < lastBlock.successor.size(); i++) {
+                EulerPath newPath = new EulerPath(lastBlock, lastBlock.successor.get(i));
+                if (!currentPath.contains(newPath)) {
+                    List<EulerPath> path = new ArrayList<>();
+                    path.addAll(currentPath);
+                    path.add(newPath);
+                    stack.push(path);
+                }
+                else
+                {
+                    Set<BasicBlock> set = new HashSet<>();
+                    for (EulerPath eulerPath : currentPath)
+                    {
+                        set.add(eulerPath.from);
+                        set.add(eulerPath.to);
+                    }
+
+                    result.add(traverseLoopToEliminateUnnecessaryVertices(newPath.from, set));
                 }
             }
 
-            if (current == beginFrom)
-                break;
+
         }
 
-        return minimumSet;
+        return result;
     }
 
     /**
@@ -185,8 +265,7 @@ public class BasicBlock {
         return result;
     }
 
-    public static List<BasicBlock> extractBasicBlocksFromSequence
-            (List<Quadruple> code, Map<String, Integer> labelIndices) {
+    public static List<BasicBlock> extractBasicBlocksFromSequence(List<Quadruple> code, Map<String, Integer> labelIndices) {
         if (code.size() == 0)
             return null;
 
