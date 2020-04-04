@@ -7,7 +7,7 @@ import java.util.*;
 
 public class BasicBlock {
     private static int blockCounter = 0;
-    private int blockId = blockCounter++;
+    public int blockId = blockCounter++;
 
     public int basicBlockStart;
     public int basicBlockEnd;
@@ -41,6 +41,62 @@ public class BasicBlock {
             this.u = u;
             this.v = v;
         }
+    }
+
+    private static Set<BasicBlock> traverseLoopToEliminateUnnecessaryVertices(BasicBlock beginFrom, Set<BasicBlock> blocks) {
+        Set<BasicBlock> minimumSet = new HashSet<>();
+        BasicBlock current = beginFrom;
+
+        while (true) {
+            for (int i = 0; i < current.successor.size(); i++) {
+                if (blocks.contains(current.successor.get(i))) {
+                    minimumSet.add(current);
+                    current = current.successor.get(i);
+
+                    break;
+                }
+            }
+
+            if (current == beginFrom)
+                break;
+        }
+
+        return minimumSet;
+    }
+
+    /**
+     * Detection of cycles in control flow graph
+     */
+    public static List<Set<BasicBlock>> discoverLoops(BasicBlock enterBlock) {
+        List<Set<BasicBlock>> result = new ArrayList<>();
+
+        Stack<BasicBlock> blocksToVisit = new Stack<>();
+        Stack<Set<BasicBlock>> visited = new Stack<>();
+
+        Set<BasicBlock> initial = new HashSet<>();
+        visited.push(initial);
+
+        blocksToVisit.push(enterBlock);
+        while (!blocksToVisit.empty()) {
+            BasicBlock current = blocksToVisit.pop();
+            Set<BasicBlock> currentVisited = visited.pop();
+
+            if (currentVisited.contains(current)) {
+                result.add(traverseLoopToEliminateUnnecessaryVertices(current, currentVisited));
+                continue;
+            }
+            else
+                currentVisited.add(current);
+
+            for (BasicBlock b : current.successor) {
+                blocksToVisit.push(b);
+                Set<BasicBlock> copyOfVisited = new HashSet<>();
+                copyOfVisited.addAll(currentVisited);
+                visited.push(copyOfVisited);
+            }
+        }
+
+        return result;
     }
 
     public static List<BasicBlock> extractBasicBlocksFromSequence(List<Quadruple> code, Map<String, Integer> labelIndices) {
@@ -126,11 +182,11 @@ public class BasicBlock {
         return basicBlocks;
     }
 
-    private boolean isEntryBlock() {
+    public boolean isEntryBlock() {
         return predecessor.size() == 0;
     }
 
-    private boolean isExitBlock() {
+    public boolean isExitBlock() {
         return successor.size() == 0;
     }
 

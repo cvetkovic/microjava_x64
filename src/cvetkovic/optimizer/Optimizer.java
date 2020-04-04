@@ -6,6 +6,7 @@ import cvetkovic.ir.quadruple.Quadruple;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class Optimizer {
 
@@ -37,5 +38,6 @@ public abstract class Optimizer {
         public List<Quadruple> code;
         public List<BasicBlock> basicBlocks;
         public Map<String, Integer> labelIndices;
+        public List<Set<BasicBlock>> loops;
     }
 }
