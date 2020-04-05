@@ -108,6 +108,7 @@ public class Compiler {
 
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
+                String IRCodeToPrint = null;
 
                 if (optimize_ir) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
@@ -116,10 +117,11 @@ public class Compiler {
                     irCodeOptimizer.executeOptimizations();
 
                     irCode = irCodeOptimizer.getOptimizationOutput();
+                    IRCodeToPrint = irCodeOptimizer.toString();
                 }
 
                 if (dumpIR)
-                    System.out.println(irCodeGenerator);
+                    System.out.println(IRCodeToPrint != null ? IRCodeToPrint : irCodeGenerator);
 
                 /*System.out.println("================ MACHINE CODE GENERATION ================");
 

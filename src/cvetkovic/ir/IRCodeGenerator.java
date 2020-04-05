@@ -247,16 +247,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Obj targetObj = ReadStatement.getDesignator().obj;
 
         if (targetObj.getType().getKind() == Struct.Int)
-            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.WORD));
+            instruction.setArg2(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.WORD));
         else if (targetObj.getType().getKind() == Struct.Char)
-            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
+            instruction.setArg2(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.BYTE));
         else if (targetObj.getType().getKind() == Struct.Bool)
-            instruction.setArg2(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BIT));
+            instruction.setArg2(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.BIT));
         else
             throw new RuntimeException("IR instruction 'scanf' is not supported with other data types than integer, character or boolean.");
 
         if (ReadStatement.getDesignator() instanceof DesignatorArrayAccess) {
-            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIOVar) instruction.getArg2()).ioVarToStruct());
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct());
             instruction.setResult(new QuadrupleObjVar(tmp));
 
             Quadruple astoreInstruction = new Quadruple(ASTORE);
@@ -268,7 +268,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.add(astoreInstruction);
         }
         else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess) {
-            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIOVar) instruction.getArg2()).ioVarToStruct());
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct());
             instruction.setResult(new QuadrupleObjVar(tmp));
 
             Quadruple astoreInstruction = new Quadruple(STORE);
@@ -293,11 +293,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Struct targetStruct = PrintStatement.getExpr().struct;
         if (targetStruct.getKind() == Struct.Int)
-            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.WORD));
+            instruction.setArg1(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.WORD));
         else if (targetStruct.getKind() == Struct.Char)
-            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BYTE));
+            instruction.setArg1(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.BYTE));
         else if (targetStruct.getKind() == Struct.Bool)
-            instruction.setArg1(new QuadrupleIOVar(QuadrupleIOVar.DataWidth.BIT));
+            instruction.setArg1(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.BIT));
         else
             throw new RuntimeException("IR instruction 'printf' is not supported with other data types than integer, character or boolean.");
 
@@ -1054,11 +1054,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             int i = 0;
 
             for (Quadruple instruction : list) {
-                builder.append(i++);
-                builder.append(" - ");
-
-                builder.append(instruction);
-                builder.append("\n");
+                builder.append(String.format("%-4d | %s\n", i++, instruction));
             }
 
             builder.append("\n");

@@ -2,10 +2,20 @@ package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.QuadrupleVariable;
+import cvetkovic.optimizer.Optimizer;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BasicBlock {
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // CLASS FIELDS
+    //////////////////////////////////////////////////////////////////////////////////
+
     private static int blockCounter = 0;
     public int blockId = blockCounter++;
 
@@ -14,6 +24,10 @@ public class BasicBlock {
 
     public List<BasicBlock> predecessor = new ArrayList<>();
     public List<BasicBlock> successor = new ArrayList<>(2);
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // STATIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Indexes labels in an instruction sequence MAP<LABEL_NAME, INDEX_IN_SEQUENCE>
@@ -31,6 +45,70 @@ public class BasicBlock {
         }
 
         return result;
+    }
+
+    private static Collection<Obj> extractAllVariables(Optimizer.CodeSequence sequence, BasicBlock basicBlock) {
+        Set<Obj> variables = new HashSet<>();
+
+        for (int i = basicBlock.basicBlockStart; i <= basicBlock.basicBlockEnd; i++) {
+            QuadrupleVariable arg1 = sequence.code.get(i).getArg1();
+            QuadrupleVariable arg2 = sequence.code.get(i).getArg2();
+            QuadrupleVariable result = sequence.code.get(i).getResult();
+
+            if (arg1 instanceof QuadrupleObjVar)
+                variables.add(((QuadrupleObjVar) arg1).getObj());
+
+            if (arg2 instanceof QuadrupleObjVar)
+                variables.add(((QuadrupleObjVar) arg2).getObj());
+
+            if (result instanceof QuadrupleObjVar)
+                variables.add(((QuadrupleObjVar) result).getObj());
+        }
+
+        return variables;
+    }
+
+    public static void determineNextUse(Optimizer.CodeSequence sequence) {
+        for (BasicBlock basicBlock : sequence.basicBlocks) {
+            // extract object nodes of all operands and destination variables in the basic block
+            Collection<Obj> allVariablesUsedInThisBlock = extractAllVariables(sequence, basicBlock);
+            // split non-temporary and temporary variables into separate sets
+            Collection<Obj> nonTemporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
+            Collection<Obj> temporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
+
+            // TODO: change whole IRCodeGenerator to set tempVar to true where needed
+
+            // insert all the variables into this map and set all those non-temporary to alive, other the dead
+            Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();
+            nonTemporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.ALIVE));
+            temporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.DEAD));
+
+            for (int instructionIndex = basicBlock.basicBlockEnd; instructionIndex > basicBlock.basicBlockStart; instructionIndex--) {
+                Quadruple instruction = sequence.code.get(instructionIndex);
+
+                Obj obj1 = null, obj2 = null, objResult = null;
+
+                if (instruction.getArg1() instanceof QuadrupleObjVar) {
+                    obj1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
+                    instruction.setArg1NextUse(liveness.get(obj1));
+                }
+                if (instruction.getArg2() instanceof QuadrupleObjVar) {
+                    obj2 = ((QuadrupleObjVar) instruction.getArg2()).getObj();
+                    instruction.setArg2NextUse(liveness.get(obj2));
+                }
+                if (instruction.getResult() instanceof QuadrupleObjVar) {
+                    objResult = ((QuadrupleObjVar) instruction.getResult()).getObj();
+                    instruction.setResultNextUse(liveness.get(objResult));
+                }
+
+                if (obj1 != null)
+                    liveness.put(obj1, Quadruple.NextUseState.ALIVE);
+                if (obj2 != null)
+                    liveness.put(obj2, Quadruple.NextUseState.ALIVE);
+                if (objResult != null)
+                    liveness.put(objResult, Quadruple.NextUseState.DEAD);
+            }
+        }
     }
 
     private static class Tuple<U, V> {
@@ -92,6 +170,8 @@ public class BasicBlock {
                     minimumSet.add(current);
                     current = current.successor.get(i);
 
+                    // TODO: here a bug lies -> only last successor will be traversed -> introduce stack/queue
+
                     break;
                 }
             }
@@ -137,6 +217,8 @@ public class BasicBlock {
 
         // so far all elementary cycles had been found
         // we need to find non-elementary cycles as well
+
+        // TODO: find more efficient algorithm for finding (non)elementary cycles in a graph
 
         int lastAdd = 0;
         int currentAdd = -1;
@@ -185,8 +267,7 @@ public class BasicBlock {
         return result;
     }
 
-    public static List<BasicBlock> extractBasicBlocksFromSequence
-            (List<Quadruple> code, Map<String, Integer> labelIndices) {
+    public static List<BasicBlock> extractBasicBlocksFromSequence(List<Quadruple> code, Map<String, Integer> labelIndices) {
         if (code.size() == 0)
             return null;
 
@@ -267,6 +348,19 @@ public class BasicBlock {
         }
 
         return basicBlocks;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // FUNCTION MEMBERS
+    //////////////////////////////////////////////////////////////////////////////////
+
+    public String printBasicBlock(List<Quadruple> code) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = basicBlockStart; i <= basicBlockEnd; i++)
+            sb.append(code.get(i)).append(System.lineSeparator());
+
+        return sb.toString();
     }
 
     public boolean isEntryBlock() {

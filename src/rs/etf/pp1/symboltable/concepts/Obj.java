@@ -19,6 +19,9 @@ public class Obj {
 
     public static final int NO_VALUE = -1;
 
+    // temp var
+    public boolean tempVar = false;
+
     private String name;
 
     // Con, Var, Type, Meth, Fld, Prog
@@ -62,6 +65,13 @@ public class Obj {
         this.type = type;
         this.adr = adr;
         this.level = level;
+    }
+
+    public Obj(int kind, String name, Struct type, boolean tempVar) {
+        this.tempVar = tempVar;
+        this.name = name;
+        this.kind = kind;
+        this.type = type;
     }
 
     /**

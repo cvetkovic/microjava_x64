@@ -3,10 +3,10 @@ package cvetkovic.ir.quadruple;
 import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
-public class QuadrupleIOVar extends QuadrupleVariable {
+public class QuadrupleIODataWidth extends QuadrupleVariable {
     protected DataWidth width;
 
-    public QuadrupleIOVar(DataWidth width) {
+    public QuadrupleIODataWidth(DataWidth width) {
         this.width = width;
     }
 

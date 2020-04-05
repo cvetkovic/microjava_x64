@@ -3,10 +3,42 @@ package cvetkovic.ir.quadruple;
 import cvetkovic.ir.IRInstruction;
 
 public class Quadruple {
+    public enum NextUseState {
+        UNKNOWN(0),
+
+        DEAD(1),
+        ALIVE(2);
+
+        private int state;
+
+        NextUseState(int state) {
+            this.state = state;
+        }
+
+        @Override
+        public String toString() {
+            switch (state) {
+                case 0:
+                    return "(N/A)";
+                case 1:
+                    return "(D)";
+                case 2:
+                    return "(A)";
+
+                default:
+                    throw new RuntimeException("Unknown next use state in quadruple.");
+            }
+        }
+    }
+
     protected IRInstruction instruction;
     protected QuadrupleVariable arg1;
     protected QuadrupleVariable arg2;
     protected QuadrupleVariable result;
+
+    protected NextUseState arg1NextUse = NextUseState.UNKNOWN;
+    protected NextUseState arg2NextUse = NextUseState.UNKNOWN;
+    protected NextUseState resultNextUse = NextUseState.UNKNOWN;
 
     public Quadruple(IRInstruction instruction) {
         this.instruction = instruction;
@@ -58,24 +90,50 @@ public class Quadruple {
         this.result = result;
     }
 
+    public NextUseState getArg1NextUse() {
+        return arg1NextUse;
+    }
+
+    public void setArg1NextUse(NextUseState arg1NextUse) {
+        this.arg1NextUse = arg1NextUse;
+    }
+
+    public NextUseState getArg2NextUse() {
+        return arg2NextUse;
+    }
+
+    public void setArg2NextUse(NextUseState arg2NextUse) {
+        this.arg2NextUse = arg2NextUse;
+    }
+
+    public NextUseState getResultNextUse() {
+        return resultNextUse;
+    }
+
+    public void setResultNextUse(NextUseState resultNextUse) {
+        this.resultNextUse = resultNextUse;
+    }
+
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
+        String arg1s = "", arg1uses = "", arg2s = "", arg2uses = "", results = "", resultuses = "";
 
-        builder.append(instruction);
         if (arg1 != null) {
-            builder.append(" ");
-            builder.append(arg1);
+            arg1s = arg1.toString();
+            arg1uses = arg1NextUse.toString();
         }
         if (arg2 != null) {
-            builder.append(" ");
-            builder.append(arg2);
+            arg2s = arg2.toString();
+            arg2uses = arg2NextUse.toString();
         }
         if (result != null) {
-            builder.append(" ");
-            builder.append(result);
+            results = result.toString();
+            resultuses = resultNextUse.toString();
         }
 
-        return builder.toString();
+        String formattedOutput = String.format("%-10s | %-10s %-5s | %-10s %-5s | %-10s %-5s |",
+                instruction, arg1s, arg1uses, arg2s, arg2uses, results, resultuses);
+
+        return formattedOutput.toString();
     }
 }
