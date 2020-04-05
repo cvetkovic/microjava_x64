@@ -103,7 +103,7 @@ public class ExpressionDAG {
                 else {
                     int tmpId = tmpObjCounter++;
 
-                    Obj var = SymbolTable.insert(Obj.Var, tmpVarPrefix + tmpId, SymbolTable.intType);
+                    Obj var = new Obj(Obj.Var, tmpVarPrefix + tmpId, SymbolTable.intType, true);
                     instruction.setResult(new QuadrupleObjVar(var));
                     node.setDestinationVariable(var);
 

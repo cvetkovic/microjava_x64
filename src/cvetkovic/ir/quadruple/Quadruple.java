@@ -120,15 +120,18 @@ public class Quadruple {
 
         if (arg1 != null) {
             arg1s = arg1.toString();
-            arg1uses = arg1NextUse.toString();
+            if (arg1 instanceof QuadrupleObjVar)
+                arg1uses = arg1NextUse.toString();
         }
         if (arg2 != null) {
             arg2s = arg2.toString();
-            arg2uses = arg2NextUse.toString();
+            if (arg2 instanceof QuadrupleObjVar)
+                arg2uses = arg2NextUse.toString();
         }
         if (result != null) {
             results = result.toString();
-            resultuses = resultNextUse.toString();
+            if (result instanceof QuadrupleObjVar)
+                resultuses = resultNextUse.toString();
         }
 
         String formattedOutput = String.format("%-10s | %-10s %-5s | %-10s %-5s | %-10s %-5s |",

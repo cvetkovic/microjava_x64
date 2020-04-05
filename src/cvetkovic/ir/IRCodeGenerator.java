@@ -256,7 +256,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             throw new RuntimeException("IR instruction 'scanf' is not supported with other data types than integer, character or boolean.");
 
         if (ReadStatement.getDesignator() instanceof DesignatorArrayAccess) {
-            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct());
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct(), true);
             instruction.setResult(new QuadrupleObjVar(tmp));
 
             Quadruple astoreInstruction = new Quadruple(ASTORE);
@@ -268,7 +268,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.add(astoreInstruction);
         }
         else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess) {
-            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct());
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct(), true);
             instruction.setResult(new QuadrupleObjVar(tmp));
 
             Quadruple astoreInstruction = new Quadruple(STORE);
@@ -389,7 +389,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         else if (FactorFunctionCall.getDesignator() instanceof DesignatorNonArrayAccess && insideClass)
             return;
         else if (cancelFactorFunctionCall) {
-            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), FactorFunctionCall.struct);
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), FactorFunctionCall.struct, true);
 
             Quadruple load = new Quadruple(LOAD);
             load.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
@@ -416,7 +416,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             // generate temp variable for storing the result of a CALL
             Struct returnType = FactorFunctionCall.getDesignator().obj.getType();
-            Obj returnValue = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), returnType);
+            Obj returnValue = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), returnType, true);
 
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(returnValue));
             instruction.setResult(new QuadrupleObjVar(returnValue));
@@ -465,7 +465,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple astore = null;
 
             if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
-                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
 
                 instruction.setResult(new QuadrupleObjVar(tmp));
 
@@ -538,7 +538,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             storeInstruction.setArg2(new QuadruplePTR());
             storeInstruction.setResult(new QuadrupleObjVar(ptrDestination));
 
-            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
             instruction.setResult(new QuadrupleObjVar(tmp));
             storeInstruction.setArg1(new QuadrupleObjVar(tmp));
 
@@ -883,7 +883,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             // TODO: maybe put this.method() invocation -> for regular and abstract methods
             if (obj.getKind() == Obj.Fld) {
-                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
 
                 Obj thisPointer = null;
                 for (Obj ptr : currentMethod.getLocalSymbols()) {
@@ -942,7 +942,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             expressionDAG = new ExpressionDAG();
         }
 
-        Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+        Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
         Obj tmp2 = null;
 
         getPtr.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
@@ -962,7 +962,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign) &&
                 !(DesignatorNonArrayAccess.getParent() instanceof DesignatorInvoke)) {
 
-            tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType);
+            tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
 
             load = new Quadruple(LOAD);
             load.setArg1(new QuadrupleObjVar(tmp));
