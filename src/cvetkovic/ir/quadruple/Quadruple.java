@@ -1,6 +1,7 @@
 package cvetkovic.ir.quadruple;
 
 import cvetkovic.ir.IRInstruction;
+import cvetkovic.misc.Config;
 
 public class Quadruple {
     public enum NextUseState {
@@ -120,17 +121,17 @@ public class Quadruple {
 
         if (arg1 != null) {
             arg1s = arg1.toString();
-            if (arg1 instanceof QuadrupleObjVar)
+            if (arg1 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
                 arg1uses = arg1NextUse.toString();
         }
         if (arg2 != null) {
             arg2s = arg2.toString();
-            if (arg2 instanceof QuadrupleObjVar)
+            if (arg2 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
                 arg2uses = arg2NextUse.toString();
         }
         if (result != null) {
             results = result.toString();
-            if (result instanceof QuadrupleObjVar)
+            if (result instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
                 resultuses = resultNextUse.toString();
         }
 

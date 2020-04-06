@@ -4,6 +4,7 @@ import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.QuadrupleVariable;
+import cvetkovic.misc.Config;
 import cvetkovic.optimizer.Optimizer;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -68,7 +69,7 @@ public class BasicBlock {
         return variables;
     }
 
-    public static void determineNextUse(Optimizer.CodeSequence sequence) {
+    public static void doLivenessAnalysis(Optimizer.CodeSequence sequence) {
         for (BasicBlock basicBlock : sequence.basicBlocks) {
             // extract object nodes of all operands and destination variables in the basic block
             Collection<Obj> allVariablesUsedInThisBlock = extractAllVariables(sequence, basicBlock);
@@ -76,15 +77,26 @@ public class BasicBlock {
             Collection<Obj> nonTemporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
             Collection<Obj> temporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
 
-            // TODO: change whole IRCodeGenerator to set tempVar to true where needed
-
             // insert all the variables into this map and set all those non-temporary to alive, other the dead
             Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();
             nonTemporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.ALIVE));
             temporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.DEAD));
 
+            Stack<String> output = new Stack<>();
+
             for (int instructionIndex = basicBlock.basicBlockEnd; instructionIndex > basicBlock.basicBlockStart; instructionIndex--) {
                 Quadruple instruction = sequence.code.get(instructionIndex);
+
+                ////////////////////////////
+                ////////////////////////////
+                StringBuilder sb = new StringBuilder();
+                if (Config.printBasicBlockGlobalLivenessAnalysisTable) {
+                    sb.append(instruction + " ");
+                    liveness.forEach((p, x) -> sb.append(p.getName() + "" + x.toString() + ", "));
+                    output.push(sb.toString());
+                }
+                ////////////////////////////
+                ////////////////////////////
 
                 Obj obj1 = null, obj2 = null, objResult = null;
 
@@ -101,13 +113,19 @@ public class BasicBlock {
                     instruction.setResultNextUse(liveness.get(objResult));
                 }
 
+                // update map for the following (i.e. logically preceding) instruction
+                // NOTE: liveness has to be done first for result variable, and then for arguments
+                //       because result may be first or second argument
+                if (objResult != null)
+                    liveness.put(objResult, Quadruple.NextUseState.DEAD);
                 if (obj1 != null)
                     liveness.put(obj1, Quadruple.NextUseState.ALIVE);
                 if (obj2 != null)
                     liveness.put(obj2, Quadruple.NextUseState.ALIVE);
-                if (objResult != null)
-                    liveness.put(objResult, Quadruple.NextUseState.DEAD);
             }
+
+            while (!output.empty())
+                System.out.println(output.pop());
         }
     }
 

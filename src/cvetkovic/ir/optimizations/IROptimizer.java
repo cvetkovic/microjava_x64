@@ -1,6 +1,7 @@
 package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.misc.Config;
 import cvetkovic.optimizer.Optimizer;
 
 import java.util.List;
@@ -16,9 +17,14 @@ public class IROptimizer extends Optimizer {
             sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(quadrupleList, sequence.labelIndices);
 
             System.out.println("Basic blocks in function '" + quadrupleList.get(0).getArg1() + "':");
-            for (BasicBlock b : sequence.basicBlocks) {
-                System.out.println(b);
-                System.out.println(b.printBasicBlock(sequence.code));
+            if (Config.printBasicBlockInfo || Config.printBasicBlockQuadruples) {
+                for (BasicBlock b : sequence.basicBlocks) {
+                    if (Config.printBasicBlockInfo)
+                        System.out.println(b);
+
+                    if (Config.printBasicBlockQuadruples)
+                        System.out.println(b.printBasicBlock(sequence.code));
+                }
             }
 
             BasicBlock enterBlock = null;
@@ -28,7 +34,7 @@ public class IROptimizer extends Optimizer {
             if (enterBlock == null)
                 throw new RuntimeException("Invalid code sequence for loop discovery as entry block has not been found.");
 
-            BasicBlock.determineNextUse(sequence);
+            BasicBlock.doLivenessAnalysis(sequence);
 
             /*sequence.loops = BasicBlock.discoverCycles(enterBlock);
 
@@ -59,23 +65,6 @@ public class IROptimizer extends Optimizer {
             stringBuilder.append("---------------------------------------------------------------------\n");
 
             CodeSequence sequence = codeSequenceList.get(i);
-            /*String[] toWrite = new String[sequence.code.size() + sequence.basicBlocks.size()];
-
-            for (int j = 0; j < sequence.code.size(); j++) {
-                String instruction = sequence.code.get(j).toString();
-                toWrite[j] = (instruction + "\n");
-            }
-
-            // insert newline after every basic block
-            for (int j = 0; j < sequence.basicBlocks.size(); j++) {
-                int writeNewLineAt = sequence.basicBlocks.get(j).basicBlockEnd + 1 + j;
-
-                for (int k = toWrite.length - 1; k > writeNewLineAt; k--)
-                    toWrite[k] = toWrite[k - 1];
-
-                toWrite[writeNewLineAt] =  System.lineSeparator();
-            }*/
-
             for(Quadruple q : sequence.code)
                 stringBuilder.append(q + "\n");
 
