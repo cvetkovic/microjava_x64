@@ -5,7 +5,6 @@ import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.QuadrupleVariable;
 import cvetkovic.misc.Config;
-import cvetkovic.optimizer.Optimizer;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -20,14 +19,42 @@ public class BasicBlock {
     private static int blockCounter = 0;
     public int blockId = blockCounter++;
 
-    public int basicBlockStart;
-    public int basicBlockEnd;
+    public int firstQuadruple;
+    public int lastQuadruple;
 
     public List<BasicBlock> predecessor = new ArrayList<>();
     public List<BasicBlock> successor = new ArrayList<>(2);
 
+    public List<Quadruple> instructions = new ArrayList<>();
+
     //////////////////////////////////////////////////////////////////////////////////
-    // STATIC FUNCTIONS
+    // BASIC BLOCK INFORMATION EXTRACTION
+    //////////////////////////////////////////////////////////////////////////////////
+
+    private void prepareBasicBlockClass(List<Quadruple> quadrupleList) {
+        System.out.println("Basic blocks in function '" + quadrupleList.get(0).getArg1() + "':");
+        if (Config.printBasicBlockInfo)
+            System.out.println(this);
+        if (Config.printBasicBlockInfo)
+            System.out.println(printBasicBlock());
+
+        doLivenessAnalysis();
+
+        /*sequence.loops = BasicBlock.discoverCycles(enterBlock);
+
+        System.out.println("");
+        System.out.println("Cycles detected in function '" + quadrupleList.get(0).getArg1() + "':");
+        System.out.println(Utility.printCycle(sequence.loops));
+
+        sequence.loops = BasicBlock.discoverLoops(sequence.loops);
+
+        System.out.println("Loops detected in function '" + quadrupleList.get(0).getArg1() + "':");
+        System.out.println(Utility.printCycle(sequence.loops));*/
+
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // STATIC METHODS
     //////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -46,87 +73,6 @@ public class BasicBlock {
         }
 
         return result;
-    }
-
-    private static Collection<Obj> extractAllVariables(Optimizer.CodeSequence sequence, BasicBlock basicBlock) {
-        Set<Obj> variables = new HashSet<>();
-
-        for (int i = basicBlock.basicBlockStart; i <= basicBlock.basicBlockEnd; i++) {
-            QuadrupleVariable arg1 = sequence.code.get(i).getArg1();
-            QuadrupleVariable arg2 = sequence.code.get(i).getArg2();
-            QuadrupleVariable result = sequence.code.get(i).getResult();
-
-            if (arg1 instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) arg1).getObj());
-
-            if (arg2 instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) arg2).getObj());
-
-            if (result instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) result).getObj());
-        }
-
-        return variables;
-    }
-
-    public static void doLivenessAnalysis(Optimizer.CodeSequence sequence) {
-        for (BasicBlock basicBlock : sequence.basicBlocks) {
-            // extract object nodes of all operands and destination variables in the basic block
-            Collection<Obj> allVariablesUsedInThisBlock = extractAllVariables(sequence, basicBlock);
-            // split non-temporary and temporary variables into separate sets
-            Collection<Obj> nonTemporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
-            Collection<Obj> temporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
-
-            // insert all the variables into this map and set all those non-temporary to alive, other the dead
-            Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();
-            nonTemporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.ALIVE));
-            temporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.DEAD));
-
-            Stack<String> output = new Stack<>();
-
-            for (int instructionIndex = basicBlock.basicBlockEnd; instructionIndex > basicBlock.basicBlockStart; instructionIndex--) {
-                Quadruple instruction = sequence.code.get(instructionIndex);
-
-                ////////////////////////////
-                ////////////////////////////
-                StringBuilder sb = new StringBuilder();
-                if (Config.printBasicBlockGlobalLivenessAnalysisTable) {
-                    sb.append(instruction + " ");
-                    liveness.forEach((p, x) -> sb.append(p.getName() + "" + x.toString() + ", "));
-                    output.push(sb.toString());
-                }
-                ////////////////////////////
-                ////////////////////////////
-
-                Obj obj1 = null, obj2 = null, objResult = null;
-
-                if (instruction.getArg1() instanceof QuadrupleObjVar) {
-                    obj1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
-                    instruction.setArg1NextUse(liveness.get(obj1));
-                }
-                if (instruction.getArg2() instanceof QuadrupleObjVar) {
-                    obj2 = ((QuadrupleObjVar) instruction.getArg2()).getObj();
-                    instruction.setArg2NextUse(liveness.get(obj2));
-                }
-                if (instruction.getResult() instanceof QuadrupleObjVar) {
-                    objResult = ((QuadrupleObjVar) instruction.getResult()).getObj();
-                    instruction.setResultNextUse(liveness.get(objResult));
-                }
-
-                // update map for the following (i.e. logically preceding) instruction
-                // NOTE: liveness has to be done first for result variable, and then for arguments
-                //       because result may be first or second argument
-                if (objResult != null)
-                    liveness.put(objResult, Quadruple.NextUseState.DEAD);
-                if (obj1 != null)
-                    liveness.put(obj1, Quadruple.NextUseState.ALIVE);
-                if (obj2 != null)
-                    liveness.put(obj2, Quadruple.NextUseState.ALIVE);
-            }
-
-            while (!output.empty())
-                System.out.println(output.pop());
-        }
     }
 
     private static class Tuple<U, V> {
@@ -319,20 +265,24 @@ public class BasicBlock {
         for (Integer l : leaders) {
             // set first instruction
             BasicBlock block = new BasicBlock();
-            block.basicBlockStart = l;
+            block.firstQuadruple = l;
+            block.instructions.add(code.get(l));
 
             // set last instruction
             int end;
-            for (end = l + 1; end < code.size() && !leaders.contains(end); end++) ;
-            block.basicBlockEnd = end - 1;
+            for (end = l + 1; end < code.size() && !leaders.contains(end); end++)
+                block.instructions.add(code.get(end));
+            block.lastQuadruple = end - 1;
+
+            block.prepareBasicBlockClass(code);
 
             // find predecessors and successors
             basicBlocks.add(block);
-            firstInstruction.put(block.basicBlockStart, block);
+            firstInstruction.put(block.firstQuadruple, block);
 
             List<Integer> followers = new LinkedList<>();
 
-            Quadruple lastInstruction = code.get(block.basicBlockEnd);
+            Quadruple lastInstruction = code.get(block.lastQuadruple);
             if (lastInstruction.getInstruction() == IRInstruction.JMP)
                 // one successor only
                 followers.add(labelIndices.get(lastInstruction.getResult().toString()));
@@ -343,11 +293,11 @@ public class BasicBlock {
                     lastInstruction.getInstruction() != IRInstruction.JMP) {
                 // two successors
                 followers.add(labelIndices.get(lastInstruction.getResult().toString()));
-                followers.add(block.basicBlockEnd + 1);
+                followers.add(block.lastQuadruple + 1);
             }
             else
                 // no jump instruction -> ELSE branch of IF statement -> falling through like in C switch statement
-                followers.add(block.basicBlockEnd + 1);
+                followers.add(block.lastQuadruple + 1);
 
             followerList.add(new Tuple(block, followers));
 
@@ -372,11 +322,97 @@ public class BasicBlock {
     // FUNCTION MEMBERS
     //////////////////////////////////////////////////////////////////////////////////
 
-    public String printBasicBlock(List<Quadruple> code) {
+    private Collection<Obj> extractAllVariables() {
+        Set<Obj> variables = new HashSet<>();
+
+        for (Quadruple q : instructions) {
+            QuadrupleVariable arg1 = q.getArg1();
+            QuadrupleVariable arg2 = q.getArg2();
+            QuadrupleVariable result = q.getResult();
+
+            if (arg1 instanceof QuadrupleObjVar)
+                variables.add(((QuadrupleObjVar) arg1).getObj());
+
+            if (arg2 instanceof QuadrupleObjVar)
+                variables.add(((QuadrupleObjVar) arg2).getObj());
+
+            if (result instanceof QuadrupleObjVar)
+                variables.add(((QuadrupleObjVar) result).getObj());
+        }
+
+        return variables;
+    }
+
+    public void doLivenessAnalysis() {
+        // extract object nodes of all operands and destination variables in the basic block
+        Collection<Obj> allVariablesUsedInThisBlock = extractAllVariables();
+        // split non-temporary and temporary variables into separate sets
+        Collection<Obj> nonTemporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
+        Collection<Obj> temporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
+
+        // insert all the variables into this map and set all those non-temporary to alive, other the dead
+        Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();
+        nonTemporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.ALIVE));
+        temporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.DEAD));
+
+        Stack<String> output = new Stack<>();
+
+        for (int instructionIndex = instructions.size() - 1; instructionIndex > 0; instructionIndex--) {
+            Quadruple instruction = instructions.get(instructionIndex);
+
+            ////////////////////////////
+            ////////////////////////////
+            StringBuilder sb = new StringBuilder();
+            if (Config.printBasicBlockGlobalLivenessAnalysisTable) {
+                sb.append(instruction + " ");
+
+                List<String> tmp = new ArrayList<>();
+                liveness.forEach((p, x) -> tmp.add(p.getName() + "" + x.toString() + ", "));
+                tmp.sort(String::compareTo);
+                if (tmp.size() > 0)
+                    tmp.set(tmp.size() - 1, tmp.get(tmp.size() - 1).replace(",", ""));
+
+                tmp.forEach(p -> sb.append(p));
+                output.push(sb.toString());
+            }
+            ////////////////////////////
+            ////////////////////////////
+
+            Obj obj1 = null, obj2 = null, objResult = null;
+
+            if (instruction.getArg1() instanceof QuadrupleObjVar) {
+                obj1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
+                instruction.setArg1NextUse(liveness.get(obj1));
+            }
+            if (instruction.getArg2() instanceof QuadrupleObjVar) {
+                obj2 = ((QuadrupleObjVar) instruction.getArg2()).getObj();
+                instruction.setArg2NextUse(liveness.get(obj2));
+            }
+            if (instruction.getResult() instanceof QuadrupleObjVar) {
+                objResult = ((QuadrupleObjVar) instruction.getResult()).getObj();
+                instruction.setResultNextUse(liveness.get(objResult));
+            }
+
+            // update map for the following (i.e. logically preceding) instruction
+            // NOTE: liveness has to be done first for result variable, and then for arguments
+            //       because result may be first or second argument
+            if (objResult != null)
+                liveness.put(objResult, Quadruple.NextUseState.DEAD);
+            if (obj1 != null)
+                liveness.put(obj1, Quadruple.NextUseState.ALIVE);
+            if (obj2 != null)
+                liveness.put(obj2, Quadruple.NextUseState.ALIVE);
+        }
+
+        while (!output.empty())
+            System.out.println(output.pop());
+    }
+
+    public String printBasicBlock() {
         StringBuilder sb = new StringBuilder();
 
-        for (int i = basicBlockStart; i <= basicBlockEnd; i++)
-            sb.append(code.get(i)).append(System.lineSeparator());
+        for (Quadruple q : instructions)
+            sb.append(q).append(System.lineSeparator());
 
         return sb.toString();
     }
@@ -402,7 +438,7 @@ public class BasicBlock {
         s.append(")");
 
         return "[id = " + blockId +
-                ", instructions = (" + basicBlockStart + ", " + basicBlockEnd + ")" +
+                ", instructions = (" + firstQuadruple + ", " + lastQuadruple + ")" +
                 ", start = " + isEntryBlock() +
                 ", end = " + isExitBlock() +
                 ", predecessors = " + p.toString().replace(", )", ")") +

@@ -39,5 +39,7 @@ public abstract class Optimizer {
         public List<BasicBlock> basicBlocks;
         public Map<String, Integer> labelIndices;
         public List<Set<BasicBlock>> loops;
+
+        public BasicBlock entryBlock;
     }
 }
