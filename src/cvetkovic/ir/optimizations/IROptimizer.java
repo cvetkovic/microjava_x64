@@ -28,12 +28,16 @@ public class IROptimizer extends Optimizer {
     }
 
     private void createOptimizationList() {
-        CommonSubexpressionElimination commonSubexpressionElimination = new CommonSubexpressionElimination();
+        // common subexpression elimination
+        for (CodeSequence sequence : codeSequenceList) {
+            for (BasicBlock block : sequence.basicBlocks) {
+                addOptimizationPass(new CommonSubexpressionElimination(block));
+            }
+        }
         /*DeadCodeElimination deadCodeElimination = new DeadCodeElimination();
         AlgebraicIdentities algebraicIdentities = new AlgebraicIdentities();
         CodeReordering codeReordering = new CodeReordering();*/
 
-        addOptimizationPass(commonSubexpressionElimination);
         /*addOptimizationPass(deadCodeElimination);
         addOptimizationPass(algebraicIdentities);
         addOptimizationPass(codeReordering);*/
@@ -47,7 +51,7 @@ public class IROptimizer extends Optimizer {
             stringBuilder.append("---------------------------------------------------------------------\n");
 
             CodeSequence sequence = codeSequenceList.get(i);
-            for(Quadruple q : sequence.code)
+            for (Quadruple q : sequence.code)
                 stringBuilder.append(q + "\n");
 
             stringBuilder.append("---------------------------------------------------------------------\n");

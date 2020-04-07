@@ -27,6 +27,10 @@ public class BasicBlock {
 
     public List<Quadruple> instructions = new ArrayList<>();
 
+    public Collection<Obj> temporaryVariables;
+    public Collection<Obj> allVariables;
+    public Collection<Obj> nonTemporaryVariables;
+
     //////////////////////////////////////////////////////////////////////////////////
     // BASIC BLOCK INFORMATION EXTRACTION
     //////////////////////////////////////////////////////////////////////////////////
@@ -345,10 +349,10 @@ public class BasicBlock {
 
     public void doLivenessAnalysis() {
         // extract object nodes of all operands and destination variables in the basic block
-        Collection<Obj> allVariablesUsedInThisBlock = extractAllVariables();
+        allVariables = extractAllVariables();
         // split non-temporary and temporary variables into separate sets
-        Collection<Obj> nonTemporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
-        Collection<Obj> temporaryVariables = allVariablesUsedInThisBlock.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
+        nonTemporaryVariables = allVariables.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
+        temporaryVariables = allVariables.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
 
         // insert all the variables into this map and set all those non-temporary to alive, other the dead
         Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();

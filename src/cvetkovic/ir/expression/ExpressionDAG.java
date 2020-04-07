@@ -22,7 +22,6 @@ public class ExpressionDAG {
     private List<ExpressionNode> arrayOfRecords = new ArrayList<>();
     private Map<ExpressionNode, Integer> accessByReference = new HashMap<>();
     private Map<Integer, ExpressionNode> accessByIndex = new HashMap<>();
-    private ExpressionNode rootNode;
 
     public ExpressionDAG() {
         ExpressionNode.resetId();
@@ -57,9 +56,6 @@ public class ExpressionDAG {
         int id = tmp.assignId();
         accessByReference.put(tmp, id);
         accessByIndex.put(id, tmp);
-
-        if (tmp.isBinaryOperator() && tmp.operation == ExpressionNodeOperation.ASSIGNMENT)
-            rootNode = tmp;
 
         return tmp;
     }

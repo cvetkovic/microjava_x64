@@ -1,8 +1,13 @@
 program TestProgram
     {
         void main()
-            int a, b, c, d;
+            int a, b, c, d, e;
         {
-            d = (a - b) + (a - c) + (a - c);
+            //d = (a - b) + (a - c) + (a - c);
+
+            //a = d;
+            //b = d;
+            //c = d;
+            //d = e;
         }
     }
