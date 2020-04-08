@@ -4,6 +4,7 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,8 @@ public abstract class Optimizer {
     public void executeOptimizations() {
         for (OptimizerPass pass : optimizationList)
             pass.doOptimization();
+
+        reassembleBasicBlocks();
     }
 
     public List<List<Quadruple>> getOptimizationOutput() {
@@ -33,12 +36,39 @@ public abstract class Optimizer {
         return result;
     }
 
-    public static class CodeSequence {
-        public List<Quadruple> code;
-        public List<BasicBlock> basicBlocks;
-        public Map<String, Integer> labelIndices;
-        //public List<Set<BasicBlock>> loops;
+    private Map<Integer, BasicBlock> indexBasicBlockBeginnings(List<BasicBlock> blocks) {
+        Map<Integer, BasicBlock> result = new HashMap<>();
 
-        public BasicBlock entryBlock;
+        for (BasicBlock b : blocks)
+            result.put(b.firstQuadruple, b);
+
+        return result;
     }
+
+    public List<List<Quadruple>> reassembleBasicBlocks() {
+        List<List<Quadruple>> outputCode = new ArrayList<>();
+
+        for (CodeSequence sequence : codeSequenceList) {
+            List<Quadruple> methodCode = new ArrayList<>();
+            Map<Integer, BasicBlock> leaders = indexBasicBlockBeginnings(sequence.basicBlocks);
+
+            BasicBlock currentBlock = null;
+            for (int index = 0; index < sequence.code.size(); ) {
+                if (currentBlock == null)
+                    currentBlock = leaders.get(index);
+
+                methodCode.addAll(currentBlock.instructions);
+
+                currentBlock.firstQuadruple = index;
+                index = currentBlock.lastQuadruple + 1;
+                currentBlock.lastQuadruple = currentBlock.firstQuadruple + currentBlock.instructions.size();
+            }
+
+            outputCode.add(methodCode);
+            sequence.code = methodCode;
+        }
+
+        return outputCode;
+    }
+
 }

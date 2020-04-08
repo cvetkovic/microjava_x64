@@ -63,9 +63,6 @@ public class Quadruple {
     }
 
     public void setArg1(QuadrupleVariable arg1) {
-        if (this.arg1 != null)
-            throw new RuntimeException("Quadruple arg1 field is immutable.");
-
         this.arg1 = arg1;
     }
 
@@ -74,9 +71,6 @@ public class Quadruple {
     }
 
     public void setArg2(QuadrupleVariable arg2) {
-        if (this.arg2 != null)
-            throw new RuntimeException("Quadruple arg1 field is immutable.");
-
         this.arg2 = arg2;
     }
 
@@ -85,9 +79,6 @@ public class Quadruple {
     }
 
     public void setResult(QuadrupleVariable result) {
-        if (this.result != null)
-            throw new RuntimeException("Quadruple arg1 field is immutable.");
-
         this.result = result;
     }
 

@@ -13,18 +13,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CommonSubexpressionElimination implements OptimizerPass {
+public class LocalValueNumbering implements OptimizerPass {
 
     protected BasicBlock basicBlock;
     protected Map<Obj, SubexpressionNode> nodes = new HashMap<>();
     protected Map<SubexpressionNode, SubexpressionNode> alreadyExistingNodes = new HashMap<>();
     protected List<SubexpressionNode> hangingRoots = new ArrayList<>();
+    protected List<List<Obj>> allAliases = new ArrayList<>();
 
-    public CommonSubexpressionElimination(BasicBlock basicBlock) {
+    public LocalValueNumbering(BasicBlock basicBlock) {
         this.basicBlock = basicBlock;
 
         makeLeafNodes();
-        makeRootNodes();
     }
 
     @Override
@@ -32,27 +32,11 @@ public class CommonSubexpressionElimination implements OptimizerPass {
      * Eliminate common subexpressions
      */
     public void doOptimization() {
+        List<Quadruple> toRemove = new ArrayList<>();
 
-    }
+        for (int i = 0; i < basicBlock.instructions.size(); i++) {
+            Quadruple instruction = basicBlock.instructions.get(i);
 
-    /**
-     * Leaf nodes represent non-temporary variables
-     */
-    private void makeLeafNodes() {
-        for (Obj leafNodes : basicBlock.nonTemporaryVariables) {
-            SubexpressionNode node = new SubexpressionNode();
-            node.aliases.add(leafNodes);
-
-            nodes.put(leafNodes, node);
-        }
-    }
-
-    /**
-     * Root nodes represent the operation, temporary variables or updates
-     * non-temporary variables
-     */
-    private void makeRootNodes() {
-        for (Quadruple instruction : basicBlock.instructions) {
             Obj obj1 = null, obj2 = null, resultObj = null;
             SubexpressionNode leftChild = null, rightChild = null;
 
@@ -77,11 +61,43 @@ public class CommonSubexpressionElimination implements OptimizerPass {
             node.rightChild = rightChild;
             node.aliases.add(resultObj);
 
+            // TODO: delete old aliases
+            // TODO: check for commutativity -> a + b = b + a, MUL also
+
             if (alreadyExistingNodes.containsKey(node)) {   // looks for the non-leaf node
                 node = alreadyExistingNodes.get(node);
                 node.aliases.add(resultObj);
                 if (!nodes.containsKey(resultObj))  // added for aliasing in case new not is not created
                     nodes.put(resultObj, node);
+
+                toRemove.add(instruction);
+                for (int j = i + 1; j < basicBlock.instructions.size(); j++) {
+                    Quadruple q = basicBlock.instructions.get(j);
+
+                    Obj qObj1 = null, qObj2 = null, qRes = null;
+
+                    if (q.getArg1() instanceof QuadrupleObjVar)
+                        qObj1 = ((QuadrupleObjVar) q.getArg1()).getObj();
+                    if (q.getArg2() instanceof QuadrupleObjVar)
+                        qObj2 = ((QuadrupleObjVar) q.getArg2()).getObj();
+                    if (q.getResult() instanceof QuadrupleObjVar)
+                        qRes = ((QuadrupleObjVar) q.getResult()).getObj();
+
+                    Obj targetObj = node.aliases.get(0);
+
+                    if (qObj1 == resultObj) {
+                        q.setArg1(new QuadrupleObjVar(targetObj));
+                        //q.setArg1NextUse(instruction.getResultNextUse());
+                    }
+                    if (qObj2 == targetObj) {
+                        q.setArg2(new QuadrupleObjVar(targetObj));
+                        //q.setArg2NextUse(instruction.getResultNextUse());
+                    }
+                    if (qRes == targetObj) {
+                        q.setResult(new QuadrupleObjVar(targetObj));
+                        //q.setResultNextUse(instruction.getResultNextUse());
+                    }
+                }
             }
             else {
                 if (instruction.getInstruction() == IRInstruction.STORE) {
@@ -107,6 +123,21 @@ public class CommonSubexpressionElimination implements OptimizerPass {
                     hangingRoots.add(node);
                 }
             }
+        }
+
+        // remove all necessary instuctions
+        basicBlock.instructions.removeAll(toRemove);
+    }
+
+    /**
+     * Leaf nodes represent non-temporary variables
+     */
+    private void makeLeafNodes() {
+        for (Obj leafNodes : basicBlock.nonTemporaryVariables) {
+            SubexpressionNode node = new SubexpressionNode();
+            node.aliases.add(leafNodes);
+
+            nodes.put(leafNodes, node);
         }
     }
 }

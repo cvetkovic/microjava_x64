@@ -1,7 +1,8 @@
 package cvetkovic.ir.optimizations;
 
-import cvetkovic.ir.optimizations.local.CommonSubexpressionElimination;
+import cvetkovic.ir.optimizations.local.LocalValueNumbering;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.Optimizer;
 
 import java.util.List;
@@ -31,7 +32,8 @@ public class IROptimizer extends Optimizer {
         // common subexpression elimination
         for (CodeSequence sequence : codeSequenceList) {
             for (BasicBlock block : sequence.basicBlocks) {
-                addOptimizationPass(new CommonSubexpressionElimination(block));
+                //addOptimizationPass(new IdentityElimination(block));
+                addOptimizationPass(new LocalValueNumbering(block));
             }
         }
         /*DeadCodeElimination deadCodeElimination = new DeadCodeElimination();
