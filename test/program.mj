@@ -3,32 +3,7 @@ program TestProgram
         void main()
             int a, b, c, d, e, f, g;
         {
-            // ---- CSE
-            a = b * c;
-            d = b * c * e;
-            f = b * c * a;
-
-            // ---- CSE
-            //d = (a - b) + (a - c) + (a - c);
-
-            // ---- CSE
-            //a = d;
-            //b = d;
-            //c = d;
-            //d = e;
-
-            // ---- CSE
-            //a = b + c;
-            //b = b - d;
-            //c = c + d;
-            //e = b + c;
-
-            // ---- CSE
-            //a = b + c;
-            //d = 5;
-            //b = b + c;
-
-            // ---- identity
-            //a = a;
+            // constant folding
+            a = 2 * 3 + b;
         }
     }

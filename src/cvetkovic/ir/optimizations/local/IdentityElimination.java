@@ -18,7 +18,7 @@ public class IdentityElimination implements OptimizerPass {
     }
 
     @Override
-    public void doOptimization() {
+    public void optimize() {
         List<Quadruple> toRemove = new ArrayList<>();
 
         for (Quadruple q : basicBlock.instructions) {
@@ -37,5 +37,10 @@ public class IdentityElimination implements OptimizerPass {
 
         for (Quadruple q : toRemove)
             basicBlock.instructions.remove(q);
+    }
+
+    @Override
+    public void finalizePass() {
+
     }
 }

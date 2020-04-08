@@ -2,6 +2,7 @@ package cvetkovic.ir.quadruple;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.misc.Config;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
 public class Quadruple {
     public enum NextUseState {
@@ -130,5 +131,33 @@ public class Quadruple {
                 instruction, arg1s, arg1uses, arg2s, arg2uses, results, resultuses);
 
         return formattedOutput.toString();
+    }
+
+    public int getFoldedValue() {
+        if (!(arg1 instanceof QuadrupleObjVar && arg2 instanceof QuadrupleObjVar))
+            throw new RuntimeException("Call not allowed on provided type of quadruple.");
+
+        Obj obj1 = ((QuadrupleObjVar) arg1).getObj();
+        Obj obj2 = ((QuadrupleObjVar) arg2).getObj();
+
+        if (!(obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) &&
+                !(obj1.getKind() == Obj.Con && obj2 == null && instruction == IRInstruction.NEG))
+            throw new RuntimeException("Call not allowed on provided type of quadruple.");
+
+        switch (instruction) {
+            case ADD:
+                return obj1.getAdr() + obj2.getAdr();
+            case SUB:
+                return obj1.getAdr() - obj2.getAdr();
+            case MUL:
+                return obj1.getAdr() * obj2.getAdr();
+            case DIV:
+                return obj1.getAdr() / obj2.getAdr();
+            case NEG:
+                return -obj1.getAdr();
+
+            default:
+                throw new RuntimeException("Call not allowed on provided type of quadruple.");
+        }
     }
 }

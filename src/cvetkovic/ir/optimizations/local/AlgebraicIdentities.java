@@ -12,7 +12,7 @@ public class AlgebraicIdentities implements OptimizerPass {
     }
 
     @Override
-    public void doOptimization() {
+    public void optimize() {
         for (Quadruple q : basicBlock.instructions) {
             switch (q.getInstruction()) {
                 case ADD:
@@ -33,5 +33,10 @@ public class AlgebraicIdentities implements OptimizerPass {
                     break;
             }
         }
+    }
+
+    @Override
+    public void finalizePass() {
+
     }
 }

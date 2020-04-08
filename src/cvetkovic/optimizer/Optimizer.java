@@ -21,8 +21,10 @@ public abstract class Optimizer {
     }
 
     public void executeOptimizations() {
-        for (OptimizerPass pass : optimizationList)
-            pass.doOptimization();
+        for (OptimizerPass pass : optimizationList) {
+            pass.optimize();
+            pass.finalizePass();
+        }
 
         reassembleBasicBlocks();
     }

@@ -1,5 +1,6 @@
 package cvetkovic.optimizer;
 
 public interface OptimizerPass {
-    void doOptimization();
+    void optimize();
+    void finalizePass();
 }

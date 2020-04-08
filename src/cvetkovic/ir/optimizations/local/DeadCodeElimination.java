@@ -4,7 +4,12 @@ import cvetkovic.optimizer.OptimizerPass;
 
 public class DeadCodeElimination implements OptimizerPass {
     @Override
-    public void doOptimization() {
+    public void optimize() {
+
+    }
+
+    @Override
+    public void finalizePass() {
 
     }
 }

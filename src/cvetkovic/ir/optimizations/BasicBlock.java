@@ -36,11 +36,11 @@ public class BasicBlock {
     //////////////////////////////////////////////////////////////////////////////////
 
     private void prepareBasicBlockClass(List<Quadruple> quadrupleList) {
-        System.out.println("Basic blocks in function '" + quadrupleList.get(0).getArg1() + "':");
-        if (Config.printBasicBlockInfo)
+        if (Config.printBasicBlockInfo) {
+            System.out.println("Basic blocks in function '" + quadrupleList.get(0).getArg1() + "':");
             System.out.println(this);
-        if (Config.printBasicBlockInfo)
             System.out.println(printBasicBlock());
+        }
 
         doLivenessAnalysis();
 

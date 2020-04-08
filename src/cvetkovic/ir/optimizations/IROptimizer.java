@@ -29,11 +29,11 @@ public class IROptimizer extends Optimizer {
     }
 
     private void createOptimizationList() {
-        // common subexpression elimination
         for (CodeSequence sequence : codeSequenceList) {
+            // LOCAL OPTIMIZATIONS
             for (BasicBlock block : sequence.basicBlocks) {
-                //addOptimizationPass(new IdentityElimination(block));
                 addOptimizationPass(new LocalValueNumbering(block));
+                //addOptimizationPass(new IdentityElimination(block));
             }
         }
         /*DeadCodeElimination deadCodeElimination = new DeadCodeElimination();

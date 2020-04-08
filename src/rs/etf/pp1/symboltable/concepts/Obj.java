@@ -167,4 +167,8 @@ public class Obj {
         else
             return name;
     }
+
+    public void changeKind(int newKind) {
+        this.kind = newKind;
+    }
 }
