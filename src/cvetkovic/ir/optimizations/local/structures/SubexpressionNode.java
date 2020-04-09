@@ -30,9 +30,15 @@ public class SubexpressionNode {
 
         SubexpressionNode node = (SubexpressionNode) obj;
 
-        return instruction == node.instruction &&
-                leftChild == node.leftChild &&
-                rightChild == node.rightChild;
+        if (instruction == node.instruction && (instruction == IRInstruction.ADD || instruction == IRInstruction.MUL)) {
+            return (leftChild == node.leftChild && rightChild == node.rightChild) ||
+                    (leftChild == node.rightChild && rightChild == node.leftChild);
+        }
+        else {
+            return instruction == node.instruction &&
+                    leftChild == node.leftChild &&
+                    rightChild == node.rightChild;
+        }
     }
 
     @Override

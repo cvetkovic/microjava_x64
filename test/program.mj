@@ -4,7 +4,7 @@ program TestProgram
             int a, b, c, d, e, f, g;
         {
             // algebraic identities
-            b = a + 0;
-            b = b + 2;
+            a = b + c;
+            e = c + b;
         }
     }
