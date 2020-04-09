@@ -41,6 +41,6 @@ public class IdentityElimination implements OptimizerPass {
 
     @Override
     public void finalizePass() {
-
+        basicBlock.doLivenessAnalysis();
     }
 }

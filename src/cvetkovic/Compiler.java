@@ -9,6 +9,7 @@ import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
 import cvetkovic.semantics.SemanticAnalyzer;
 import cvetkovic.structures.SymbolTable;
+import cvetkovic.x64.MachineCodeGenerator;
 import java_cup.runtime.Symbol;
 
 import java.io.BufferedReader;
@@ -18,7 +19,7 @@ import java.util.List;
 
 public class Compiler {
     private static String inputFile = "", outputFile = "";
-    private static boolean dumpAST = false, dumpSymbolTable = false, dumpIR = false, run = false, optimize_ir = false;
+    private static boolean dumpAST = false, dumpSymbolTable = false, dumpIR = false, run = false, optimize_ir = false, dump_asm = false;
     private static boolean showHelp;
 
     public static void main(String[] args) throws Exception {
@@ -45,6 +46,8 @@ public class Compiler {
                 dumpIR = true;
             else if (s.toLowerCase().equals("-optimize_ir"))
                 optimize_ir = true;
+            else if (s.toLowerCase().equals("-dump_asm"))
+                dump_asm = true;
             else if (s.toLowerCase().equals("-run"))
                 run = true;
             else {
@@ -68,6 +71,7 @@ public class Compiler {
                     "-dump_symbols - dump symbol table\n" +
                     "-dump_ir - dump intermediate code\n" +
                     "-optimize_ir - do optimizations on intermediate code\n" +
+                    "-dump_asm - dump generated x86-64 code\n" +
                     "-run - run generated object file upon compilation\n");
 
             return;
@@ -78,8 +82,6 @@ public class Compiler {
             System.out.println("Specified input file doesn't exist.");
             return;
         }
-
-        File outputFile = new File(Compiler.outputFile);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
             Yylex lexer = new Yylex(reader);
@@ -108,31 +110,41 @@ public class Compiler {
 
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
+                IROptimizer irCodeOptimizer = new IROptimizer(irCode);
                 String IRCodeToPrint = null;
 
                 if (optimize_ir) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
 
-                    IROptimizer irCodeOptimizer = new IROptimizer(irCode);
                     irCodeOptimizer.executeOptimizations();
-
-                    irCode = irCodeOptimizer.getOptimizationOutput();
                     IRCodeToPrint = irCodeOptimizer.toString();
                 }
 
                 if (dumpIR)
                     System.out.println(IRCodeToPrint != null ? IRCodeToPrint : irCodeGenerator);
 
-                /*System.out.println("================ MACHINE CODE GENERATION ================");
+                System.out.println("================ MACHINE CODE GENERATION ================");
+                MachineCodeGenerator machineCodeGenerator = new MachineCodeGenerator(Compiler.outputFile, irCodeOptimizer.getOptimizationOutput());
+                machineCodeGenerator.generateCode();
+                if (dump_asm) {
+                    readOutputFile(Compiler.outputFile);
+                }
 
-                System.out.println("================ MACHINE CODE OPTIMIZATION ================");
-
-                System.out.println("================ COMPILATION DONE ================");*/
+                System.out.println("================ COMPILATION DONE ================");
             }
             else if (parser.isErrorDetected())
                 System.out.println("Error during syntax analysis. Semantic analyze and code generation aborted.");
             else if (semanticCheck.isErrorDetected())
                 System.out.println("Error during semantic analysis. Code generation aborted.");
+        }
+    }
+
+    private static void readOutputFile(String outputFile) throws Exception {
+        try (BufferedReader reader = new BufferedReader(new FileReader(outputFile))) {
+            String line;
+
+            while ((line = reader.readLine()) != null)
+                System.out.println(line);
         }
     }
 }

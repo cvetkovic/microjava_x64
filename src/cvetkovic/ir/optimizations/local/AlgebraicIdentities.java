@@ -8,9 +8,22 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 
 public class AlgebraicIdentities {
 
+    /**
+     * Tries to do a algebraic simplification over quadruple and if succeeds returns non null value
+     *
+     * @param instruction Instruction quadruple
+     * @param obj1        Redundant parameter, but needed for simplicity
+     * @param obj2        Redundant parameter, but needed for simplicity
+     * @param result      Redundant parameter, but needed for simplicity
+     * @return Null if code removal is not needed or optimization is not applicable for provided instruction
+     */
     public static Obj simplifyAlgebra(Quadruple instruction, Obj obj1, Obj obj2, Obj result) {
         if (obj1 == null || obj2 == null || result == null)
             return null;
+        else if (instruction.getArg1() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getArg1()).getObj() == obj1 ||
+                instruction.getArg2() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getArg2()).getObj() == obj2 ||
+                instruction.getResult() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getResult()).getObj() == result)
+            throw new RuntimeException("Provided parameter does not match the quadruple argument.");
 
         switch (instruction.getInstruction()) {
             case ADD:

@@ -62,7 +62,6 @@ public class LocalValueNumbering implements OptimizerPass {
             node.aliases.add(resultObj);
 
             // TODO: delete old aliases
-            // TODO: check for commutativity -> a + b = b + a, MUL also
 
             Obj replaceAlgebraWith = AlgebraicIdentities.simplifyAlgebra(instruction, obj1, obj2, resultObj);
 
