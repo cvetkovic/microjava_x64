@@ -10,6 +10,17 @@ program TestProgram
 
             // constant folding
             //a = 2 * 3 + b;
+            //a = 2 * 3 - 4 + b;
+
+            // algebraic identities
+            b = a + 0;
+            b = a - 0;
+            b = a - a;
+            b = 2 * a;
+            b = a * 1;
+            b = a * 0;
+            b = a / 1;
+            b = a / a;
 
             // ---- CSE
             //a = d;

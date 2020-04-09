@@ -5,6 +5,7 @@ import cvetkovic.misc.Config;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 public class Quadruple {
+
     public enum NextUseState {
         UNKNOWN(0),
 
@@ -54,6 +55,10 @@ public class Quadruple {
 
     // TODO: add to setters RuntimeException if that parameter cannot be set because of instruction format specification
     // TODO: add explicit typechecking
+
+    public void setInstruction(IRInstruction add) {
+        this.instruction = add;
+    }
 
     public IRInstruction getInstruction() {
         return instruction;

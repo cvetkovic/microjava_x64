@@ -3,7 +3,8 @@ program TestProgram
         void main()
             int a, b, c, d, e, f, g;
         {
-            // constant folding
-            a = 2 * 3 + b;
+            // algebraic identities
+            b = a + 0;
+            b = b + 2;
         }
     }

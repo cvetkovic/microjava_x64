@@ -1,42 +1,80 @@
 package cvetkovic.ir.optimizations.local;
 
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.ir.quadruple.QuadrupleObjVar;
+import cvetkovic.structures.SymbolTable;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
-public class AlgebraicIdentities implements OptimizerPass {
-    protected BasicBlock basicBlock;
+public class AlgebraicIdentities {
 
-    public AlgebraicIdentities(BasicBlock basicBlock) {
-        this.basicBlock = basicBlock;
-    }
+    public static Obj simplifyAlgebra(Quadruple instruction, Obj obj1, Obj obj2, Obj result) {
+        if (obj1 == null || obj2 == null || result == null)
+            return null;
 
-    @Override
-    public void optimize() {
-        for (Quadruple q : basicBlock.instructions) {
-            switch (q.getInstruction()) {
-                case ADD:
-                    // TODO: resolve x + 0 = 0 + x
-
-                    break;
-                case SUB:
-                    // TODO: resolve x - 0
-
-                    break;
-                case MUL:
-                    // var * 2 = var + var -> not needed because it will be impelemented in machine code as SHL var 1
-                    // TODO: resolve x * 1 = 1 * x
-
-                    break;
-                case DIV:
-                    // TODO: resolve x / 1
-                    break;
-            }
+        switch (instruction.getInstruction()) {
+            case ADD:
+                if ((obj1.getKind() == Obj.Con && obj1.getAdr() == 0 && obj2.getKind() == Obj.Var) ||
+                        (obj2.getKind() == Obj.Con && obj2.getAdr() == 0 && obj1.getKind() == Obj.Var)) {
+                    // instruction: ADD var con || ADD con var
+                    return (obj1.getKind() == Obj.Con ? obj2 : obj1);
+                }
+                else
+                    return null;
+            case SUB:
+                if (obj1.getKind() == Obj.Var && obj2.getKind() == Obj.Con && obj2.getAdr() == 0) {
+                    // instruction: SUB var 0
+                    return obj1;
+                }
+                else if (obj1.getKind() == Obj.Var && obj2.getKind() == Obj.Var && obj1 == obj2) {
+                    // instruction: SUB var var
+                    Obj tmp = new Obj(Obj.Con, "const", SymbolTable.intType);
+                    tmp.setAdr(0);
+                    return tmp;
+                }
+                else
+                    return null;
+            case MUL:
+                if ((obj1.getKind() == Obj.Con && obj1.getAdr() == 2 && obj2.getKind() == Obj.Var) ||
+                        (obj2.getKind() == Obj.Con && obj2.getAdr() == 2 && obj1.getKind() == Obj.Var)) {
+                    // instruction: MUL var 2 || MUL 2 var
+                    instruction.setInstruction(IRInstruction.ADD);
+                    if (obj1.getKind() == Obj.Con)
+                        instruction.setArg1(new QuadrupleObjVar(obj2));
+                    else
+                        instruction.setArg2(new QuadrupleObjVar(obj1));
+                    return null;
+                }
+                else if ((obj1.getKind() == Obj.Con && obj1.getAdr() == 1 && obj2.getKind() == Obj.Var) ||
+                        (obj2.getKind() == Obj.Con && obj2.getAdr() == 1 && obj1.getKind() == Obj.Var)) {
+                    // instruction: MUL 1 var || MUL var 1
+                    return (obj1.getKind() == Obj.Con ? obj2 : obj1);
+                }
+                else if ((obj1.getKind() == Obj.Con && obj1.getAdr() == 0 && obj2.getKind() == Obj.Var) ||
+                        (obj2.getKind() == Obj.Con && obj2.getAdr() == 0 && obj1.getKind() == Obj.Var)) {
+                    // instruction: MUL 0 var || MUL var 0
+                    Obj tmp = new Obj(Obj.Con, "const", SymbolTable.intType);
+                    tmp.setAdr(0);
+                    return tmp;
+                }
+                else
+                    return null;
+            case DIV:
+                if (obj1.getKind() == Obj.Var && obj2.getKind() == Obj.Con && obj2.getAdr() == 1) {
+                    // instruction: DIV var 1
+                    return obj1;
+                }
+                else if (obj1.getKind() == Obj.Var && obj2.getKind() == Obj.Var && obj1 == obj2) {
+                    // instruction: DIV var var
+                    // TODO: maybe unsafe because of division with zero
+                    Obj tmp = new Obj(Obj.Con, "const", SymbolTable.intType);
+                    tmp.setAdr(1);
+                    return tmp;
+                }
+                else
+                    return null;
+            default:
+                return null;
         }
-    }
-
-    @Override
-    public void finalizePass() {
-
     }
 }

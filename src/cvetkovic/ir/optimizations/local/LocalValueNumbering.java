@@ -64,17 +64,24 @@ public class LocalValueNumbering implements OptimizerPass {
             // TODO: delete old aliases
             // TODO: check for commutativity -> a + b = b + a, MUL also
 
+            Obj replaceAlgebraWith = AlgebraicIdentities.simplifyAlgebra(instruction, obj1, obj2, resultObj);
+
             if (alreadyExistingNodes.containsKey(node) ||
                     (obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
-                    (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG)) {   // looks for the non-leaf node
+                    (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG) ||
+                    replaceAlgebraWith != null) {   // looks for the non-leaf node
 
                 boolean doConstantFolding = false;
                 int foldedValue = -1;
+
                 if ((obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
                         (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG)) {
                     // constant folding
                     foldedValue = instruction.getFoldedValue();
                     doConstantFolding = true;
+                }
+                else if (replaceAlgebraWith != null) {
+                    // TODO: delete non existing nodes from DAG
                 }
                 else {
                     node = alreadyExistingNodes.get(node);
@@ -102,6 +109,8 @@ public class LocalValueNumbering implements OptimizerPass {
                         targetObj.changeKind(Obj.Con);
                         targetObj.setAdr(foldedValue);
                     }
+                    else if (replaceAlgebraWith != null)
+                        targetObj = replaceAlgebraWith;
 
                     if (qObj1 == resultObj) {
                         q.setArg1(new QuadrupleObjVar(targetObj));
