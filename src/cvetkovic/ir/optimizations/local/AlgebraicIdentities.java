@@ -20,10 +20,10 @@ public class AlgebraicIdentities {
     public static Obj simplifyAlgebra(Quadruple instruction, Obj obj1, Obj obj2, Obj result) {
         if (obj1 == null || obj2 == null || result == null)
             return null;
-        else if (instruction.getArg1() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getArg1()).getObj() == obj1 ||
+        /*else if (instruction.getArg1() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getArg1()).getObj() == obj1 ||
                 instruction.getArg2() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getArg2()).getObj() == obj2 ||
                 instruction.getResult() instanceof QuadrupleObjVar && ((QuadrupleObjVar) instruction.getResult()).getObj() == result)
-            throw new RuntimeException("Provided parameter does not match the quadruple argument.");
+            throw new RuntimeException("Provided parameter does not match the quadruple argument.");*/
 
         switch (instruction.getInstruction()) {
             case ADD:

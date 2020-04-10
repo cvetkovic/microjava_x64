@@ -30,6 +30,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     //////////////////////////////////////////////////////////////////////////////////
     private SharedData sharedData;
     private HashMap<String, String> classInstances = new LinkedHashMap<>();
+    private List<Obj> globalVariables = new ArrayList<>();
 
     //////////////////////////////////////////////////////////////////////////////////
     // AUXILIARY INTERNAL STRUCTURES
@@ -224,16 +225,28 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         Obj obj = SymbolTable.currentScope.findSymbol(variableName);
 
         if (obj == SymbolTable.noObj || obj == null) {
+            Obj newlyCreatedVar;
+
             if (SingleVariableDeclaration.getSingleVarArray() instanceof SingleVarNoArray)                // non-array declaration
-                SymbolTable.insert(SymbolTable.getCurrentScopeKind(), SingleVariableDeclaration.getVariableName(), currentDataType.struct);
+                newlyCreatedVar = SymbolTable.insert(SymbolTable.getCurrentScopeKind(), SingleVariableDeclaration.getVariableName(), currentDataType.struct);
             else                                                                                        // array declaration
-                SymbolTable.insert(SymbolTable.getCurrentScopeKind(), SingleVariableDeclaration.getVariableName(), SymbolTable.getArrayStruct(currentDataType.struct));
+                newlyCreatedVar = SymbolTable.insert(SymbolTable.getCurrentScopeKind(), SingleVariableDeclaration.getVariableName(), SymbolTable.getArrayStruct(currentDataType.struct));
+
+            if (SymbolTable.currentScope.getOuter().getOuter() == null) {
+                // the variable is global, hence add to global variable list
+                // NOTE: all these variables go to .bss section
+                globalVariables.add(newlyCreatedVar);
+            }
 
             if (currentDataType.struct.getKind() == Struct.Class)
                 classInstances.put(variableName, currentDataType.getTypeIdent());
         }
         else
             throwError(SingleVariableDeclaration.getLine(), "Variable with name '" + variableName + "' redefinition error.");
+    }
+
+    public List<Obj> getGlobalVariables() {
+        return globalVariables;
     }
 
     /**

@@ -2,6 +2,7 @@ package cvetkovic.x64;
 
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.QuadrupleIntegerConst;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,10 +17,12 @@ public class MachineCodeGenerator {
     private BufferedWriter writer;
 
     private List<List<Quadruple>> instructions;
+    private List<Obj> globalVariables;
 
-    public MachineCodeGenerator(String outputFileUrl, List<List<Quadruple>> instructions) {
+    public MachineCodeGenerator(String outputFileUrl, List<List<Quadruple>> instructions, List<Obj> globalVariables) {
         this.outputFileUrl = outputFileUrl;
         this.instructions = instructions;
+        this.globalVariables = globalVariables;
 
         try {
             outputFileHandle = new File(outputFileUrl);
@@ -31,10 +34,30 @@ public class MachineCodeGenerator {
         }
     }
 
-    // TODO: close writer somewhere
-    // TODO: decide between Intel or AT&T syntax
+    private void generateDirectives() throws IOException {
+        writer.write(".global main");
+        writer.write(System.lineSeparator());
+        writer.write(System.lineSeparator());
+    }
 
-    public void generateCode() throws IOException {
+    private void generateBSS() throws IOException {
+        writer.write(".section .bss");
+        writer.write(System.lineSeparator());
+
+        for (Obj var : globalVariables) {
+            writer.write(var.getName() + ":");
+            writer.write(System.lineSeparator());
+            writer.write("\t" + DataStructures.getAssemblyDirectiveForAllocation(DataStructures.getX64VariableSize(var.getType())) + " 0x0");
+            writer.write(System.lineSeparator());
+        }
+
+        writer.write(System.lineSeparator());
+    }
+
+    private void generateFunctionsBody() throws IOException {
+        writer.write(".section .text");
+        writer.write(System.lineSeparator());
+
         for (List<Quadruple> sequence : instructions) {
             for (Quadruple quadruple : sequence) {
 
@@ -82,7 +105,20 @@ public class MachineCodeGenerator {
             //writer.write("----------------------------------------------------------------------------");
             //writer.write(System.lineSeparator());
         }
+    }
 
-        writer.close();
+    // TODO: close writer somewhere
+    // TODO: decide between Intel or AT&T syntax
+
+    public void generateCode() {
+        try {
+            generateDirectives();
+            generateBSS();
+            generateFunctionsBody();
+
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

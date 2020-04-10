@@ -15,4 +15,19 @@ public class DataStructures {
         else
             throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
     }
+
+    public static String getAssemblyDirectiveForAllocation(int size) {
+        switch (size)
+        {
+            case 1:
+                return ".byte";
+            case 4:
+                return ".long";
+            case 8:
+                return ".quad";
+
+            default:
+                throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
+        }
+    }
 }

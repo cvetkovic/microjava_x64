@@ -1,12 +1,22 @@
 program TestProgram
+
+    int globalInt;
+    char globalChar;
+
     {
         void main()
-            int a, b, c, d, e, f, g;
+            int a, b, c, d, e, f, g, h, i, j;
+            int x, y, z;
+            int arr[];
         {
-            // algebraic identities
-            c = a + b;
+            // dead code
             d = b + a;
-            d = 5;
-            d = 56;
+            d = f + e;
+
+            // array
+            //x = arr[i];
+            //arr[j] = y;
+            //z = arr[i];
+            //x = arr[i];
         }
     }

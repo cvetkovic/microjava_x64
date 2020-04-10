@@ -124,7 +124,9 @@ public class Compiler {
                     System.out.println(IRCodeToPrint != null ? IRCodeToPrint : irCodeGenerator);
 
                 System.out.println("================ MACHINE CODE GENERATION ================");
-                MachineCodeGenerator machineCodeGenerator = new MachineCodeGenerator(Compiler.outputFile, irCodeOptimizer.getOptimizationOutput());
+                MachineCodeGenerator machineCodeGenerator = new MachineCodeGenerator(Compiler.outputFile,
+                        irCodeOptimizer.getOptimizationOutput(),
+                        semanticCheck.getGlobalVariables());
                 machineCodeGenerator.generateCode();
                 if (dump_asm) {
                     readOutputFile(Compiler.outputFile);
