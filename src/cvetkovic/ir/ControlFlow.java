@@ -1,7 +1,7 @@
 package cvetkovic.ir;
 
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleLabel;
+import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 
 import java.util.ArrayList;
 import java.util.List;

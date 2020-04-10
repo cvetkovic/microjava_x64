@@ -2,8 +2,8 @@ package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleObjVar;
-import cvetkovic.ir.quadruple.QuadrupleVariable;
+import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
 import rs.etf.pp1.symboltable.concepts.Obj;
 

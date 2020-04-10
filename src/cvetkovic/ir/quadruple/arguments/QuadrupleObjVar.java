@@ -1,4 +1,4 @@
-package cvetkovic.ir.quadruple;
+package cvetkovic.ir.quadruple.arguments;
 
 import rs.etf.pp1.symboltable.concepts.Obj;
 

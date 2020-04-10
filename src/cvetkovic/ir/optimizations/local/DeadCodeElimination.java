@@ -1,7 +1,7 @@
 package cvetkovic.ir.optimizations.local;
 
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
 

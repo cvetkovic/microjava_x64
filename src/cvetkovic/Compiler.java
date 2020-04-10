@@ -116,7 +116,7 @@ public class Compiler {
                 if (optimize_ir) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
 
-                    //irCodeOptimizer.executeOptimizations();
+                    irCodeOptimizer.executeOptimizations();
                     IRCodeToPrint = irCodeOptimizer.toString();
                 }
 

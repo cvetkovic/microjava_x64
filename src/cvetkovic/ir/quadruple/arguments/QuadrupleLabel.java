@@ -1,4 +1,4 @@
-package cvetkovic.ir.quadruple;
+package cvetkovic.ir.quadruple.arguments;
 
 public class QuadrupleLabel extends QuadrupleVariable {
     private String labelName;

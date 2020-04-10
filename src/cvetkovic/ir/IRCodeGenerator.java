@@ -3,7 +3,8 @@ package cvetkovic.ir;
 import cvetkovic.ir.expression.ExpressionDAG;
 import cvetkovic.ir.expression.ExpressionNode;
 import cvetkovic.ir.expression.ExpressionNodeOperation;
-import cvetkovic.ir.quadruple.*;
+import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.parser.ast.*;
 import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.DataStructures;
@@ -403,7 +404,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             if (!(FactorFunctionCall.getDesignator() instanceof DesignatorRoot))
                 pushImplicitThisForFunctionCall();
 
-            Quadruple instruction = new Quadruple(IRInstruction.CALL);
+            Quadruple instruction = new Quadruple(FactorFunctionCall.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL : INVOKE_VIRTUAL);
             instruction.setArg1(new QuadrupleObjVar(var));
 
             // generate temp variable for storing the result of a CALL
@@ -563,7 +564,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (!(DesignatorInvoke.getDesignator() instanceof DesignatorRoot))
             pushImplicitThisForFunctionCall();
 
-        Quadruple instruction = new Quadruple(IRInstruction.CALL);
+        Quadruple instruction = new Quadruple(DesignatorInvoke.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL: INVOKE_VIRTUAL);
         instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
 
         if (postponeUpdateVarList) {

@@ -1,6 +1,8 @@
 package cvetkovic.ir.quadruple;
 
 import cvetkovic.ir.IRInstruction;
+import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -132,7 +134,7 @@ public class Quadruple {
                 resultuses = resultNextUse.toString();
         }
 
-        String formattedOutput = String.format("%-10s | %-10s %-5s | %-10s %-5s | %-10s %-5s |",
+        String formattedOutput = String.format("%-15.15s | %-15.15s %-5s | %-15.15s %-5s | %-15.15s %-5s |",
                 instruction, arg1s, arg1uses, arg2s, arg2uses, results, resultuses);
 
         return formattedOutput.toString();

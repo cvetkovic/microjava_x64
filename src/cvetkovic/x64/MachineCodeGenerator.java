@@ -1,7 +1,7 @@
 package cvetkovic.x64;
 
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleIntegerConst;
+import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.io.BufferedWriter;

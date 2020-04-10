@@ -2,6 +2,7 @@ package cvetkovic.semantics;
 
 import cvetkovic.parser.ast.*;
 import cvetkovic.structures.SymbolTable;
+import cvetkovic.x64.DataStructures;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -127,6 +128,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(ProgramName ProgramName) {
         ProgramName.obj = SymbolTable.insert(Obj.Prog, ProgramName.getProgramName(), SymbolTable.noType);
         SymbolTable.openScope(SymbolTable.ScopeType.OUTSIDE_CLASS);
+        currentAddressOffset.push(0);
     }
 
     /**
@@ -210,6 +212,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             throwError(SingleConst.getLine(), "Constants cannot be of other type other than integer, character or boolean.");
     }
 
+    // stack for giving variables and fields its offset in data structure
+    private Stack<Integer> currentAddressOffset = new Stack<>();
+
     /**
      * Variable declaration
      */
@@ -237,6 +242,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 // NOTE: all these variables go to .bss section
                 globalVariables.add(newlyCreatedVar);
             }
+
+            // determine address
+            newlyCreatedVar.setAdr(currentAddressOffset.peek());
+            currentAddressOffset.push(currentAddressOffset.pop() + DataStructures.getX64VariableSize(newlyCreatedVar.getType()));
 
             if (currentDataType.struct.getKind() == Struct.Class)
                 classInstances.put(variableName, currentDataType.getTypeIdent());
@@ -528,6 +537,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentClass = null;
         currentClassName = "";
         currentClassExtends = null;
+        currentAddressOffset.pop();
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -584,6 +594,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
         SymbolTable.closeScope();
         currentClass = null;
+        currentAddressOffset.pop();
     }
 
     private void prepareClassSymbolTable() {
@@ -594,7 +605,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
         // needed to add, otherwise fields cannot be accesed properly during
         // code generation as first field would point to VTP, etc.
-        SymbolTable.insert(Obj.Fld, "_vtp", Tab.noType);
+        SymbolTable.insert(Obj.Fld, "_vtp", Tab.noType).setAdr(0);
+        currentAddressOffset.push(DataStructures.getX64VariableSize(new Struct(Struct.Class)));
     }
 
     @Override
@@ -680,6 +692,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(AbstractMethodName AbstractMethodName) {
         String methodName = AbstractMethodName.getI1();
         currentMethodName = methodName;
+        currentAddressOffset.push(0);
 
         Obj object = SymbolTable.currentScope.findSymbol(methodName);
         if (object == SymbolTable.noObj || object == null) {
@@ -705,6 +718,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         abstractMethodReturnType = null;
         currentMethodName = "";
         currentMethod = null;
+        currentAddressOffset.pop();
 
         SymbolTable.closeScope();
     }
@@ -817,6 +831,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(MethodName MethodName) {
         // NOTE: ord, chr, len shall not be added to symbol table as they already exist on its creation
 
+        currentAddressOffset.push(0);
         Struct returnType = currentMethodReturnType;
         String methodName = MethodName.getMethodName();
 
@@ -904,6 +919,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         SymbolTable.closeScope();
         currentMethod = null;
         currentMethodName = "";
+        currentAddressOffset.pop();
     }
 
     @Override

@@ -2,7 +2,7 @@ package cvetkovic.ir.optimizations.local;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
