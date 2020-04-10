@@ -5,8 +5,10 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.optimizations.local.structures.SubexpressionNode;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.QuadruplePTR;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
+import rs.etf.pp1.symboltable.concepts.Struct;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ public class LocalValueNumbering implements OptimizerPass {
 
     // no need for SubexpressionNode list here because only one can node be alive at one time
     protected Map<Obj, SubexpressionNode> arrayAccesses = new HashMap<>();
+    protected boolean removeDAG = false;
 
     public LocalValueNumbering(BasicBlock basicBlock) {
         this.basicBlock = basicBlock;
@@ -63,6 +66,7 @@ public class LocalValueNumbering implements OptimizerPass {
             node.aliases.add(resultObj);
 
             boolean nodeAlive = true;
+            // checking whether node is alive in case of ALOAD -> [ALSU06] pg. 538
             if (instruction.getInstruction() == IRInstruction.ALOAD) {
                 if (alreadyExistingNodes.containsKey(node)) {
                     SubexpressionNode subexpressionNode = alreadyExistingNodes.get(node);
@@ -76,11 +80,27 @@ public class LocalValueNumbering implements OptimizerPass {
                 }
             }
             else if (instruction.getInstruction() == IRInstruction.ASTORE) {
+                // killing old node accesses
                 if (arrayAccesses.containsKey(resultObj)) {
                     arrayAccesses.get(resultObj).deadNode = true;
                 }
             }
-            // killing old node accesses
+            else if (instruction.getInstruction() == IRInstruction.PARAM) {
+                if (obj1.getType().getKind() == Struct.Class)
+                    removeDAG = true;
+            }
+            else if ((instruction.getInstruction() == IRInstruction.STORE &&
+                    instruction.getArg2() != null && instruction.getArg2() instanceof QuadruplePTR) ||
+                    ((instruction.getInstruction() == IRInstruction.CALL || instruction.getInstruction() == IRInstruction.INVOKE_VIRTUAL) && removeDAG)) {
+                nodes.clear();
+                alreadyExistingNodes.clear();
+                arrayAccesses.clear();
+                removeDAG = false;
+
+                makeLeafNodes();
+
+                continue;
+            }
 
             // TODO: delete old aliases
 
@@ -139,6 +159,8 @@ public class LocalValueNumbering implements OptimizerPass {
                         q.setArg2(new QuadrupleObjVar(targetObj));
                     if (qRes == targetObj)
                         q.setResult(new QuadrupleObjVar(targetObj));
+                    else if (q.getInstruction() == IRInstruction.STORE && q.getArg2() != null && q.getArg2() instanceof QuadruplePTR)
+                        q.setResult(new QuadrupleObjVar(nodes.get(resultObj).aliases.get(0)));
                 }
             }
             else {
@@ -151,7 +173,11 @@ public class LocalValueNumbering implements OptimizerPass {
                     }
                     else {
                         // situation STORE non-temp to non-temp
-                        nodes.put(resultObj, leftChild);
+                        if (resultObj.tempVar) // equivalent to checking whether arg2 instanceof PTR
+                            instruction.setResult(new QuadrupleObjVar(nodes.get(resultObj).aliases.get(0)));
+                        else {
+                            nodes.put(resultObj, leftChild);
+                        }
                     }
                 }
                 else {

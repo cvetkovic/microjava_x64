@@ -23,7 +23,8 @@ public enum IRInstruction {
     MALLOC, // heap memory allocation
 
     PARAM,  // push parameter
-    CALL,   // function invocation
+    CALL,   // non-class static method invocation
+    INVOKE_VIRTUAL, // class method invocation
     RETURN, // return from function
 
     ALOAD,  // array load

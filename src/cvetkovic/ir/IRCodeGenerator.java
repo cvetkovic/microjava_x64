@@ -212,12 +212,15 @@ public class IRCodeGenerator extends VisitorAdaptor {
             int classSize = 0;
 
             for (Obj member : type.getMembers()) {
-                if (member.getName().equals("_vtp") || member.getName().equals("extends"))
+                if (member.getName().equals("extends"))
                     continue;
                 else if (member.getKind() == Obj.Meth)
                     continue;
 
-                classSize += DataStructures.getX64VariableSize(member.getType());
+                if (member.getName().equals("_vtp"))
+                    classSize += DataStructures.getX64VariableSize(new Struct(Struct.Class));
+                else
+                    classSize += DataStructures.getX64VariableSize(member.getType());
             }
 
             Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
@@ -337,14 +340,12 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(ActParsStart ActParsStart) {
-        pushImplicitThisForFunctionCall();
+        reverseParameterStack.push(new Stack<>());
     }
 
     private void pushImplicitThisForFunctionCall() {
-        reverseParameterStack.push(new Stack<>());
-
         // for case -> shapes[i].toString();
-        if (expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
+        if (expressionDAG.getLast() != null && expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
             code.addAll(expressionDAG.emitQuadruples());
             expressionDAG = new ExpressionDAG();
         }
@@ -354,9 +355,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple implicitThis = new Quadruple(PARAM);
             implicitThis.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
-            ParameterContainer container = new ParameterContainer();
-            container.instructions.add(implicitThis);
-            reverseParameterStack.peek().push(container);
+            code.add(implicitThis);
         }
     }
 
@@ -365,17 +364,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         while (!container.empty())
             code.addAll(container.pop().instructions);
-    }
-
-    @Override
-    public void visit(DesignatorMethodCallParameters DesignatorMethodCallParameters) {
-        endFunctionCall();
-    }
-
-    @Override
-    public void visit(NoDesignatorMethodCallParameters NoDesignatorMethodCallParameters) {
-        pushImplicitThisForFunctionCall();
-        endFunctionCall();
     }
 
     private static class ParameterContainer {
@@ -411,6 +399,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
         }
         else {
+            endFunctionCall();
+            if (!(FactorFunctionCall.getDesignator() instanceof DesignatorRoot))
+                pushImplicitThisForFunctionCall();
+
             Quadruple instruction = new Quadruple(IRInstruction.CALL);
             instruction.setArg1(new QuadrupleObjVar(var));
 
@@ -566,6 +558,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(DesignatorInvoke DesignatorInvoke) {
         Obj methodToInvoke = DesignatorInvoke.getDesignator().obj;
+
+        endFunctionCall();
+        if (!(DesignatorInvoke.getDesignator() instanceof DesignatorRoot))
+            pushImplicitThisForFunctionCall();
 
         Quadruple instruction = new Quadruple(IRInstruction.CALL);
         instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
