@@ -9,14 +9,10 @@ program TestProgram
             int x, y, z;
             int arr[];
         {
-            // dead code
-            d = b + a;
-            d = f + e;
-
             // array
-            //x = arr[i];
-            //arr[j] = y;
-            //z = arr[i];
-            //x = arr[i];
+            x = arr[i];
+            arr[j] = y;
+            x = arr[i];
+            y = arr[i];
         }
     }

@@ -6,6 +6,9 @@ import cvetkovic.ir.quadruple.QuadrupleObjVar;
 import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
+/**
+ * Contains methods for probing whether quadruple can be optimized with algebraic identities transformation/removal
+ */
 public class AlgebraicIdentities {
 
     /**

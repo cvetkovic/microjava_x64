@@ -129,7 +129,7 @@ public class Compiler {
                         semanticCheck.getGlobalVariables());
                 machineCodeGenerator.generateCode();
                 if (dump_asm) {
-                    readOutputFile(Compiler.outputFile);
+                    //readOutputFile(Compiler.outputFile);
                 }
 
                 System.out.println("================ COMPILATION DONE ================");

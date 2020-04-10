@@ -35,6 +35,8 @@ public class MachineCodeGenerator {
     }
 
     private void generateDirectives() throws IOException {
+        writer.write(".intel_syntax");
+        writer.write(System.lineSeparator());
         writer.write(".global main");
         writer.write(System.lineSeparator());
         writer.write(System.lineSeparator());
@@ -100,15 +102,12 @@ public class MachineCodeGenerator {
                 }
             }
 
-            writer.write(System.lineSeparator());
-
-            //writer.write("----------------------------------------------------------------------------");
-            //writer.write(System.lineSeparator());
+            if (instructions.get(instructions.size() - 1) != sequence) {
+                writer.write(System.lineSeparator());
+                //writer.write("----------------------------------------------------------------------------");
+            }
         }
     }
-
-    // TODO: close writer somewhere
-    // TODO: decide between Intel or AT&T syntax
 
     public void generateCode() {
         try {

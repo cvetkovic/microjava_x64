@@ -11,6 +11,7 @@ public class SubexpressionNode {
     public IRInstruction instruction;
 
     public List<Obj> aliases = new ArrayList<>();
+    public boolean deadNode = false;
 
     public SubexpressionNode leftChild;
     public SubexpressionNode rightChild;

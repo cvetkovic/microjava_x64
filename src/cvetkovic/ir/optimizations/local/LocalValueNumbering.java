@@ -13,13 +13,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Optimizer that does constant folding, algebraic identities substitution and common subexpression elimination
+ */
 public class LocalValueNumbering implements OptimizerPass {
 
     protected BasicBlock basicBlock;
     protected Map<Obj, SubexpressionNode> nodes = new HashMap<>();
     protected Map<SubexpressionNode, SubexpressionNode> alreadyExistingNodes = new HashMap<>();
-    protected List<SubexpressionNode> hangingRoots = new ArrayList<>();
-    protected List<List<Obj>> allAliases = new ArrayList<>();
+    //protected List<SubexpressionNode> hangingRoots = new ArrayList<>()
+
+    // no need for SubexpressionNode list here because only one can node be alive at one time
+    protected Map<Obj, SubexpressionNode> arrayAccesses = new HashMap<>();
 
     public LocalValueNumbering(BasicBlock basicBlock) {
         this.basicBlock = basicBlock;
@@ -27,10 +32,6 @@ public class LocalValueNumbering implements OptimizerPass {
         makeLeafNodes();
     }
 
-    @Override
-    /**
-     * Eliminate common subexpressions
-     */
     public void optimize() {
         List<Quadruple> toRemove = new ArrayList<>();
 
@@ -61,11 +62,31 @@ public class LocalValueNumbering implements OptimizerPass {
             node.rightChild = rightChild;
             node.aliases.add(resultObj);
 
+            boolean nodeAlive = true;
+            if (instruction.getInstruction() == IRInstruction.ALOAD) {
+                if (alreadyExistingNodes.containsKey(node)) {
+                    SubexpressionNode subexpressionNode = alreadyExistingNodes.get(node);
+                    if (subexpressionNode.deadNode) {
+                        nodeAlive = false;
+                        arrayAccesses.remove(obj1);
+                    }
+                }
+                else {
+                    arrayAccesses.put(obj1, node);
+                }
+            }
+            else if (instruction.getInstruction() == IRInstruction.ASTORE) {
+                if (arrayAccesses.containsKey(resultObj)) {
+                    arrayAccesses.get(resultObj).deadNode = true;
+                }
+            }
+            // killing old node accesses
+
             // TODO: delete old aliases
 
             Obj replaceAlgebraWith = AlgebraicIdentities.simplifyAlgebra(instruction, obj1, obj2, resultObj);
 
-            if (alreadyExistingNodes.containsKey(node) ||
+            if ((alreadyExistingNodes.containsKey(node) && nodeAlive) ||
                     (obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
                     (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG) ||
                     replaceAlgebraWith != null) {   // looks for the non-leaf node
@@ -81,6 +102,7 @@ public class LocalValueNumbering implements OptimizerPass {
                 }
                 else if (replaceAlgebraWith != null) {
                     // TODO: delete non existing nodes from DAG
+                    // algebraic identities
                 }
                 else {
                     node = alreadyExistingNodes.get(node);
@@ -111,22 +133,17 @@ public class LocalValueNumbering implements OptimizerPass {
                     else if (replaceAlgebraWith != null)
                         targetObj = replaceAlgebraWith;
 
-                    if (qObj1 == resultObj) {
+                    if (qObj1 == resultObj)
                         q.setArg1(new QuadrupleObjVar(targetObj));
-                        //q.setArg1NextUse(instruction.getResultNextUse());
-                    }
-                    if (qObj2 == targetObj) {
+                    if (qObj2 == targetObj)
                         q.setArg2(new QuadrupleObjVar(targetObj));
-                        //q.setArg2NextUse(instruction.getResultNextUse());
-                    }
-                    if (qRes == targetObj) {
+                    if (qRes == targetObj)
                         q.setResult(new QuadrupleObjVar(targetObj));
-                        //q.setResultNextUse(instruction.getResultNextUse());
-                    }
                 }
             }
             else {
                 if (instruction.getInstruction() == IRInstruction.STORE) {
+                    // aliasing subexpression nodes
                     if (alreadyExistingNodes.containsKey(leftChild)) {
                         // situation STORE non-temp to non-temp
                         alreadyExistingNodes.get(leftChild).aliases.add(resultObj);
@@ -142,16 +159,16 @@ public class LocalValueNumbering implements OptimizerPass {
                     nodes.put(resultObj, node);
 
                     // remove hanging children and set new node to hang
-                    if (hangingRoots.contains(leftChild))
+                    /*if (hangingRoots.contains(leftChild))
                         hangingRoots.remove(leftChild);
                     if (hangingRoots.contains(rightChild))
                         hangingRoots.remove(rightChild);
-                    hangingRoots.add(node);
+                    hangingRoots.add(node);*/
                 }
             }
         }
 
-        // remove all necessary instuctions
+        // remove all necessary instructions
         basicBlock.instructions.removeAll(toRemove);
     }
 

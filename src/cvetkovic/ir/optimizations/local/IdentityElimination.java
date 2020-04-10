@@ -9,6 +9,9 @@ import cvetkovic.optimizer.OptimizerPass;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Eliminates instructions like STORE x x, but not STORE x PTR x
+ */
 public class IdentityElimination implements OptimizerPass {
 
     protected BasicBlock basicBlock;

@@ -320,6 +320,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             throwError(DesignatorNonArrayAccess.getLine(), "Object '" + parentName + "' has to be variable, class field, element of array or class in order to be able to access it.");
     }
 
+    Map<Obj, Obj> designatorArrayAccessMap = new HashMap<>();
+
     @Override
     public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
         String parentName;
@@ -332,8 +334,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             throwError(DesignatorArrayAccess.getLine(), "Identifier '" + parentName + "' is not declared as array, therefore it cannot be accessed.");
         else if (DesignatorArrayAccess.getExpr().struct != SymbolTable.intType)
             throwError(DesignatorArrayAccess.getLine(), "Indexer of '" + parentName + "' has to be of type integer.");
-        else
-            DesignatorArrayAccess.obj = new Obj(Obj.Elem, "ArrayAccess_" + DesignatorArrayAccess.getDesignator().obj.getName(), DesignatorArrayAccess.getDesignator().obj.getType().getElemType());
+        else {
+            if (designatorArrayAccessMap.containsKey(DesignatorArrayAccess.getDesignator().obj))
+                DesignatorArrayAccess.obj = designatorArrayAccessMap.get(DesignatorArrayAccess.getDesignator().obj);
+            else {
+                Obj tmp = new Obj(Obj.Elem, "ArrayAccess_" + DesignatorArrayAccess.getDesignator().obj.getName(), DesignatorArrayAccess.getDesignator().obj.getType().getElemType());
+                designatorArrayAccessMap.put(DesignatorArrayAccess.getDesignator().obj, tmp);
+                DesignatorArrayAccess.obj = tmp;
+            }
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////

@@ -42,5 +42,25 @@ program TestProgram
 
             // ---- identity
             //a = a;
+
+            // constant folding
+            a = 2 + 3 + 4 + 5 * 3;
+            b = 3 * 3 / 3 + 4 - 9 + c;
+            e = 3 * 3 / 3 + 4 - 9 + c;
+
+            // algebraic identities and common subexpression elimination
+            a = b + 0;
+            a = a;
+            c = 5;
+            a = b + c;
+            b = b + c;
+            c = b + c;
+            c = a;
+            d = c + c;
+
+            // dead code
+            //d = b + a;
+            //d = f + e;
+
         }
     }

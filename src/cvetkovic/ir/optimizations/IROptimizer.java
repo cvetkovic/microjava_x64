@@ -1,6 +1,5 @@
 package cvetkovic.ir.optimizations;
 
-import cvetkovic.ir.optimizations.local.IdentityElimination;
 import cvetkovic.ir.optimizations.local.LocalValueNumbering;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.optimizer.CodeSequence;
@@ -34,7 +33,7 @@ public class IROptimizer extends Optimizer {
             // LOCAL OPTIMIZATIONS
             for (BasicBlock block : sequence.basicBlocks) {
                 addOptimizationPass(new LocalValueNumbering(block));
-                addOptimizationPass(new IdentityElimination(block));
+                //addOptimizationPass(new IdentityElimination(block));
                 //addOptimizationPass(new DeadCodeElimination(block));
             }
         }
