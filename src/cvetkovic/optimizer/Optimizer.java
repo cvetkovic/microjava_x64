@@ -29,13 +29,8 @@ public abstract class Optimizer {
         reassembleBasicBlocks();
     }
 
-    public List<List<Quadruple>> getOptimizationOutput() {
-        List<List<Quadruple>> result = new ArrayList<>();
-
-        for (int i = 0; i < codeSequenceList.size(); i++)
-            result.add(codeSequenceList.get(i).code);
-
-        return result;
+    public List<CodeSequence> getOptimizationOutput() {
+        return codeSequenceList;
     }
 
     private Map<Integer, BasicBlock> indexBasicBlockBeginnings(List<BasicBlock> blocks) {

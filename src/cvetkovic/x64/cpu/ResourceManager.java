@@ -1,43 +1,68 @@
 package cvetkovic.x64.cpu;
 
+import cvetkovic.ir.optimizations.BasicBlock;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
 
 public class ResourceManager {
-    private Map<Obj, PriorityQueue<Descriptor>> referencesToDescriptors = new HashMap<>();
-    private static DescriptorComparator comparator = new DescriptorComparator();
+    private Map<Obj, PriorityQueue<Descriptor>> referencesToMemory = new HashMap<>();
+    private Map<Obj, AddressDescriptor> referencesToAddressDescriptors = new HashMap<>();
+
+    private static DescriptorComparator queueComparator = new DescriptorComparator();
 
     private List<RegisterDescriptor> unoccupiedRegisters;
+    private Set<Obj> dirtyVariables = new HashSet<>();
 
-    public ResourceManager(List<RegisterDescriptor> unoccupiedRegisters) {
+    public ResourceManager(List<RegisterDescriptor> unoccupiedRegisters, List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         this.unoccupiedRegisters = unoccupiedRegisters;
+
+        createAddressRegisters(variables);
     }
 
-    public void validate(Obj obj, Descriptor descriptor) {
-        if (referencesToDescriptors.containsKey(obj))
-            referencesToDescriptors.get(obj).add(descriptor);
-        else {
-            PriorityQueue<Descriptor> queue = new PriorityQueue<>(comparator);
+    private void createAddressRegisters(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
+        for (BasicBlock.Tuple<Obj, Boolean> tuple : variables) {
+            AddressDescriptor descriptor = new AddressDescriptor(tuple.u, tuple.v);
+            PriorityQueue<Descriptor> queue = new PriorityQueue<>(queueComparator);
             queue.add(descriptor);
-            referencesToDescriptors.put(obj, queue);
+
+            referencesToMemory.put(tuple.u, queue);
+            referencesToAddressDescriptors.put(tuple.u, descriptor);
         }
     }
 
-    public Descriptor getLocation(Obj obj) {
-        if (referencesToDescriptors.containsKey(obj))
-            return referencesToDescriptors.get(obj).peek();
-        else
-            return null;
+    private void allocateSpaceForTemporaryVariables() {
+        throw new RuntimeException("Not yet implemented.");
+    }
+
+    /**
+     * Invalidates what's currently in this descriptor and validates it new obj node
+     *
+     * @param newObj           Object node that will be assigned to target descriptor
+     * @param targetDescriptor Target descriptor that will be taken with obj
+     */
+    public void validate(Obj newObj, Descriptor targetDescriptor) {
+        // deleting old reference
+        Obj oldObj = targetDescriptor.holdsValueOf;
+        PriorityQueue<Descriptor> oldObjQueue = referencesToMemory.get(oldObj);
+        if (oldObjQueue != null)
+            oldObjQueue.remove(targetDescriptor);
+
+        PriorityQueue<Descriptor> newObjQueue = referencesToMemory.get(newObj);
+        if (newObjQueue == null) {
+            newObjQueue = new PriorityQueue<>(queueComparator);
+            referencesToMemory.put(newObj, newObjQueue);
+        }
+        newObjQueue.add(targetDescriptor);
     }
 
     public void invalidate(Obj obj) {
-        Queue<Descriptor> queue = referencesToDescriptors.get(obj);
+        Queue<Descriptor> queue = referencesToMemory.get(obj);
 
         if (queue != null)
             queue.forEach(p -> p.holdsValueOf = null);
         else
-            referencesToDescriptors.put(obj, new PriorityQueue<>(comparator));
+            referencesToMemory.put(obj, new PriorityQueue<>(queueComparator));
     }
 
     private static class DescriptorComparator implements Comparator<Descriptor> {
@@ -53,25 +78,52 @@ public class ResourceManager {
     }
 
     public RegisterDescriptor getRegister(Obj obj, List<String> out) {
-        if (referencesToDescriptors.containsKey(obj)) {
-            PriorityQueue<Descriptor> queue = referencesToDescriptors.get(obj);
+        return getRegister(obj, out, false);
+    }
 
-            if (queue.size() > 0 && queue.peek() instanceof RegisterDescriptor)
-                return (RegisterDescriptor)queue.peek();                // in register
-            else if (queue.size() > 0 && !(queue.peek() instanceof RegisterDescriptor) && unoccupiedRegisters.size() > 0)
-                return unoccupiedRegisters.get(0);  // not in register, but there is a free register
-            else
-                return getRegisterComplex(obj);
+    public RegisterDescriptor getRegister(Obj obj, List<String> out, boolean forseMemory) {
+        PriorityQueue<Descriptor> queue = referencesToMemory.get(obj);
+        AddressDescriptor addressDescriptor = referencesToAddressDescriptors.get(obj);
+
+        if (queue != null && queue.peek() instanceof RegisterDescriptor)
+            return (RegisterDescriptor) queue.peek();
+        else if ((queue == null || queue.peek() instanceof AddressDescriptor) && unoccupiedRegisters.size() > 0) {
+            RegisterDescriptor register = unoccupiedRegisters.get(0);
+            unoccupiedRegisters.remove(0);
+
+            out.add("\tmov " + register + ", " + addressDescriptor + "");
+
+            return register;
         }
         else {
-            if (unoccupiedRegisters.size() > 0)
-                return unoccupiedRegisters.get(0);  // not in register, but there is a free register
-            else
-                return getRegisterComplex(obj);
+            return null;
         }
     }
 
     private RegisterDescriptor getRegisterComplex(Obj obj) {
         throw new RuntimeException("Not implemented yet.");
+    }
+
+    /**
+     * This method is invoked on end of basic block's code generation
+     * in order to save all non-temporary variables to memory that
+     * were made dirty during the execution
+     */
+    public void saveDirtyVariables(List<String> out) {
+        for (Obj obj : dirtyVariables) {
+            PriorityQueue<Descriptor> queue = referencesToMemory.get(obj);
+
+            // the only case where we need to save is when RegisterDescriptor is on top of the queue
+            if (queue.size() > 0 && queue.peek() instanceof RegisterDescriptor)
+                out.add("mov " + referencesToAddressDescriptors.get(obj) + ", " + queue.peek().toString() + System.lineSeparator());
+        }
+    }
+
+    public void saveContext() {
+
+    }
+
+    public void restoreContext() {
+
     }
 }

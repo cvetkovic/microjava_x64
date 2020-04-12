@@ -2,7 +2,7 @@ package cvetkovic.x64;
 
 import rs.etf.pp1.symboltable.concepts.Struct;
 
-public class DataStructures {
+public class ISADataWidthCalculator {
     public static int getX64VariableSize(Struct type) {
         if (type.getKind() == Struct.Bool)
             return 1;

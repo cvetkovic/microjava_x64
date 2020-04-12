@@ -2,7 +2,7 @@ package cvetkovic.semantics;
 
 import cvetkovic.parser.ast.*;
 import cvetkovic.structures.SymbolTable;
-import cvetkovic.x64.DataStructures;
+import cvetkovic.x64.ISADataWidthCalculator;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -31,7 +31,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     //////////////////////////////////////////////////////////////////////////////////
     private SharedData sharedData;
     private HashMap<String, String> classInstances = new LinkedHashMap<>();
-    private List<Obj> globalVariables = new ArrayList<>();
+    private Set<Obj> globalVariables = new HashSet<>();
 
     //////////////////////////////////////////////////////////////////////////////////
     // AUXILIARY INTERNAL STRUCTURES
@@ -245,7 +245,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
             // determine address
             newlyCreatedVar.setAdr(currentAddressOffset.peek());
-            currentAddressOffset.push(currentAddressOffset.pop() + DataStructures.getX64VariableSize(newlyCreatedVar.getType()));
+            currentAddressOffset.push(currentAddressOffset.pop() + ISADataWidthCalculator.getX64VariableSize(newlyCreatedVar.getType()));
 
             if (currentDataType.struct.getKind() == Struct.Class)
                 classInstances.put(variableName, currentDataType.getTypeIdent());
@@ -254,7 +254,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             throwError(SingleVariableDeclaration.getLine(), "Variable with name '" + variableName + "' redefinition error.");
     }
 
-    public List<Obj> getGlobalVariables() {
+    public Set<Obj> getGlobalVariables() {
         return globalVariables;
     }
 
@@ -606,7 +606,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         // needed to add, otherwise fields cannot be accesed properly during
         // code generation as first field would point to VTP, etc.
         SymbolTable.insert(Obj.Fld, "_vtp", Tab.noType).setAdr(0);
-        currentAddressOffset.push(DataStructures.getX64VariableSize(new Struct(Struct.Class)));
+        currentAddressOffset.push(ISADataWidthCalculator.getX64VariableSize(new Struct(Struct.Class)));
     }
 
     @Override

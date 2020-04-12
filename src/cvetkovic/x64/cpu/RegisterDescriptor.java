@@ -1,7 +1,5 @@
 package cvetkovic.x64.cpu;
 
-import rs.etf.pp1.symboltable.concepts.Obj;
-
 public class RegisterDescriptor extends Descriptor {
     protected String ISAName;
 
@@ -9,11 +7,8 @@ public class RegisterDescriptor extends Descriptor {
         this.ISAName = ISAName;
     }
 
-    public Obj getHoldsValueOf() {
-        return holdsValueOf;
-    }
-
-    public void setHoldsValueOf(Obj holdsValueOf) {
-        this.holdsValueOf = holdsValueOf;
+    @Override
+    public String toString() {
+        return ISAName;
     }
 }

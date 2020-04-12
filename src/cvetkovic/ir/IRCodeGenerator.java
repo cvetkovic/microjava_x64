@@ -7,7 +7,7 @@ import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.parser.ast.*;
 import cvetkovic.structures.SymbolTable;
-import cvetkovic.x64.DataStructures;
+import cvetkovic.x64.ISADataWidthCalculator;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
@@ -219,9 +219,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
                     continue;
 
                 if (member.getName().equals("_vtp"))
-                    classSize += DataStructures.getX64VariableSize(new Struct(Struct.Class));
+                    classSize += ISADataWidthCalculator.getX64VariableSize(new Struct(Struct.Class));
                 else
-                    classSize += DataStructures.getX64VariableSize(member.getType());
+                    classSize += ISADataWidthCalculator.getX64VariableSize(member.getType());
             }
 
             Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
@@ -235,7 +235,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             allocateArray = true;
 
             Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
-            result.setAdr(DataStructures.getX64VariableSize(FactorArrayDeclaration.struct));
+            result.setAdr(ISADataWidthCalculator.getX64VariableSize(FactorArrayDeclaration.struct));
             //expressionNodeStack.push(new ExpressionNode(result));
         }
     }
@@ -594,7 +594,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             // skip all parameters because space only for local variables shall be allocated
             if (i >= MethodName.obj.getLevel()) {
                 Struct type = current.getType();
-                numberOfBytes += DataStructures.getX64VariableSize(type);
+                numberOfBytes += ISADataWidthCalculator.getX64VariableSize(type);
             }
 
             i++;

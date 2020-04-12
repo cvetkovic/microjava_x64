@@ -107,8 +107,8 @@ public class LocalValueNumbering implements OptimizerPass {
             Obj replaceAlgebraWith = AlgebraicIdentities.simplifyAlgebra(instruction, obj1, obj2, resultObj);
 
             if ((alreadyExistingNodes.containsKey(node) && nodeAlive) ||
-                    (obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
-                    (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG) ||
+                    (obj1 != null && obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
+                    (obj1 != null && obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG) ||
                     replaceAlgebraWith != null) {   // looks for the non-leaf node
 
                 boolean doConstantFolding = false;

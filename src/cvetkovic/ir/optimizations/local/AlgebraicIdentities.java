@@ -93,4 +93,20 @@ public class AlgebraicIdentities {
                 return null;
         }
     }
+
+    public static boolean isIncInstructionArgs(Obj obj1, Obj obj2) {
+        if ((obj1.getKind() == Obj.Con && obj1.getAdr() == 1 && obj2.getKind() == Obj.Var) ||
+                (obj2.getKind() == Obj.Con && obj2.getAdr() == 1 && obj1.getKind() == Obj.Var))
+            return true;
+        else
+            return false;
+
+    }
+
+    public static boolean isDecInstructionArgs(Obj obj1, Obj obj2) {
+        if (obj1.getKind() == Obj.Var && obj2.getKind() == Obj.Con && obj2.getAdr() == 1)
+            return true;
+        else
+            return false;
+    }
 }

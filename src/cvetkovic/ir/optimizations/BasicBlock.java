@@ -79,9 +79,9 @@ public class BasicBlock {
         return result;
     }
 
-    private static class Tuple<U, V> {
-        U u;
-        V v;
+    public static class Tuple<U, V> {
+        public U u;
+        public V v;
 
         public Tuple(U u, V v) {
             this.u = u;
