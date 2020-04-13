@@ -4,6 +4,7 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ResourceManager {
     private Map<Obj, PriorityQueue<Descriptor>> referencesToMemory = new HashMap<>();
@@ -12,10 +13,12 @@ public class ResourceManager {
     private static DescriptorComparator queueComparator = new DescriptorComparator();
 
     private List<RegisterDescriptor> unoccupiedRegisters;
+    private List<RegisterDescriptor> allRegisters = new ArrayList<>();
     private Set<Obj> dirtyVariables = new HashSet<>();
 
     public ResourceManager(List<RegisterDescriptor> unoccupiedRegisters, List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         this.unoccupiedRegisters = unoccupiedRegisters;
+        this.allRegisters.addAll(unoccupiedRegisters);
 
         createAddressDescriptors(variables);
     }
@@ -89,10 +92,12 @@ public class ResourceManager {
         AddressDescriptor addressDescriptor = referencesToAddressDescriptors.get(obj);
 
         if (queue != null && queue.peek() instanceof RegisterDescriptor)
+            // obj is already in register, no action needed
             return queue.peek();
         else if (forceMemory)
             return addressDescriptor;
         else if ((queue == null || queue.peek() instanceof AddressDescriptor) && unoccupiedRegisters.size() > 0) {
+            // var not encountered before or is not in a register
             RegisterDescriptor register = unoccupiedRegisters.get(0);
             unoccupiedRegisters.remove(0);
 
@@ -101,9 +106,24 @@ public class ResourceManager {
 
             return register;
         }
-        else {
-            return null;
+        else if (countRegisterLocations(obj) > 1) {
+            // obj is more than one register, so get the first one
+            // TODO: put LRU here
+            RegisterDescriptor descriptor = allRegisters.stream().filter(p -> p.holdsValueOf == obj).collect(Collectors.toList()).get(0);
+            Obj oldValue = descriptor.holdsValueOf;
+
+            PriorityQueue<Descriptor> q = referencesToMemory.get(oldValue);
+            if (q != null)
+                q.remove(descriptor);
+
+            return descriptor;
         }
+        else
+            return null;
+    }
+
+    private long countRegisterLocations(Obj obj) {
+        return allRegisters.stream().filter(p -> p.holdsValueOf == obj).count();
     }
 
     /**

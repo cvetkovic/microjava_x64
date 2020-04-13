@@ -222,14 +222,44 @@ public class MachineCodeGenerator {
                             break;
                         }
                         case MUL: {
+                            boolean operandsSwapped = false;
+                            Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
+                            if (destAndArg1 == null) {
+                                destAndArg1 = resourceManager.getRegister(obj2, aux);
+                                operandsSwapped = true;
+                            }
+                            Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux, true) : resourceManager.getRegister(obj1, aux, true));
 
+                            resourceManager.invalidateFromRegister(destAndArg1, aux);
+                            resourceManager.validate(objResult, destAndArg1, true);
+
+                            issueAuxiliaryInstructions(aux);
+                            writer.write("\timul " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
+                            writer.write(System.lineSeparator());
+
+                            // TODO: take care of data width movsw -> extending to 32-bit
 
                             break;
                         }
                         case DIV: {
+                            RegisterDescriptor source = null; //("rax", obj1);
+                            RegisterDescriptor divideBy = null;
+
+                            writer.write("\tmovsx eax, " + source);
+                            writer.write(System.lineSeparator());
+                            writer.write("\tcdq"); // TODO: AH -> EAX sign extension
+                            writer.write(System.lineSeparator());
+                            writer.write("\tidiv " + divideBy);
+                            writer.write(System.lineSeparator());
+
+                            // EAX stores the result
+
                             break;
                         }
                         case REM: {
+
+                            // EDX stores the result
+
                             break;
                         }
                         case NEG: {
@@ -248,6 +278,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
+
                         case STORE: {
                             Descriptor source = resourceManager.getRegister(obj1, aux);
                             //Descriptor destination = resourceManager.getRegister(objResult, aux);
@@ -259,6 +290,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
+
                         case ENTER: {
                             writer.write("\tpush rbp");
                             writer.write(System.lineSeparator());
@@ -274,6 +306,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
+
                         case LEAVE: {
                             writer.write("\tleave");
                             writer.write(System.lineSeparator());
@@ -283,8 +316,22 @@ public class MachineCodeGenerator {
                             break;
                         }
 
+                        /*case RETURN: {
+                            RegisterDescriptor returnValueRegister = resourceManager.getRegisterSpecific("rax");
+                            Descriptor source = resourceManager.getRegister(obj1, aux);
+
+                            issueAuxiliaryInstructions(aux);
+                            writer.write("\tmov " + returnValueRegister + ", " + (source != null ? source : obj2));
+                            writer.write(System.lineSeparator());
+
+                            resourceManager.invalidateFromRegister(returnValueRegister, aux);
+                            resourceManager.validate(objResult, returnValueRegister, true);
+
+                            break;
+                        }*/
+
                         //////////////////////////////////////////////////////////////////////////////////
-                        // CONSTRUCTOR & STATIC INITIALIZATION
+                        // INPUT / OUTPUT
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case SCANF: {

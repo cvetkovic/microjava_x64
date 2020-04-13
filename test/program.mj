@@ -5,7 +5,7 @@ program TestProgram
             int c;
         {
             read(c);
-            c = -c;
-            print(c);
+            b = c / 2;
+            print(b);
         }
     }
