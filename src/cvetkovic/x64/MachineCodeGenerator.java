@@ -189,15 +189,21 @@ public class MachineCodeGenerator {
                     Obj obj2 = (quadruple.getArg2() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) quadruple.getArg2()).getObj() : null);
                     Obj objResult = (quadruple.getResult() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) quadruple.getResult()).getObj() : null);
 
+                    int numOfArgsInMemory = 0;
+
                     switch (quadruple.getInstruction()) {
+                        //////////////////////////////////////////////////////////////////////////////////
+                        // ARITHMETIC INSTRUCTION (allowed only on int type in MikroJava - 32-bit)
+                        //////////////////////////////////////////////////////////////////////////////////
+
                         case ADD: {
-                            boolean operandsSwapped = false;
-                            Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
+                            /*boolean operandsSwapped = false;
+                            Descriptor destAndArg1 = resourceManager.getRegister(obj1);
                             if (destAndArg1 == null) {
-                                destAndArg1 = resourceManager.getRegister(obj2, aux);
+                                destAndArg1 = resourceManager.getRegister(obj2);
                                 operandsSwapped = true;
                             }
-                            Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux, true) : resourceManager.getRegister(obj1, aux, true));
+                            Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux) : resourceManager.getRegister(obj1, aux));
 
                             resourceManager.invalidateFromRegister(destAndArg1, aux);
                             resourceManager.validate(objResult, destAndArg1, true);
@@ -205,24 +211,44 @@ public class MachineCodeGenerator {
                             issueAuxiliaryInstructions(aux);
                             writer.write("\tadd " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
                             writer.write(System.lineSeparator());
-
+*/
                             break;
                         }
+
                         case SUB: {
-                            Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
-                            Descriptor arg2 = resourceManager.getRegister(obj2, aux, true);
+                            // if first instruction is constant then load it to register first
+                            // if second operand is constant then encode it in instruction
+                            RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
+                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
 
-                            resourceManager.invalidateFromRegister(destAndArg1, aux);
-                            resourceManager.validate(objResult, destAndArg1, true);
+                            dest_arg1_register.setPrintWidth(4);
+                            resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
+
+                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
+                                numOfArgsInMemory++;
+                            else if (arg2_register != null)
+                                resourceManager.fetchOperand(arg2_register, obj2, aux);
+
+                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
+                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
 
                             issueAuxiliaryInstructions(aux);
-                            writer.write("\tadd " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
+                            String secondOperand;
+                            if (arg2_register == null)
+                                secondOperand = String.valueOf(obj2.getAdr());
+                            else if (numOfArgsInMemory > 0)
+                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
+                            else
+                                secondOperand = arg2_register.toString();
+
+                            writer.write("\tSUB " + dest_arg1_register + ", " + secondOperand);
                             writer.write(System.lineSeparator());
 
                             break;
                         }
+
                         case MUL: {
-                            boolean operandsSwapped = false;
+                            /*boolean operandsSwapped = false;
                             Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
                             if (destAndArg1 == null) {
                                 destAndArg1 = resourceManager.getRegister(obj2, aux);
@@ -235,14 +261,14 @@ public class MachineCodeGenerator {
 
                             issueAuxiliaryInstructions(aux);
                             writer.write("\timul " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
-                            writer.write(System.lineSeparator());
+                            writer.write(System.lineSeparator());*/
 
                             // TODO: take care of data width movsw -> extending to 32-bit
 
                             break;
                         }
                         case DIV: {
-                            RegisterDescriptor source = null; //("rax", obj1);
+                            /*RegisterDescriptor source = null; //("rax", obj1);
                             RegisterDescriptor divideBy = null;
 
                             writer.write("\tmovsx eax, " + source);
@@ -254,7 +280,7 @@ public class MachineCodeGenerator {
 
                             // EAX stores the result
 
-                            break;
+                            break;*/
                         }
                         case REM: {
 
@@ -263,7 +289,7 @@ public class MachineCodeGenerator {
                             break;
                         }
                         case NEG: {
-                            RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce(aux);
+                            /*RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce(aux);
                             Descriptor source = resourceManager.getRegister(obj1, aux);
 
                             issueAuxiliaryInstructions(aux);
@@ -276,31 +302,34 @@ public class MachineCodeGenerator {
                             resourceManager.invalidateFromRegister(zeroRegister, aux);
                             resourceManager.validate(objResult, zeroRegister, true);
 
-                            break;
+                            break;*/
                         }
 
                         case STORE: {
-                            Descriptor source = resourceManager.getRegister(obj1, aux);
-                            //Descriptor destination = resourceManager.getRegister(objResult, aux);
+                            /*Descriptor arg1_register = resourceManager.getRegister(obj1, quadruple);
+                            Descriptor result_register = resourceManager.getRegister(objResult, quadruple);
+
+                            resourceManager.invalidate(result_register, objResult, aux);
+                            resourceManager.validate(result_register, objResult, aux, true);
 
                             issueAuxiliaryInstructions(aux);
+                            writer.write("\tMOV " + result_register + ", " + arg1_register);
+                            writer.write(System.lineSeparator());*/
 
-                            resourceManager.validate(objResult, source, true);
-                            //resourceManager.invalidate();
 
                             break;
                         }
 
                         case ENTER: {
-                            writer.write("\tpush rbp");
+                            writer.write("\tPUSH rbp");
                             writer.write(System.lineSeparator());
-                            writer.write("\tmov rbp, rsp");
+                            writer.write("\tMOV rbp, rsp");
                             writer.write(System.lineSeparator());
 
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
                             if (allocateSize.getValue() > 0) {
                                 // has to be divisible by 16 by System V ABI
-                                writer.write("\tsub rsp, " + SystemV_ABI.alignTo16(allocateSize.getValue()));
+                                writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(allocateSize.getValue()));
                                 writer.write(System.lineSeparator());
                             }
 
@@ -308,9 +337,9 @@ public class MachineCodeGenerator {
                         }
 
                         case LEAVE: {
-                            writer.write("\tleave");
+                            writer.write("\tLEAVE");
                             writer.write(System.lineSeparator());
-                            writer.write("\tret");
+                            writer.write("\tRET");
                             writer.write(System.lineSeparator());
 
                             break;
@@ -357,7 +386,7 @@ public class MachineCodeGenerator {
 
                         case PRINTF: {
                             // TODO: save eax, ecx, edx -> check for dirty only
-                            Descriptor source = resourceManager.getRegister(obj2, aux);
+                            /*Descriptor source = resourceManager.getRegister(obj2, aux);
 
                             issueAuxiliaryInstructions(aux);
 
@@ -389,7 +418,7 @@ public class MachineCodeGenerator {
                             // invoke
                             writer.write("\tcall printf");
                             writer.write(System.lineSeparator());
-                            // TODO: restore eax, ecx, edx -> check for dirty only
+                            // TODO: restore eax, ecx, edx -> check for dirty only*/
 
                             break;
                         }

@@ -4,8 +4,7 @@ program TestProgram
             int a, b;
             int c;
         {
-            read(c);
-            b = c / 2;
-            print(b);
+            c = a - 10;
+            c = 400 - a;
         }
     }
