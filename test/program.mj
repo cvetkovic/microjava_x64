@@ -4,8 +4,7 @@ program TestProgram
             int a, b;
             int c;
         {
-            a = 2;
-            c = a + 5;
+            read(c);
             print(c);
         }
     }

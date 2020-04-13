@@ -17,10 +17,10 @@ public class ResourceManager {
     public ResourceManager(List<RegisterDescriptor> unoccupiedRegisters, List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         this.unoccupiedRegisters = unoccupiedRegisters;
 
-        createAddressRegisters(variables);
+        createAddressDescriptors(variables);
     }
 
-    private void createAddressRegisters(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
+    private void createAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         for (BasicBlock.Tuple<Obj, Boolean> tuple : variables) {
             AddressDescriptor descriptor = new AddressDescriptor(tuple.u, tuple.v);
             PriorityQueue<Descriptor> queue = new PriorityQueue<>(queueComparator);
@@ -31,8 +31,8 @@ public class ResourceManager {
         }
     }
 
-    private void allocateSpaceForTemporaryVariables() {
-        throw new RuntimeException("Not yet implemented.");
+    public AddressDescriptor getAddressDescriptor(Obj var) {
+        return referencesToAddressDescriptors.get(var);
     }
 
     /**
@@ -84,13 +84,13 @@ public class ResourceManager {
         return getRegister(obj, out, false);
     }
 
-    public Descriptor getRegister(Obj obj, List<String> out, boolean forseMemory) {
+    public Descriptor getRegister(Obj obj, List<String> out, boolean forceMemory) {
         PriorityQueue<Descriptor> queue = referencesToMemory.get(obj);
         AddressDescriptor addressDescriptor = referencesToAddressDescriptors.get(obj);
 
         if (queue != null && queue.peek() instanceof RegisterDescriptor)
             return queue.peek();
-        else if (forseMemory)
+        else if (forceMemory)
             return addressDescriptor;
         else if ((queue == null || queue.peek() instanceof AddressDescriptor) && unoccupiedRegisters.size() > 0) {
             RegisterDescriptor register = unoccupiedRegisters.get(0);

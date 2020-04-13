@@ -97,6 +97,14 @@ public class MachineCodeGenerator {
     private void generateDirectives() throws IOException {
         writer.write(".intel_syntax noprefix");
         writer.write(System.lineSeparator());
+
+        writer.write(".extern calloc");
+        writer.write(System.lineSeparator());
+        writer.write(".extern printf");
+        writer.write(System.lineSeparator());
+        writer.write(".extern scanf");
+        writer.write(System.lineSeparator());
+
         writer.write(".global main");
         writer.write(System.lineSeparator());
         writer.write(System.lineSeparator());
@@ -119,6 +127,7 @@ public class MachineCodeGenerator {
                 writer.write(System.lineSeparator());
             }
 
+            writer.write(System.lineSeparator());
             writer.write(System.lineSeparator());
         }
     }
@@ -150,6 +159,8 @@ public class MachineCodeGenerator {
 
             writer.write(table.toString());
         }
+
+        writer.write(System.lineSeparator());
     }
 
     /**
@@ -217,11 +228,6 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-                        case GEN_LABEL: {
-                            writer.write(quadruple.getArg1().toString() + ":");
-                            writer.write(System.lineSeparator());
-                            break;
-                        }
                         case ENTER: {
                             writer.write("\tpush rbp");
                             writer.write(System.lineSeparator());
@@ -245,16 +251,39 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-                        case SCANF: {
 
+                        //////////////////////////////////////////////////////////////////////////////////
+                        // CONSTRUCTOR & STATIC INITIALIZATION
+                        //////////////////////////////////////////////////////////////////////////////////
+
+                        case SCANF: {
+                            // TODO: save eax, ecx, edx -> check for dirty only
+                            Descriptor destination = resourceManager.getAddressDescriptor(objResult);
+
+                            // print format -> equivalent with mov rdi, offset FORMAT
+                            writer.write("\tlea rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
+                            writer.write(System.lineSeparator());
+                            // obj
+                            writer.write("\tlea rsi, " + destination);
+                            writer.write(System.lineSeparator());
+                            // clear eax -> for variable number of vector registers
+                            writer.write("\txor eax, eax");
+                            writer.write(System.lineSeparator());
+                            // invoke
+                            writer.write("\tcall scanf");
+                            writer.write(System.lineSeparator());
+                            // TODO: restore eax, ecx, edx -> check for dirty only
 
                             break;
                         }
+
                         case PRINTF: {
                             // TODO: save eax, ecx, edx -> check for dirty only
                             Descriptor source = resourceManager.getRegister(obj2, aux);
 
-                            // print format
+                            issueAuxiliaryInstructions(aux);
+
+                            // print format -> equivalent with mov rdi, offset FORMAT
                             writer.write("\tlea rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
                             // obj
@@ -270,26 +299,37 @@ public class MachineCodeGenerator {
 
                             break;
                         }
+
+                        //////////////////////////////////////////////////////////////////////////////////
+                        // BRANCHES AND LABEL GENERATING
+                        //////////////////////////////////////////////////////////////////////////////////
+
                         case JMP: {
                             writer.write("\tjmp " + quadruple.getResult());
                             writer.write(System.lineSeparator());
 
                             break;
                         }
-                        default:
+
+                        case GEN_LABEL: {
+                            writer.write(quadruple.getArg1().toString() + ":");
+                            writer.write(System.lineSeparator());
                             break;
-                        //throw new RuntimeException("Instruction not supported by x86-64 code generator.");
+                        }
+
+                        //////////////////////////////////////////////////////////////////////////////////
+                        // OTHER
+                        //////////////////////////////////////////////////////////////////////////////////
+
+                        default:
+                            throw new RuntimeException("Instruction not supported by x86-64 code generator.");
                     }
 
                     aux.clear();
                 }
 
-                /*if (instructions.get(instructions.size() - 1) != sequence) {
-                    writer.write(System.lineSeparator());
-                    //writer.write("----------------------------------------------------------------------------");
-                }*/
-                resourceManager.saveDirtyVariables(aux);
-                issueAuxiliaryInstructions(aux);
+                // TODO: resourceManager.saveDirtyVariables(aux);
+                // TODO: issueAuxiliaryInstructions(aux);
                 // TODO: resourceManager.saveContext();
                 // TODO: writer.write( machine code );
                 // TODO: resourceManager.restoreContext();
