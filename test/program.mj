@@ -5,6 +5,7 @@ program TestProgram
             int c;
         {
             read(c);
+            c = -c;
             print(c);
         }
     }

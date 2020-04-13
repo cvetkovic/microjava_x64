@@ -522,8 +522,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     private void resolveIncDec(Obj var, Quadruple instruction, Obj ptrDestination) {
+        Obj constValue = new Obj(Obj.Con, "", SymbolTable.BooleanStruct);
+        constValue.setAdr(1);
+
         instruction.setArg1(new QuadrupleObjVar(var));
-        instruction.setArg2(new QuadrupleIntegerConst(1));
+        instruction.setArg2(new QuadrupleObjVar(constValue));
 
         Quadruple storeInstruction = null;
         if (storeToPtr) {

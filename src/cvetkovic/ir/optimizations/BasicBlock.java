@@ -354,7 +354,7 @@ public class BasicBlock {
         nonTemporaryVariables = allVariables.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
         temporaryVariables = allVariables.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
 
-        // insert all the variables into this map and set all those non-temporary to alive, other the dead
+        // insert all the variables into this map and mark all those non-temporary as alive, other as dead
         Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();
         nonTemporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.ALIVE));
         temporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.DEAD));

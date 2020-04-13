@@ -59,10 +59,10 @@ public class ResourceManager {
         PriorityQueue<Descriptor> oldObjQueue = referencesToMemory.get(oldObj);
         if (oldObjQueue != null && oldObjQueue.peek() instanceof RegisterDescriptor) {
             // if target descriptor has dirty variable save it to memory
-            if (dirtyVariables.contains(targetDescriptor.holdsValueOf)) {
+            /*if (dirtyVariables.contains(targetDescriptor.holdsValueOf)) {
                 aux.add("\tmov " + referencesToAddressDescriptors.get(targetDescriptor.holdsValueOf) + ", " + targetDescriptor);
                 dirtyVariables.remove(targetDescriptor.holdsValueOf);
-            }
+            }*/
 
             oldObjQueue.remove(targetDescriptor);
         }
@@ -121,6 +121,31 @@ public class ResourceManager {
         }
 
         dirtyVariables.clear();
+    }
+
+    public RegisterDescriptor getRegisterByForce(List<String> out) {
+        // TODO: change allocation algorithm do this with LRU
+        RegisterDescriptor register;
+
+        if (unoccupiedRegisters.size() > 0) {
+            register = unoccupiedRegisters.get(0);
+            unoccupiedRegisters.remove(register);
+        }
+        else {
+            for (PriorityQueue<Descriptor> queue : referencesToMemory.values()) {
+                if (queue.peek() instanceof RegisterDescriptor) {
+                    register = (RegisterDescriptor)queue.poll();
+                    out.add("\tmov " + referencesToMemory.get(register.holdsValueOf) + ", " + register);
+                    register.holdsValueOf = null;
+
+                    break;
+                }
+            }
+
+            throw new RuntimeException("Register not allocatable by force.");
+        }
+
+        return register;
     }
 
     public void saveContext(List<RegisterDescriptor> usedRegisters) {

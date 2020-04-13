@@ -1,7 +1,6 @@
 package cvetkovic.x64;
 
 import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.ir.optimizations.local.AlgebraicIdentities;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
@@ -23,7 +22,13 @@ import java.util.Set;
 
 public class MachineCodeGenerator {
 
-    private static final String[] registerNames = {"rax", "rbx", "rcx", "rdx", "rdi", "rsi"};
+    private static final String[][] registerNames = {
+            new String[]{"rax", "eax", "al"},
+            new String[]{"rbx", "ebx", "bl"},
+            new String[]{"rcx", "ecx", "cl"},
+            new String[]{"rdx", "edx", "dl"},
+            new String[]{"rdi", "edi", "dil"},
+            new String[]{"rsi", "esi", "sil"}};
 
     private String outputFileUrl;
     private File outputFileHandle;
@@ -79,8 +84,8 @@ public class MachineCodeGenerator {
      */
     private void initializeISATables(BasicBlock basicBlock) {
         List<RegisterDescriptor> registers = new ArrayList<>();
-        for (String id : registerNames)
-            registers.add(new RegisterDescriptor(id));
+        for (String[] id : registerNames)
+            registers.add(new RegisterDescriptor(id[2], id[1], id[0]));
 
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.nonTemporaryVariables)
@@ -186,34 +191,60 @@ public class MachineCodeGenerator {
 
                     switch (quadruple.getInstruction()) {
                         case ADD: {
-                            if (AlgebraicIdentities.isIncInstructionArgs(obj1, obj2)) {
-                                /*Obj var = obj1.getKind() != Obj.Con ? obj1 : obj2;
-                                Descriptor arg = resourceManager.getRegister(var, aux);
-
-                                writer.write("\tinc " + arg);
-                                resourceManager.invalidateFromRegister(arg);*/
+                            boolean operandsSwapped = false;
+                            Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
+                            if (destAndArg1 == null) {
+                                destAndArg1 = resourceManager.getRegister(obj2, aux);
+                                operandsSwapped = true;
                             }
-                            else {
-                                boolean operandsSwapped = false;
-                                Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
-                                if (destAndArg1 == null) {
-                                    destAndArg1 = resourceManager.getRegister(obj2, aux);
-                                    operandsSwapped = true;
-                                }
-                                Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux, true) : resourceManager.getRegister(obj1, aux, true));
+                            Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux, true) : resourceManager.getRegister(obj1, aux, true));
 
-                                resourceManager.invalidateFromRegister(destAndArg1, aux);
-                                resourceManager.validate(objResult, destAndArg1, true);
+                            resourceManager.invalidateFromRegister(destAndArg1, aux);
+                            resourceManager.validate(objResult, destAndArg1, true);
 
-                                issueAuxiliaryInstructions(aux);
-                                writer.write("\tadd " + destAndArg1 + ", " + arg2);
-                                writer.write(System.lineSeparator());
-                            }
+                            issueAuxiliaryInstructions(aux);
+                            writer.write("\tadd " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
                         case SUB: {
+                            Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
+                            Descriptor arg2 = resourceManager.getRegister(obj2, aux, true);
 
+                            resourceManager.invalidateFromRegister(destAndArg1, aux);
+                            resourceManager.validate(objResult, destAndArg1, true);
+
+                            issueAuxiliaryInstructions(aux);
+                            writer.write("\tadd " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
+                            writer.write(System.lineSeparator());
+
+                            break;
+                        }
+                        case MUL: {
+
+
+                            break;
+                        }
+                        case DIV: {
+                            break;
+                        }
+                        case REM: {
+                            break;
+                        }
+                        case NEG: {
+                            RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce(aux);
+                            Descriptor source = resourceManager.getRegister(obj1, aux);
+
+                            issueAuxiliaryInstructions(aux);
+                            writer.write("\txor " + zeroRegister + ", " + zeroRegister);
+                            writer.write(System.lineSeparator());
+                            zeroRegister.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
+                            writer.write("\tsub " + zeroRegister + ", " + (source != null ? source : obj2));
+                            writer.write(System.lineSeparator());
+
+                            resourceManager.invalidateFromRegister(zeroRegister, aux);
+                            resourceManager.validate(objResult, zeroRegister, true);
 
                             break;
                         }
@@ -287,7 +318,23 @@ public class MachineCodeGenerator {
                             writer.write("\tlea rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
                             // obj
-                            writer.write("\tmov rsi, " + source);
+                            int sourceSize = SystemV_ABI.getX64VariableSize(source.getHoldsValueOf().getType());
+                            String regName;
+                            switch (sourceSize) {
+                                case 1:
+                                    regName = "sil";
+                                    break;
+                                case 4:
+                                    regName = "esi";
+                                    break;
+                                case 8:
+                                    regName = "rsi";
+                                    break;
+                                default:
+                                    throw new RuntimeException("Data width not supported by print language construct.");
+                            }
+
+                            writer.write("\tmov " + regName + ", " + source);
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
                             writer.write("\txor eax, eax");
