@@ -41,28 +41,31 @@ public class ResourceManager {
      * @param newObj           Object node that will be assigned to target descriptor
      * @param targetDescriptor Target descriptor that will be taken with obj
      */
-    public void validate(Obj newObj, Descriptor targetDescriptor) {
-        // deleting old reference
-        Obj oldObj = targetDescriptor.holdsValueOf;
-        PriorityQueue<Descriptor> oldObjQueue = referencesToMemory.get(oldObj);
-        if (oldObjQueue != null)
-            oldObjQueue.remove(targetDescriptor);
-
+    public void validate(Obj newObj, Descriptor targetDescriptor, boolean setDirty) {
         PriorityQueue<Descriptor> newObjQueue = referencesToMemory.get(newObj);
         if (newObjQueue == null) {
             newObjQueue = new PriorityQueue<>(queueComparator);
             referencesToMemory.put(newObj, newObjQueue);
         }
+        targetDescriptor.holdsValueOf = newObj;
         newObjQueue.add(targetDescriptor);
+
+        if (setDirty && !newObj.tempVar)
+            dirtyVariables.add(newObj);
     }
 
-    public void invalidate(Obj obj) {
-        Queue<Descriptor> queue = referencesToMemory.get(obj);
+    public void invalidateFromRegister(Descriptor targetDescriptor, List<String> aux) {
+        Obj oldObj = targetDescriptor.holdsValueOf;
+        PriorityQueue<Descriptor> oldObjQueue = referencesToMemory.get(oldObj);
+        if (oldObjQueue != null && oldObjQueue.peek() instanceof RegisterDescriptor) {
+            // if target descriptor has dirty variable save it to memory
+            if (dirtyVariables.contains(targetDescriptor.holdsValueOf)) {
+                aux.add("\tmov " + referencesToAddressDescriptors.get(targetDescriptor.holdsValueOf) + ", " + targetDescriptor);
+                dirtyVariables.remove(targetDescriptor.holdsValueOf);
+            }
 
-        if (queue != null)
-            queue.forEach(p -> p.holdsValueOf = null);
-        else
-            referencesToMemory.put(obj, new PriorityQueue<>(queueComparator));
+            oldObjQueue.remove(targetDescriptor);
+        }
     }
 
     private static class DescriptorComparator implements Comparator<Descriptor> {
@@ -77,31 +80,30 @@ public class ResourceManager {
         }
     }
 
-    public RegisterDescriptor getRegister(Obj obj, List<String> out) {
+    public Descriptor getRegister(Obj obj, List<String> out) {
         return getRegister(obj, out, false);
     }
 
-    public RegisterDescriptor getRegister(Obj obj, List<String> out, boolean forseMemory) {
+    public Descriptor getRegister(Obj obj, List<String> out, boolean forseMemory) {
         PriorityQueue<Descriptor> queue = referencesToMemory.get(obj);
         AddressDescriptor addressDescriptor = referencesToAddressDescriptors.get(obj);
 
         if (queue != null && queue.peek() instanceof RegisterDescriptor)
-            return (RegisterDescriptor) queue.peek();
+            return queue.peek();
+        else if (forseMemory)
+            return addressDescriptor;
         else if ((queue == null || queue.peek() instanceof AddressDescriptor) && unoccupiedRegisters.size() > 0) {
             RegisterDescriptor register = unoccupiedRegisters.get(0);
             unoccupiedRegisters.remove(0);
 
-            out.add("\tmov " + register + ", " + addressDescriptor + "");
+            register.holdsValueOf = obj;
+            out.add("\tmov " + register + ", " + (queue != null ? addressDescriptor : obj) + "");
 
             return register;
         }
         else {
             return null;
         }
-    }
-
-    private RegisterDescriptor getRegisterComplex(Obj obj) {
-        throw new RuntimeException("Not implemented yet.");
     }
 
     /**
@@ -115,15 +117,19 @@ public class ResourceManager {
 
             // the only case where we need to save is when RegisterDescriptor is on top of the queue
             if (queue.size() > 0 && queue.peek() instanceof RegisterDescriptor)
-                out.add("mov " + referencesToAddressDescriptors.get(obj) + ", " + queue.peek().toString() + System.lineSeparator());
+                out.add("\tmov " + referencesToAddressDescriptors.get(obj) + ", " + queue.peek().toString());
         }
+
+        dirtyVariables.clear();
     }
 
-    public void saveContext() {
-
+    public void saveContext(List<RegisterDescriptor> usedRegisters) {
+        /*
+        Only RBP, RBX, R12-R15 should be saved by callee -> ABI 3.2.1
+         */
     }
 
-    public void restoreContext() {
+    public void restoreContext(List<RegisterDescriptor> usedRegisters) {
 
     }
 }

@@ -1,10 +1,11 @@
 program TestProgram
-    int a, b;
     {
         void main()
+            int a, b;
             int c;
         {
-            c = a + b;
+            a = 2;
+            c = a + 5;
             print(c);
         }
     }

@@ -2,7 +2,7 @@ package cvetkovic.x64;
 
 import rs.etf.pp1.symboltable.concepts.Struct;
 
-public class ISADataWidthCalculator {
+public class SystemV_ABI {
     public static int getX64VariableSize(Struct type) {
         if (type.getKind() == Struct.Bool)
             return 1;
@@ -16,6 +16,11 @@ public class ISADataWidthCalculator {
             throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
     }
 
+    /**
+     * Compliant with GNU assembly
+     * @param size
+     * @return
+     */
     public static String getAssemblyDirectiveForAllocation(int size) {
         switch (size)
         {
@@ -29,5 +34,15 @@ public class ISADataWidthCalculator {
             default:
                 throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");
         }
+    }
+
+    /**
+     * Finds next value that is divisible by 16 because all stack frames have to
+     * be aligned on a 16 byte boundary
+     * @param num
+     * @return
+     */
+    public static int alignTo16(int num) {
+        return ((num >> 4) + 1) << 4;
     }
 }

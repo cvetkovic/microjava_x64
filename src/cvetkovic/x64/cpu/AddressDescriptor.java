@@ -24,7 +24,7 @@ public class AddressDescriptor extends Descriptor {
                 return String.valueOf(new Integer(holdsValueOf.getAdr()));
             case Obj.Var:
                 if (!isGlobalVar)
-                    return "EBP - " + holdsValueOf.getAdr();
+                    return "[RBP - " + holdsValueOf.getAdr() + "]";
                 else
                     return holdsValueOf.getName();
             case Obj.Fld:

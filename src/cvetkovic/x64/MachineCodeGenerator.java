@@ -11,6 +11,7 @@ import cvetkovic.x64.cpu.Descriptor;
 import cvetkovic.x64.cpu.RegisterDescriptor;
 import cvetkovic.x64.cpu.ResourceManager;
 import rs.etf.pp1.symboltable.concepts.Obj;
+import rs.etf.pp1.symboltable.concepts.Struct;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,6 +33,9 @@ public class MachineCodeGenerator {
     private Set<Obj> globalVariables;
     private List<ClassMetadata> classMetadata;
     private ResourceManager resourceManager;
+
+    private static final String integerTypeLabel = "number_format";
+    private static final String nonIntegerTypeLabel = "character_format";
 
     /**
      * Just does variable assignments to class fields. Invoke generateCode() method to do the compilation.
@@ -61,8 +65,8 @@ public class MachineCodeGenerator {
 
             generateDirectives();
             generateBSS();
-            generateFunctionsBody();
             generatePolymorphismTables();
+            generateFunctionsBody();
 
             writer.close();
         } catch (IOException e) {
@@ -91,7 +95,7 @@ public class MachineCodeGenerator {
      * @throws IOException
      */
     private void generateDirectives() throws IOException {
-        writer.write(".intel_syntax");
+        writer.write(".intel_syntax noprefix");
         writer.write(System.lineSeparator());
         writer.write(".global main");
         writer.write(System.lineSeparator());
@@ -111,7 +115,7 @@ public class MachineCodeGenerator {
             for (Obj var : globalVariables) {
                 writer.write(var.getName() + ":");
                 writer.write(System.lineSeparator());
-                writer.write("\t" + ISADataWidthCalculator.getAssemblyDirectiveForAllocation(ISADataWidthCalculator.getX64VariableSize(var.getType())) + " 0x0");
+                writer.write("\t" + SystemV_ABI.getAssemblyDirectiveForAllocation(SystemV_ABI.getX64VariableSize(var.getType())) + " 0x0");
                 writer.write(System.lineSeparator());
             }
 
@@ -120,10 +124,22 @@ public class MachineCodeGenerator {
     }
 
     private void generatePolymorphismTables() throws IOException {
-        if (classMetadata.size() > 0) {
-            writer.write(".section .data");
-            writer.write(System.lineSeparator());
+        writer.write(".section .data");
+        writer.write(System.lineSeparator());
 
+        // scanf/print character format
+        writer.write(nonIntegerTypeLabel + ":");
+        writer.write(System.lineSeparator());
+        writer.write("\t.asciz \"%c\"");
+        writer.write(System.lineSeparator());
+
+        // scanf/print number format
+        writer.write(integerTypeLabel + ":");
+        writer.write(System.lineSeparator());
+        writer.write("\t.asciz \"%d\"");
+        writer.write(System.lineSeparator());
+
+        if (classMetadata.size() > 0) {
             StringBuilder table = new StringBuilder();
 
             for (ClassMetadata metadata : classMetadata) {
@@ -158,45 +174,55 @@ public class MachineCodeGenerator {
                     Obj objResult = (quadruple.getResult() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) quadruple.getResult()).getObj() : null);
 
                     switch (quadruple.getInstruction()) {
-                        case ADD:
+                        case ADD: {
                             if (AlgebraicIdentities.isIncInstructionArgs(obj1, obj2)) {
-                            /*Obj var = obj1.getKind() != Obj.Con ? obj1 : obj2;
-                            Descriptor arg = resourceManager.getRegister(var, aux, true);
+                                /*Obj var = obj1.getKind() != Obj.Con ? obj1 : obj2;
+                                Descriptor arg = resourceManager.getRegister(var, aux);
 
-                            writer.write("\tinc " + arg);
-                            resourceManager.invalidate(var);*/
-                                // TODO: do INC instruction
+                                writer.write("\tinc " + arg);
+                                resourceManager.invalidateFromRegister(arg);*/
                             }
                             else {
                                 boolean operandsSwapped = false;
-                                RegisterDescriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
+                                Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
                                 if (destAndArg1 == null) {
                                     destAndArg1 = resourceManager.getRegister(obj2, aux);
                                     operandsSwapped = true;
                                 }
                                 Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux, true) : resourceManager.getRegister(obj1, aux, true));
 
+                                resourceManager.invalidateFromRegister(destAndArg1, aux);
+                                resourceManager.validate(objResult, destAndArg1, true);
+
                                 issueAuxiliaryInstructions(aux);
                                 writer.write("\tadd " + destAndArg1 + ", " + arg2);
                                 writer.write(System.lineSeparator());
-
-                                resourceManager.validate(objResult, destAndArg1);
-                                resourceManager.invalidate(!operandsSwapped ? obj1 : obj2);
                             }
 
                             break;
-
-                        case SUB:
+                        }
+                        case SUB: {
 
 
                             break;
+                        }
+                        case STORE: {
+                            Descriptor source = resourceManager.getRegister(obj1, aux);
+                            //Descriptor destination = resourceManager.getRegister(objResult, aux);
 
-                        case GEN_LABEL:
+                            issueAuxiliaryInstructions(aux);
+
+                            resourceManager.validate(objResult, source, true);
+                            //resourceManager.invalidate();
+
+                            break;
+                        }
+                        case GEN_LABEL: {
                             writer.write(quadruple.getArg1().toString() + ":");
                             writer.write(System.lineSeparator());
                             break;
-
-                        case ENTER:
+                        }
+                        case ENTER: {
                             writer.write("\tpush rbp");
                             writer.write(System.lineSeparator());
                             writer.write("\tmov rbp, rsp");
@@ -204,25 +230,52 @@ public class MachineCodeGenerator {
 
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
                             if (allocateSize.getValue() > 0) {
-                                // TODO: type in decimal or in HEX ?
-                                writer.write("\tsub rsp, " + allocateSize.getValue());
+                                // has to be divisible by 16 by System V ABI
+                                writer.write("\tsub rsp, " + SystemV_ABI.alignTo16(allocateSize.getValue()));
                                 writer.write(System.lineSeparator());
                             }
 
                             break;
-
-                        case LEAVE:
-                            writer.write("\tpop rbp");
+                        }
+                        case LEAVE: {
+                            writer.write("\tleave");
                             writer.write(System.lineSeparator());
                             writer.write("\tret");
                             writer.write(System.lineSeparator());
-                            break;
 
-                        case JMP:
+                            break;
+                        }
+                        case SCANF: {
+
+
+                            break;
+                        }
+                        case PRINTF: {
+                            // TODO: save eax, ecx, edx -> check for dirty only
+                            Descriptor source = resourceManager.getRegister(obj2, aux);
+
+                            // print format
+                            writer.write("\tlea rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
+                            writer.write(System.lineSeparator());
+                            // obj
+                            writer.write("\tmov rsi, " + source);
+                            writer.write(System.lineSeparator());
+                            // clear eax -> for variable number of vector registers
+                            writer.write("\txor eax, eax");
+                            writer.write(System.lineSeparator());
+                            // invoke
+                            writer.write("\tcall printf");
+                            writer.write(System.lineSeparator());
+                            // TODO: restore eax, ecx, edx -> check for dirty only
+
+                            break;
+                        }
+                        case JMP: {
                             writer.write("\tjmp " + quadruple.getResult());
                             writer.write(System.lineSeparator());
-                            break;
 
+                            break;
+                        }
                         default:
                             break;
                         //throw new RuntimeException("Instruction not supported by x86-64 code generator.");
@@ -235,7 +288,6 @@ public class MachineCodeGenerator {
                     writer.write(System.lineSeparator());
                     //writer.write("----------------------------------------------------------------------------");
                 }*/
-
                 resourceManager.saveDirtyVariables(aux);
                 issueAuxiliaryInstructions(aux);
                 // TODO: resourceManager.saveContext();

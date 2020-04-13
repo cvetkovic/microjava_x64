@@ -2,7 +2,7 @@ package cvetkovic.semantics;
 
 import cvetkovic.parser.ast.*;
 import cvetkovic.structures.SymbolTable;
-import cvetkovic.x64.ISADataWidthCalculator;
+import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
@@ -245,7 +245,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
             // determine address
             newlyCreatedVar.setAdr(currentAddressOffset.peek());
-            currentAddressOffset.push(currentAddressOffset.pop() + ISADataWidthCalculator.getX64VariableSize(newlyCreatedVar.getType()));
+            currentAddressOffset.push(currentAddressOffset.pop() + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
 
             if (currentDataType.struct.getKind() == Struct.Class)
                 classInstances.put(variableName, currentDataType.getTypeIdent());
@@ -606,7 +606,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         // needed to add, otherwise fields cannot be accesed properly during
         // code generation as first field would point to VTP, etc.
         SymbolTable.insert(Obj.Fld, "_vtp", Tab.noType).setAdr(0);
-        currentAddressOffset.push(ISADataWidthCalculator.getX64VariableSize(new Struct(Struct.Class)));
+        currentAddressOffset.push(SystemV_ABI.getX64VariableSize(new Struct(Struct.Class)));
     }
 
     @Override
@@ -692,7 +692,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(AbstractMethodName AbstractMethodName) {
         String methodName = AbstractMethodName.getI1();
         currentMethodName = methodName;
-        currentAddressOffset.push(0);
+        currentAddressOffset.push(8);
 
         Obj object = SymbolTable.currentScope.findSymbol(methodName);
         if (object == SymbolTable.noObj || object == null) {
@@ -831,7 +831,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(MethodName MethodName) {
         // NOTE: ord, chr, len shall not be added to symbol table as they already exist on its creation
 
-        currentAddressOffset.push(0);
+        currentAddressOffset.push(8);
         Struct returnType = currentMethodReturnType;
         String methodName = MethodName.getMethodName();
 
