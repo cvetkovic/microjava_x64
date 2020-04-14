@@ -59,6 +59,8 @@ public abstract class Optimizer {
                 currentBlock.firstQuadruple = index;
                 index = currentBlock.lastQuadruple + 1;
                 currentBlock.lastQuadruple = currentBlock.firstQuadruple + currentBlock.instructions.size();
+
+                currentBlock = null;
             }
 
             outputCode.add(methodCode);

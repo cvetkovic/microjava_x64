@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MachineCodeGenerator {
 
@@ -31,6 +32,8 @@ public class MachineCodeGenerator {
     private String outputFileUrl;
     private File outputFileHandle;
     private BufferedWriter writer;
+
+    private int instructionCounter = 0;
 
     private List<CodeSequence> codeSequences;
     private Set<Obj> globalVariables;
@@ -173,6 +176,10 @@ public class MachineCodeGenerator {
         writer.write(System.lineSeparator());
     }
 
+    private boolean checkEquality(int a, int b) {
+        return a == b;
+    }
+
     /**
      * Generates assembly code for methods' body
      *
@@ -183,7 +190,17 @@ public class MachineCodeGenerator {
         writer.write(System.lineSeparator());
 
         for (CodeSequence function : codeSequences) {
-            for (BasicBlock basicBlock : function.basicBlocks) {
+            BasicBlock basicBlock = null;
+
+            for (int i = 0 ; i < function.basicBlocks.size(); i++) {
+                if (basicBlock == null) {
+                    // assign new basic block to compile
+                    if (instructionCounter == 0)
+                        basicBlock = function.entryBlock;
+                    else
+                        basicBlock = function.basicBlocks.stream().filter(p -> checkEquality(p.firstQuadruple, instructionCounter)).collect(Collectors.toList()).get(0);
+                }
+
                 List<String> aux = new ArrayList<>();
 
                 // old register/memory descriptors are discarded
@@ -377,8 +394,12 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case SCANF: {
-                            // TODO: save eax, ecx, edx -> check for dirty only
                             Descriptor destination = resourceManager.getAddressDescriptor(objResult);
+
+                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
+                            makeRegisterPreservationList(toPreserve);
+                            resourceManager.preserveContext(toPreserve, aux);
+                            issueAuxiliaryInstructions(aux);
 
                             // print format -> equivalent with mov rdi, offset FORMAT
                             writer.write("\tlea rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
@@ -392,7 +413,10 @@ public class MachineCodeGenerator {
                             // invoke
                             writer.write("\tcall scanf");
                             writer.write(System.lineSeparator());
-                            // TODO: restore eax, ecx, edx -> check for dirty only
+
+                            aux.clear();
+                            resourceManager.restoreContext(toPreserve, aux);
+                            issueAuxiliaryInstructions(aux);
 
                             break;
                         }
@@ -427,15 +451,16 @@ public class MachineCodeGenerator {
                                     throw new RuntimeException("Data width not supported by print language construct.");
                             }
 
-                            // TODO: check order of the following two lines
                             resourceManager.preserveContext(toPreserve, aux);
                             aux.addAll(tmp);
                             issueAuxiliaryInstructions(aux);
 
                             // data to be printed
-                            if (source.getHoldsValueOf() != null) // otherwise operand will be fetched by fetchOperandInstruction
+                            if (source.getHoldsValueOf() != null || obj2.getKind() == Obj.Con) { // otherwise operand will be fetched by fetchOperandInstruction
+                                source.setPrintWidth(sourceSize);
                                 writer.write("\tMOV " + regName + ", " + source);
-                            writer.write(System.lineSeparator());
+                                writer.write(System.lineSeparator());
+                            }
                             // print format -> equivalent with mov rdi, offset FORMAT
                             writer.write("\tLEA rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
@@ -464,6 +489,75 @@ public class MachineCodeGenerator {
                             break;
                         }
 
+                        case JL:
+                        case JLE:
+                        case JG:
+                        case JGE:
+                        case JE:
+                        case JNE: {
+                            // if first instruction is constant then load it to register first
+                            // if second operand is constant then encode it in instruction
+                            RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
+                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
+
+                            dest_arg1_register.setPrintWidth(4);
+                            resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
+
+                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
+                                numOfArgsInMemory++;
+                            else if (arg2_register != null)
+                                resourceManager.fetchOperand(arg2_register, obj2, aux);
+
+                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
+                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
+
+                            issueAuxiliaryInstructions(aux);
+                            String secondOperand;
+                            if (arg2_register == null)
+                                secondOperand = String.valueOf(obj2.getAdr());
+                            else if (numOfArgsInMemory > 0)
+                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
+                            else
+                                secondOperand = arg2_register.toString();
+
+                            dest_arg1_register.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
+                            writer.write("\tCMP " + dest_arg1_register + ", " + secondOperand);
+                            writer.write(System.lineSeparator());
+                            String x64Instruction;
+                            switch (quadruple.getInstruction()) {
+                                case JL: {
+                                    x64Instruction = "JL";
+                                    break;
+                                }
+                                case JLE: {
+                                    x64Instruction = "JLE";
+                                    break;
+                                }
+                                case JG: {
+                                    x64Instruction = "JG";
+                                    break;
+                                }
+                                case JGE: {
+                                    x64Instruction = "JGE";
+                                    break;
+                                }
+                                case JE: {
+                                    x64Instruction = "JE";
+                                    break;
+                                }
+                                case JNE: {
+                                    x64Instruction = "JNE";
+                                    break;
+                                }
+                                default:
+                                    throw new RuntimeException("Not supported jump instruction.");
+                            }
+                            writer.write("\t" + x64Instruction + " " + quadruple.getResult());
+                            writer.write(System.lineSeparator());
+
+                            break;
+                        }
+
                         case GEN_LABEL: {
                             writer.write(quadruple.getArg1().toString() + ":");
                             writer.write(System.lineSeparator());
@@ -479,7 +573,11 @@ public class MachineCodeGenerator {
                     }
 
                     aux.clear();
+
+                    instructionCounter++;
                 }
+
+                basicBlock = null;
 
                 // TODO: resourceManager.saveDirtyVariables(aux);
                 // TODO: issueAuxiliaryInstructions(aux);

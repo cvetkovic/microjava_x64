@@ -55,6 +55,8 @@ public class LocalValueNumbering implements OptimizerPass {
                 continue; // instruction doesn't involve any operands
             else if (instruction.getInstruction() == IRInstruction.PRINTF)
                 continue;
+            else if (instruction.getInstruction() == IRInstruction.SCANF)
+                continue;
 
             if (obj1 != null)
                 leftChild = nodes.get(obj1);
