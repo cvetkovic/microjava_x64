@@ -87,6 +87,9 @@ public class MachineCodeGenerator {
      * Initializes register and memory descriptors
      */
     private void initializeISATables(BasicBlock basicBlock) {
+        registers.clear();
+        mapToRegister.clear();
+
         for (String[] id : registerNames) {
             RegisterDescriptor newRegister = new RegisterDescriptor(id[2], id[1], id[0]);
 
@@ -192,7 +195,7 @@ public class MachineCodeGenerator {
         for (CodeSequence function : codeSequences) {
             BasicBlock basicBlock = null;
 
-            for (int i = 0 ; i < function.basicBlocks.size(); i++) {
+            for (int i = 0; i < function.basicBlocks.size(); i++) {
                 if (basicBlock == null) {
                     // assign new basic block to compile
                     if (instructionCounter == 0)
@@ -202,6 +205,7 @@ public class MachineCodeGenerator {
                 }
 
                 List<String> aux = new ArrayList<>();
+                boolean cancelSaveDirtyVals = false;
 
                 // old register/memory descriptors are discarded
                 initializeISATables(basicBlock);
@@ -364,8 +368,11 @@ public class MachineCodeGenerator {
                         }
 
                         case LEAVE: {
+                            // save dirty variables
                             resourceManager.saveDirtyVariables(aux, false);
                             issueAuxiliaryInstructions(aux);
+                            aux.clear();
+                            cancelSaveDirtyVals = true;
 
                             writer.write("\tLEAVE");
                             writer.write(System.lineSeparator());
@@ -426,8 +433,8 @@ public class MachineCodeGenerator {
 
                             List<String> tmp = new ArrayList<>();
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            makeRegisterPreservationList(toPreserve);
                             resourceManager.fetchOperand(source, obj2, tmp);
+                            makeRegisterPreservationList(toPreserve);
 
                             // obj
                             int sourceSize;
@@ -483,6 +490,12 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case JMP: {
+                            // save dirty variables
+                            resourceManager.saveDirtyVariables(aux, false);
+                            issueAuxiliaryInstructions(aux);
+                            aux.clear();
+                            cancelSaveDirtyVals = true;
+
                             writer.write("\tjmp " + quadruple.getResult());
                             writer.write(System.lineSeparator());
 
@@ -552,6 +565,14 @@ public class MachineCodeGenerator {
                                 default:
                                     throw new RuntimeException("Not supported jump instruction.");
                             }
+
+                            // save dirty variables
+                            aux.clear();
+                            resourceManager.saveDirtyVariables(aux, false);
+                            issueAuxiliaryInstructions(aux);
+                            aux.clear();
+                            cancelSaveDirtyVals = true;
+
                             writer.write("\t" + x64Instruction + " " + quadruple.getResult());
                             writer.write(System.lineSeparator());
 
@@ -575,6 +596,12 @@ public class MachineCodeGenerator {
                     aux.clear();
 
                     instructionCounter++;
+                }
+
+                if (!cancelSaveDirtyVals) {
+                    resourceManager.saveDirtyVariables(aux, false);
+                    issueAuxiliaryInstructions(aux);
+                    aux.clear();
                 }
 
                 basicBlock = null;

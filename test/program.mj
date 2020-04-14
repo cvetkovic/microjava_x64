@@ -6,46 +6,9 @@ program TestProgram
             int c; // -16
             int d; // -20
         {
-            read(a);
-            read(b);
-
-            if (a == b) {
-                print('j');
-                print('e');
-                print(eol);
-            }
-
-            if (a != b) {
-                print('j');
-                print('n');
-                print('e');
-                print(eol);
-            }
-
-            if (a < b) {
-                print('j');
-                print('l');
-                print(eol);
-            }
-
-            if (a <= b) {
-                print('j');
-                print('l');
-                print('e');
-                print(eol);
-            }
-
-
-            if (a > b) {
-                print('j');
-                print('g');
-                print(eol);
-            }
-
-            if (a >= b) {
-                print('j');
-                print('g');
-                print('e');
+            for (c = 10; c > 0; c--)
+            {
+                print(c);
                 print(eol);
             }
         }

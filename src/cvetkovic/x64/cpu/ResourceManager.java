@@ -290,7 +290,7 @@ public class ResourceManager {
 
         // TODO: remove register references in referenceToMemory map
 
-        if (duplicates.firstKey() > 1)
+        if (duplicates.size() > 0 && duplicates.firstKey() > 1)
             return duplicates.get(duplicates.firstKey());
         else
             return null;
@@ -303,7 +303,7 @@ public class ResourceManager {
      */
     public void saveDirtyVariables(List<String> out, boolean saveTemps) {
         for (Obj obj : dirtyVariables) {
-            if (!saveTemps && obj.tempVar)
+            if (obj == null || !saveTemps && obj.tempVar)
                 continue;
 
             PriorityQueue<Descriptor> queue = addressDescriptors.get(obj);
@@ -358,7 +358,12 @@ public class ResourceManager {
      * @return
      */
     public boolean checkIfRegisterIsTaken(RegisterDescriptor descriptor) {
-        return !freeRegisters.contains(descriptor);
+        for (PriorityQueue<Descriptor> queue : addressDescriptors.values()) {
+            if (queue.contains(descriptor))
+                return true;
+        }
+
+        return false;
     }
 
     //////////////////////////////////////// CONTEXT PRESERVATION
