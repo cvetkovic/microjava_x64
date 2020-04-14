@@ -3,9 +3,11 @@ package cvetkovic.x64.cpu;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ResourceManager {
     private static DescriptorComparator staticQueueComparator = new DescriptorComparator();
@@ -17,11 +19,14 @@ public class ResourceManager {
     private List<RegisterDescriptor> allRegisters = new ArrayList<>();
     private Set<Obj> dirtyVariables = new HashSet<>();
 
+    private int sizeOfTempVars = 0;
+
     public ResourceManager(List<RegisterDescriptor> freeRegisters, List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         this.freeRegisters = freeRegisters;
         this.allRegisters.addAll(freeRegisters);
 
         createAddressDescriptors(variables);
+        sizeOfTempVars = calculateSizeOfTempVariables(variables);
     }
 
     private void createAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
@@ -36,6 +41,20 @@ public class ResourceManager {
             addressDescriptors.put(tuple.u, queue);
             memoryDescriptors.put(tuple.u, descriptor);
         }
+    }
+
+    private int calculateSizeOfTempVariables(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
+        int tempVarSize = 0;
+
+        List<Obj> tempVars = variables.stream().filter(p -> p.u.tempVar).map(p -> p.u).collect(Collectors.toList());
+        for (Obj obj : tempVars)
+            tempVarSize += SystemV_ABI.getX64VariableSize(obj.getType());
+
+        return tempVarSize;
+    }
+
+    public int getSizeOfTempVars() {
+        return sizeOfTempVars;
     }
 
     /**
@@ -61,9 +80,10 @@ public class ResourceManager {
             addressDescriptors.put(newObj, newObjQueue);
         }
         targetDescriptor.holdsValueOf = newObj;
-        newObjQueue.add(targetDescriptor);
+        if (!newObjQueue.contains(targetDescriptor))
+            newObjQueue.add(targetDescriptor);
 
-        if (setDirty && !newObj.tempVar)
+        if (setDirty)
             dirtyVariables.add(newObj);
     }
 
@@ -78,18 +98,24 @@ public class ResourceManager {
         if (register != null && freeRegisters.contains(register))
             freeRegisters.remove(register);
 
-        if (operand.getKind() == Obj.Con)
+        if (operand.getKind() == Obj.Con) {
+            register.setPrintWidth(SystemV_ABI.getX64VariableSize(operand.getType()));
             out.add("\tMOV " + register + ", " + operand.getAdr());
+        }
         else if (register.holdsValueOf != operand) {
             PriorityQueue<Descriptor> newObjQueue = addressDescriptors.get(operand);
             if (newObjQueue == null) {
                 newObjQueue = new PriorityQueue<>(staticQueueComparator);
                 addressDescriptors.put(operand, newObjQueue);
             }
-            newObjQueue.add(register);
+
+            Descriptor operandDescriptor = newObjQueue.peek();
 
             register.holdsValueOf = operand;
-            out.add("\tMOV " + register + ", " + memoryDescriptors.get(operand));
+            register.setPrintWidth(SystemV_ABI.getX64VariableSize(operandDescriptor.getHoldsValueOf().getType()));
+            out.add("\tMOV " + register + ", " + operandDescriptor);
+
+            newObjQueue.add(register);
         }
     }
 
@@ -107,9 +133,6 @@ public class ResourceManager {
             // count the number of other registers that hold oldObj
             int numberOfRegister = (int) oldObjQueue.stream().filter(p -> p instanceof RegisterDescriptor && p != targetDescriptor).count();
 
-            // remove old obj from its queue
-            oldObjQueue.remove(targetDescriptor);
-
             // don't save old obj unless it's dirty
             if (!dirtyVariables.contains(oldObj))
                 return;
@@ -119,19 +142,13 @@ public class ResourceManager {
                 return;
             else {
                 // must save the old obj
-                aux.add("\tmov " + memoryDescriptors.get(oldObj) + ", " + targetDescriptor);
+                ((RegisterDescriptor)targetDescriptor).setPrintWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
+
+                aux.add("\tMOV " + memoryDescriptors.get(oldObj) + ", " + targetDescriptor);
                 dirtyVariables.remove(oldObj);
             }
-        }
 
-        PriorityQueue<Descriptor> oldObjQueue = addressDescriptors.get(oldObj);
-        if (oldObjQueue != null && oldObjQueue.peek() instanceof RegisterDescriptor) {
-            // if target descriptor has dirty variable save it to memory
-            /*if (dirtyVariables.contains(targetDescriptor.holdsValueOf)) {
-                aux.add("\tmov " + referencesToAddressDescriptors.get(targetDescriptor.holdsValueOf) + ", " + targetDescriptor);
-                dirtyVariables.remove(targetDescriptor.holdsValueOf);
-            }*/
-
+            // remove old obj from its queue
             oldObjQueue.remove(targetDescriptor);
         }
     }
@@ -279,13 +296,16 @@ public class ResourceManager {
      * in order to save all non-temporary variables to memory that
      * were made dirty during the execution
      */
-    public void saveDirtyVariables(List<String> out) {
+    public void saveDirtyVariables(List<String> out, boolean saveTemps) {
         for (Obj obj : dirtyVariables) {
+            if (!saveTemps && obj.tempVar)
+                continue;
+
             PriorityQueue<Descriptor> queue = addressDescriptors.get(obj);
 
             // the only case where we need to save is when RegisterDescriptor is on top of the queue
             if (queue.size() > 0 && queue.peek() instanceof RegisterDescriptor)
-                out.add("\tmov " + memoryDescriptors.get(obj) + ", " + queue.peek().toString());
+                out.add("\tMOV " + memoryDescriptors.get(obj) + ", " + queue.peek().toString());
         }
 
         dirtyVariables.clear();

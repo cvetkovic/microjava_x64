@@ -1,10 +1,17 @@
 program TestProgram
     {
         void main()
-            int a, b;
-            int c;
+            int a; // -8
+            int b; // -12
+            int c; // -16
+            int d; // -20
         {
-            c = a - 10;
+            a = 5;
+            b = 3;
+            c = a - b;
             c = 400 - a;
+            d = a - b;
+            print(c);
+            print(d);
         }
     }

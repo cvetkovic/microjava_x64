@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -88,7 +89,7 @@ public class MachineCodeGenerator {
             registers.add(new RegisterDescriptor(id[2], id[1], id[0]));
 
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
-        for (Obj var : basicBlock.nonTemporaryVariables)
+        for (Obj var : basicBlock.allVariables)
             memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
 
         resourceManager = new ResourceManager(registers, memoryLocationList);
@@ -306,16 +307,20 @@ public class MachineCodeGenerator {
                         }
 
                         case STORE: {
-                            /*Descriptor arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            Descriptor result_register = resourceManager.getRegister(objResult, quadruple);
+                            RegisterDescriptor arg1_result_register = resourceManager.getRegister(objResult, quadruple);
 
-                            resourceManager.invalidate(result_register, objResult, aux);
-                            resourceManager.validate(result_register, objResult, aux, true);
+                            resourceManager.fetchOperand(arg1_result_register, obj1, aux);
+
+                            // optimization not to use new register to hold the value
+                            RegisterDescriptor result_register = resourceManager.getRegister(objResult, quadruple);
+                            if (result_register.getHoldsValueOf() == objResult)
+                                arg1_result_register = result_register;
+
+                            // change the address descriptor of destination register so that it only holds obj1 value
+                            resourceManager.invalidate(arg1_result_register, objResult, aux);
+                            resourceManager.validate(arg1_result_register, objResult, aux, true);
 
                             issueAuxiliaryInstructions(aux);
-                            writer.write("\tMOV " + result_register + ", " + arg1_register);
-                            writer.write(System.lineSeparator());*/
-
 
                             break;
                         }
@@ -327,16 +332,20 @@ public class MachineCodeGenerator {
                             writer.write(System.lineSeparator());
 
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
-                            if (allocateSize.getValue() > 0) {
-                                // has to be divisible by 16 by System V ABI
-                                writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(allocateSize.getValue()));
-                                writer.write(System.lineSeparator());
-                            }
+                            int sizeToAllocate = allocateSize.getValue() + resourceManager.getSizeOfTempVars();
+                            giveAddressToTemps(basicBlock, allocateSize.getValue());
+
+                            // has to be divisible by 16 by System V ABI
+                            writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(sizeToAllocate));
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
 
                         case LEAVE: {
+                            resourceManager.saveDirtyVariables(aux, false);
+                            issueAuxiliaryInstructions(aux);
+
                             writer.write("\tLEAVE");
                             writer.write(System.lineSeparator());
                             writer.write("\tRET");
@@ -457,6 +466,15 @@ public class MachineCodeGenerator {
                 // TODO: writer.write( machine code );
                 // TODO: resourceManager.restoreContext();
             }
+        }
+    }
+
+    private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
+        Collection<Obj> tempVars = basicBlock.temporaryVariables;
+        for (Obj obj : tempVars) {
+            int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
+            obj.setAdr(startValue + objSize);
+            startValue += objSize;
         }
     }
 
