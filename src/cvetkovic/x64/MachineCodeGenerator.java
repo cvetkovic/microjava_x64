@@ -16,10 +16,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class MachineCodeGenerator {
 
@@ -42,6 +39,9 @@ public class MachineCodeGenerator {
 
     private static final String integerTypeLabel = "number_format";
     private static final String nonIntegerTypeLabel = "character_format";
+
+    private List<RegisterDescriptor> registers = new ArrayList<>();
+    private Map<String, RegisterDescriptor> mapToRegister = new HashMap<>();
 
     /**
      * Just does variable assignments to class fields. Invoke generateCode() method to do the compilation.
@@ -84,9 +84,13 @@ public class MachineCodeGenerator {
      * Initializes register and memory descriptors
      */
     private void initializeISATables(BasicBlock basicBlock) {
-        List<RegisterDescriptor> registers = new ArrayList<>();
-        for (String[] id : registerNames)
-            registers.add(new RegisterDescriptor(id[2], id[1], id[0]));
+        for (String[] id : registerNames) {
+            RegisterDescriptor newRegister = new RegisterDescriptor(id[2], id[1], id[0]);
+
+            registers.add(newRegister);
+            for (int i = 0; i < 3; i++)
+                mapToRegister.put(id[i], newRegister);
+        }
 
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.allVariables)
@@ -395,15 +399,15 @@ public class MachineCodeGenerator {
 
                         case PRINTF: {
                             // TODO: save eax, ecx, edx -> check for dirty only
-                            /*Descriptor source = resourceManager.getRegister(obj2, aux);
+                            RegisterDescriptor source = resourceManager.getRegister(obj2, quadruple);
 
-                            issueAuxiliaryInstructions(aux);
-
-                            // print format -> equivalent with mov rdi, offset FORMAT
-                            writer.write("\tlea rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
-                            writer.write(System.lineSeparator());
                             // obj
-                            int sourceSize = SystemV_ABI.getX64VariableSize(source.getHoldsValueOf().getType());
+                            int sourceSize;
+                            if (source.getHoldsValueOf() != null)
+                                sourceSize = SystemV_ABI.getX64VariableSize(source.getHoldsValueOf().getType());
+                            else
+                                sourceSize = 1; // char
+
                             String regName;
                             switch (sourceSize) {
                                 case 1:
@@ -419,7 +423,26 @@ public class MachineCodeGenerator {
                                     throw new RuntimeException("Data width not supported by print language construct.");
                             }
 
-                            writer.write("\tmov " + regName + ", " + source);
+                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
+                            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rdi")))
+                                toPreserve.add(mapToRegister.get("rdi"));
+                            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(regName)))
+                                toPreserve.add(mapToRegister.get(regName));
+                            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("eax")))
+                                toPreserve.add(mapToRegister.get("eax"));
+
+                            // TODO: check order of the following two lines
+                            resourceManager.saveContext(toPreserve, aux);
+                            resourceManager.fetchOperand(source, obj2, aux);
+
+                            issueAuxiliaryInstructions(aux);
+
+                            // data to be printed
+                            if (source.getHoldsValueOf() != null) // otherwise operand will be fetched by fetchOperandInstruction
+                                writer.write("\tmov " + regName + ", " + source);
+                            writer.write(System.lineSeparator());
+                            // print format -> equivalent with mov rdi, offset FORMAT
+                            writer.write("\tlea rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
                             writer.write("\txor eax, eax");
@@ -427,7 +450,10 @@ public class MachineCodeGenerator {
                             // invoke
                             writer.write("\tcall printf");
                             writer.write(System.lineSeparator());
-                            // TODO: restore eax, ecx, edx -> check for dirty only*/
+
+                            aux.clear();
+                            resourceManager.restoreContext(toPreserve, aux);
+                            issueAuxiliaryInstructions(aux);
 
                             break;
                         }

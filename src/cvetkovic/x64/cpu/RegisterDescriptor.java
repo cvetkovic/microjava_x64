@@ -19,6 +19,15 @@ public class RegisterDescriptor extends Descriptor {
         this.printWidth = width;
     }
 
+    /*@Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RegisterDescriptor))
+            throw new RuntimeException("Register descriptor cannot be compared");
+
+        RegisterDescriptor descriptor = (RegisterDescriptor)obj;
+        return
+    }*/
+
     @Override
     public String toString() {
         if (printWidth == 1) {

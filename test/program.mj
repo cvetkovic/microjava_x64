@@ -12,6 +12,7 @@ program TestProgram
             c = 400 - a;
             d = a - b;
             print(c);
+            print(' ');
             print(d);
         }
     }

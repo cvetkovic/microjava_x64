@@ -102,6 +102,8 @@ public class ResourceManager {
             register.setPrintWidth(SystemV_ABI.getX64VariableSize(operand.getType()));
             out.add("\tMOV " + register + ", " + operand.getAdr());
         }
+        else if (register.holdsValueOf == operand)
+            return;
         else if (register.holdsValueOf != operand) {
             PriorityQueue<Descriptor> newObjQueue = addressDescriptors.get(operand);
             if (newObjQueue == null) {
@@ -142,7 +144,7 @@ public class ResourceManager {
                 return;
             else {
                 // must save the old obj
-                ((RegisterDescriptor)targetDescriptor).setPrintWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
+                ((RegisterDescriptor) targetDescriptor).setPrintWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
 
                 aux.add("\tMOV " + memoryDescriptors.get(oldObj) + ", " + targetDescriptor);
                 dirtyVariables.remove(oldObj);
@@ -336,13 +338,43 @@ public class ResourceManager {
         return register;
     }
 
-    public void saveContext(List<RegisterDescriptor> usedRegisters) {
-        /*
-        Only RBP, RBX, R12-R15 should be saved by callee -> ABI 3.2.1
-         */
+    /**
+     * Checks whether object node is loaded in memory
+     *
+     * @param obj
+     * @return
+     */
+    public boolean checkIfObjIsInRegister(Obj obj) {
+        return addressDescriptors.get(obj).peek() instanceof RegisterDescriptor;
     }
 
-    public void restoreContext(List<RegisterDescriptor> usedRegisters) {
+    /**
+     * Checks whether register is free
+     *
+     * @param descriptor
+     * @return
+     */
+    public boolean checkIfRegisterIsTaken(RegisterDescriptor descriptor) {
+        return !freeRegisters.contains(descriptor);
+    }
 
+    //////////////////////////////////////// CONTEXT PRESERVATION
+
+    /*
+    Only RBP, RBX, R12-R15 should be saved by callee -> ABI 3.2.1
+     */
+
+    public void saveContext(List<RegisterDescriptor> usedRegisters, List<String> out) {
+        for (int i = 0; i < usedRegisters.size(); i++) {
+            usedRegisters.get(i).setPrintWidth(8);
+            out.add("\tPUSH " + usedRegisters.get(i));
+        }
+    }
+
+    public void restoreContext(List<RegisterDescriptor> usedRegisters, List<String> out) {
+        for (int i = 0; i < usedRegisters.size(); i++) {
+            usedRegisters.get(i).setPrintWidth(8);
+            out.add("\tPOP " + usedRegisters.get(i));
+        }
     }
 }
