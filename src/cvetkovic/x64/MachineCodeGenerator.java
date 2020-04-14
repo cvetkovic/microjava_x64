@@ -400,6 +400,11 @@ public class MachineCodeGenerator {
                         case PRINTF: {
                             RegisterDescriptor source = resourceManager.getRegister(obj2, quadruple);
 
+                            List<String> tmp = new ArrayList<>();
+                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
+                            makeRegisterPreservationList(toPreserve);
+                            resourceManager.fetchOperand(source, obj2, tmp);
+
                             // obj
                             int sourceSize;
                             if (source.getHoldsValueOf() != null)
@@ -422,13 +427,9 @@ public class MachineCodeGenerator {
                                     throw new RuntimeException("Data width not supported by print language construct.");
                             }
 
-                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            makeRegisterPreservationList(toPreserve);
-
                             // TODO: check order of the following two lines
                             resourceManager.preserveContext(toPreserve, aux);
-                            resourceManager.fetchOperand(source, obj2, aux);
-
+                            aux.addAll(tmp);
                             issueAuxiliaryInstructions(aux);
 
                             // data to be printed

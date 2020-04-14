@@ -136,12 +136,16 @@ public class ResourceManager {
             int numberOfRegister = (int) oldObjQueue.stream().filter(p -> p instanceof RegisterDescriptor && p != targetDescriptor).count();
 
             // don't save old obj unless it's dirty
-            if (!dirtyVariables.contains(oldObj))
+            if (!dirtyVariables.contains(oldObj)) {
+                oldObjQueue.remove(targetDescriptor);
                 return;
+            }
 
             // if other registers hold the same value do nothing
-            if (numberOfRegister > 0)
+            if (numberOfRegister > 0) {
+                oldObjQueue.remove(targetDescriptor);
                 return;
+            }
             else {
                 // must save the old obj
                 ((RegisterDescriptor) targetDescriptor).setPrintWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
@@ -376,7 +380,7 @@ public class ResourceManager {
     }
 
     public void restoreContext(List<RegisterDescriptor> usedRegisters, List<String> out) {
-        for (int i = 0; i < usedRegisters.size(); i++) {
+        for (int i = usedRegisters.size() - 1; i >= 0; i--) {
             RegisterDescriptor descriptor = usedRegisters.get(i);
             if (descriptor.holdsValueOf == null)
                 continue;
