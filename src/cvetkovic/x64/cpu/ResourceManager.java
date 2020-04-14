@@ -209,10 +209,9 @@ public class ResourceManager {
      * @return Register descriptor if condition is satisfied, otherwise null.
      */
     private RegisterDescriptor getRegisterByLiveness(Quadruple instruction) {
-        Obj obj1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
+        Obj obj1 = (instruction.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) instruction.getArg1()).getObj() : null);
         Obj obj2 = (instruction.getArg2() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) instruction.getArg2()).getObj() : null);
-        Obj objResult = ((QuadrupleObjVar) instruction.getResult()).getObj();
-
+        Obj objResult = (instruction.getResult() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) instruction.getResult()).getObj() : null);
 
         if (obj1 != null && instruction.getArg1NextUse() == Quadruple.NextUseState.DEAD) {
             PriorityQueue<Descriptor> arg1Queue = addressDescriptors.get(obj1);
@@ -364,17 +363,25 @@ public class ResourceManager {
     Only RBP, RBX, R12-R15 should be saved by callee -> ABI 3.2.1
      */
 
-    public void saveContext(List<RegisterDescriptor> usedRegisters, List<String> out) {
+    public void preserveContext(List<RegisterDescriptor> usedRegisters, List<String> out) {
+        // push operations not allowed -> store required registers in memory
         for (int i = 0; i < usedRegisters.size(); i++) {
-            usedRegisters.get(i).setPrintWidth(8);
-            out.add("\tPUSH " + usedRegisters.get(i));
+            RegisterDescriptor descriptor = usedRegisters.get(i);
+            if (descriptor.holdsValueOf == null)
+                continue;
+
+            out.add("\tMOV " + memoryDescriptors.get(descriptor.holdsValueOf) + ", " + descriptor);
+            dirtyVariables.remove(descriptor.holdsValueOf);
         }
     }
 
     public void restoreContext(List<RegisterDescriptor> usedRegisters, List<String> out) {
         for (int i = 0; i < usedRegisters.size(); i++) {
-            usedRegisters.get(i).setPrintWidth(8);
-            out.add("\tPOP " + usedRegisters.get(i));
+            RegisterDescriptor descriptor = usedRegisters.get(i);
+            if (descriptor.holdsValueOf == null)
+                continue;
+
+            out.add("\tMOV " + descriptor + ", " + memoryDescriptors.get(descriptor.holdsValueOf));
         }
     }
 }

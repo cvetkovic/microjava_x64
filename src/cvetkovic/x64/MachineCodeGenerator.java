@@ -398,7 +398,6 @@ public class MachineCodeGenerator {
                         }
 
                         case PRINTF: {
-                            // TODO: save eax, ecx, edx -> check for dirty only
                             RegisterDescriptor source = resourceManager.getRegister(obj2, quadruple);
 
                             // obj
@@ -424,31 +423,26 @@ public class MachineCodeGenerator {
                             }
 
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rdi")))
-                                toPreserve.add(mapToRegister.get("rdi"));
-                            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(regName)))
-                                toPreserve.add(mapToRegister.get(regName));
-                            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("eax")))
-                                toPreserve.add(mapToRegister.get("eax"));
+                            makeRegisterPreservationList(toPreserve);
 
                             // TODO: check order of the following two lines
-                            resourceManager.saveContext(toPreserve, aux);
+                            resourceManager.preserveContext(toPreserve, aux);
                             resourceManager.fetchOperand(source, obj2, aux);
 
                             issueAuxiliaryInstructions(aux);
 
                             // data to be printed
                             if (source.getHoldsValueOf() != null) // otherwise operand will be fetched by fetchOperandInstruction
-                                writer.write("\tmov " + regName + ", " + source);
+                                writer.write("\tMOV " + regName + ", " + source);
                             writer.write(System.lineSeparator());
                             // print format -> equivalent with mov rdi, offset FORMAT
-                            writer.write("\tlea rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
+                            writer.write("\tLEA rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
-                            writer.write("\txor eax, eax");
+                            writer.write("\tXOR eax, eax");
                             writer.write(System.lineSeparator());
                             // invoke
-                            writer.write("\tcall printf");
+                            writer.write("\tCALL printf");
                             writer.write(System.lineSeparator());
 
                             aux.clear();
@@ -493,6 +487,19 @@ public class MachineCodeGenerator {
                 // TODO: resourceManager.restoreContext();
             }
         }
+    }
+
+    private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve) {
+        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rax")))
+            toPreserve.add(mapToRegister.get("rax"));
+        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rcx")))
+            toPreserve.add(mapToRegister.get("rcx"));
+        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rdx")))
+            toPreserve.add(mapToRegister.get("rdx"));
+        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rsi")))
+            toPreserve.add(mapToRegister.get("rsi"));
+        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rdi")))
+            toPreserve.add(mapToRegister.get("rdi"));
     }
 
     private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
