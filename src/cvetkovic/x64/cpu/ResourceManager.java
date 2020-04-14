@@ -94,16 +94,20 @@ public class ResourceManager {
      * @param operand
      * @param out
      */
-    public void fetchOperand(RegisterDescriptor register, Obj operand, List<String> out) {
-        if (register != null && freeRegisters.contains(register))
+    public boolean fetchOperand(RegisterDescriptor register, Obj operand, List<String> out) {
+        boolean retVal = false;
+
+        if (register != null && freeRegisters.contains(register)) {
+            retVal = true;
             freeRegisters.remove(register);
+        }
 
         if (operand.getKind() == Obj.Con) {
             register.setPrintWidth(SystemV_ABI.getX64VariableSize(operand.getType()));
             out.add("\tMOV " + register + ", " + operand.getAdr());
         }
         else if (register.holdsValueOf == operand)
-            return;
+            return retVal;
         else if (register.holdsValueOf != operand) {
             PriorityQueue<Descriptor> newObjQueue = addressDescriptors.get(operand);
             if (newObjQueue == null) {
@@ -119,6 +123,8 @@ public class ResourceManager {
 
             newObjQueue.add(register);
         }
+
+        return retVal;
     }
 
     public void invalidate(Descriptor targetDescriptor, Obj newObj, List<String> aux) {

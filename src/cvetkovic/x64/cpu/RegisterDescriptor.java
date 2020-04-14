@@ -15,6 +15,10 @@ public class RegisterDescriptor extends Descriptor {
         this.ISA_8_ByteName = ISA_8_ByteName;
     }
 
+    public String getWidest() {
+        return ISA_8_ByteName;
+    }
+
     public void setPrintWidth(int width) {
         this.printWidth = width;
     }

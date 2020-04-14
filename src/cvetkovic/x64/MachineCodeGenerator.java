@@ -223,21 +223,34 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case ADD: {
-                            /*boolean operandsSwapped = false;
-                            Descriptor destAndArg1 = resourceManager.getRegister(obj1);
-                            if (destAndArg1 == null) {
-                                destAndArg1 = resourceManager.getRegister(obj2);
-                                operandsSwapped = true;
-                            }
-                            Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux) : resourceManager.getRegister(obj1, aux));
+                            // if first instruction is constant then load it to register first
+                            // if second operand is constant then encode it in instruction
+                            RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
+                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
 
-                            resourceManager.invalidateFromRegister(destAndArg1, aux);
-                            resourceManager.validate(objResult, destAndArg1, true);
+                            dest_arg1_register.setPrintWidth(4);
+                            resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
+
+                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
+                                numOfArgsInMemory++;
+                            else if (arg2_register != null)
+                                resourceManager.fetchOperand(arg2_register, obj2, aux);
+
+                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
+                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
 
                             issueAuxiliaryInstructions(aux);
-                            writer.write("\tadd " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
+                            String secondOperand;
+                            if (arg2_register == null)
+                                secondOperand = String.valueOf(obj2.getAdr());
+                            else if (numOfArgsInMemory > 0)
+                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
+                            else
+                                secondOperand = arg2_register.toString();
+
+                            writer.write("\tADD " + dest_arg1_register + ", " + secondOperand);
                             writer.write(System.lineSeparator());
-*/
+
                             break;
                         }
 
@@ -433,8 +446,8 @@ public class MachineCodeGenerator {
 
                             List<String> tmp = new ArrayList<>();
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            resourceManager.fetchOperand(source, obj2, tmp);
-                            makeRegisterPreservationList(toPreserve);
+                            boolean justRemovedFromFreeList = resourceManager.fetchOperand(source, obj2, tmp);
+                            makeRegisterPreservationList(toPreserve, (justRemovedFromFreeList ? source : null));
 
                             // obj
                             int sourceSize;
@@ -458,8 +471,8 @@ public class MachineCodeGenerator {
                                     throw new RuntimeException("Data width not supported by print language construct.");
                             }
 
-                            resourceManager.preserveContext(toPreserve, aux);
                             aux.addAll(tmp);
+                            resourceManager.preserveContext(toPreserve, aux);
                             issueAuxiliaryInstructions(aux);
 
                             // data to be printed
@@ -616,16 +629,20 @@ public class MachineCodeGenerator {
     }
 
     private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve) {
-        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rax")))
-            toPreserve.add(mapToRegister.get("rax"));
-        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rcx")))
-            toPreserve.add(mapToRegister.get("rcx"));
-        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rdx")))
-            toPreserve.add(mapToRegister.get("rdx"));
-        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rsi")))
-            toPreserve.add(mapToRegister.get("rsi"));
-        if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get("rdi")))
-            toPreserve.add(mapToRegister.get("rdi"));
+        makeRegisterPreservationList(toPreserve, null);
+    }
+
+    private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve, RegisterDescriptor reg) {
+        for (int i = 0; i < registerNames.length; i++) {
+            /*if (reg != null) {
+                String regName = reg.getWidest();
+                if (regName == registerNames[i][0] || regName == registerNames[1][0]) // ebx isn't preserved
+                    continue;
+            }*/
+
+            if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(registerNames[i][0])))
+                toPreserve.add(mapToRegister.get(registerNames[i][0]));
+        }
     }
 
     private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
