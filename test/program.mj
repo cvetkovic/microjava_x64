@@ -19,7 +19,9 @@ program TestProgram
         {
             k = new Klasa;
 
-            k.polje1 = 1;
+read(k.polje1);
+            //k.polje1 = 4;
 
+            print(k.polje1);
         }
     }

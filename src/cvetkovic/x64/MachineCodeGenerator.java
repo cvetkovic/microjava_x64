@@ -293,6 +293,18 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case LOAD: {
+                            RegisterDescriptor source_dest = resourceManager.getRegister(obj1, quadruple);
+
+                            resourceManager.fetchOperand(source_dest, obj1, aux);
+                            resourceManager.validate(source_dest, objResult, aux, true);
+
+                            Struct destStruct = obj1.getType().getElemType();
+                            String ptrSpecifier = SystemV_ABI.getPtrSpecifier(destStruct);
+                            int destSize = SystemV_ABI.getX64VariableSize(destStruct);
+
+                            writer.write("\tMOV " + source_dest.getNameBySize(destSize) + ", " + ptrSpecifier + " [" + source_dest.getNameBySize(8) + "]");
+                            writer.write(System.lineSeparator());
+
                             break;
                         }
 
