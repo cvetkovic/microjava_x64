@@ -295,7 +295,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Quadruple instruction = new Quadruple(IRInstruction.PRINTF);
 
-        Struct targetStruct = PrintStatement.getExpr().struct;
+        Struct targetStruct = (PrintStatement.getExpr().struct.getElemType() == null ? PrintStatement.getExpr().struct : PrintStatement.getExpr().struct.getElemType());
         if (targetStruct.getKind() == Struct.Int)
             instruction.setArg1(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.WORD));
         else if (targetStruct.getKind() == Struct.Char)
@@ -883,7 +883,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             // TODO: maybe put this.method() invocation -> for regular and abstract methods
             if (obj.getKind() == Obj.Fld) {
-                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
+                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
 
                 Obj thisPointer = null;
                 for (Obj ptr : currentMethod.getLocalSymbols()) {
@@ -942,7 +942,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             expressionDAG = new ExpressionDAG();
         }
 
-        Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
+        Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
         Obj tmp2 = null;
 
         getPtr.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));

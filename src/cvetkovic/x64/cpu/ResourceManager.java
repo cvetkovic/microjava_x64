@@ -121,6 +121,15 @@ public class ResourceManager {
         }
     }
 
+    public void invalidateWithoutSave(Obj obj) {
+        PriorityQueue<Descriptor> queue = addressDescriptors.get(obj);
+
+        if (queue != null) {
+            while (queue.size() > 0 && queue.peek() instanceof RegisterDescriptor)
+                queue.poll();
+        }
+    }
+
     public void invalidate(RegisterDescriptor targetDescriptor, Obj newObj, List<String> aux) {
         Obj oldObj = targetDescriptor.holdsValueOf;
         targetDescriptor.holdsValueOf = null;
@@ -145,7 +154,7 @@ public class ResourceManager {
             }
             else {
                 // must save the old obj
-                String targetDescriptorString = targetDescriptor.getSizeByWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
+                String targetDescriptorString = targetDescriptor.getNameBySize(SystemV_ABI.getX64VariableSize(oldObj.getType()));
                 aux.add("\tMOV " + memoryDescriptors.get(oldObj) + ", " + targetDescriptorString);
                 dirtyVariables.remove(oldObj);
             }
@@ -167,13 +176,17 @@ public class ResourceManager {
         }
     }
 
+    private RegisterDescriptor lastTimeReturned;
+
     public RegisterDescriptor getRegister(Obj obj, Quadruple instruction) {
         PriorityQueue<Descriptor> queue = addressDescriptors.get(obj);
         MemoryDescriptor addressDescriptor = memoryDescriptors.get(obj);
 
-        if (queue != null && queue.peek() instanceof RegisterDescriptor)
+        if (queue != null && queue.peek() instanceof RegisterDescriptor && lastTimeReturned != queue.peek()) {
             // CASE: obj is already in register, no action needed
+            lastTimeReturned = (RegisterDescriptor) queue.peek();
             return (RegisterDescriptor) queue.peek();
+        }
         else if ((queue == null || queue.peek() instanceof MemoryDescriptor) && freeRegisters.size() > 0) {
             // CASE: var not encountered before or is not in a register and there are free registers
             // take a register from the list and return
@@ -188,18 +201,22 @@ public class ResourceManager {
             if (duplicate != null)
                 return duplicate;
 
-            RegisterDescriptor twoAppearancesInSingleInstruction = getRegisterIfDestination(instruction);
+            /*RegisterDescriptor twoAppearancesInSingleInstruction = getRegisterIfDestination(instruction);
             if (twoAppearancesInSingleInstruction != null)
                 return twoAppearancesInSingleInstruction;
 
             RegisterDescriptor livenessRegister = getRegisterByLiveness(instruction);
             if (livenessRegister != null)
-                return livenessRegister;
+                return livenessRegister;*/
 
             // return any register
-            return allRegisters.get(0);
+            if (circularAllocation >= allRegisters.size())
+                circularAllocation = 0;
+            return allRegisters.get(circularAllocation++);
         }
     }
+
+    private static int circularAllocation = 0;
 
     /**
      * If v is not used later (that is, after the instruction I, there
@@ -371,6 +388,8 @@ public class ResourceManager {
             RegisterDescriptor descriptor = usedRegisters.get(i);
             if (descriptor.holdsValueOf == null)
                 continue;
+            else if (descriptor.holdsValueOf.getKind() == Obj.Con)
+                continue;
 
             out.add("\tMOV " + memoryDescriptors.get(descriptor.holdsValueOf) + ", " + descriptor);
             dirtyVariables.remove(descriptor.holdsValueOf);
@@ -383,7 +402,8 @@ public class ResourceManager {
             if (descriptor.holdsValueOf == null)
                 continue;
 
-            out.add("\tMOV " + descriptor + ", " + memoryDescriptors.get(descriptor.holdsValueOf));
+            out.add("\tMOV " + descriptor + ", " +
+                    (descriptor.holdsValueOf.getKind() != Obj.Con ? memoryDescriptors.get(descriptor.holdsValueOf) : descriptor.holdsValueOf.getAdr()));
         }
     }
 }

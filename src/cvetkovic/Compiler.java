@@ -130,7 +130,6 @@ public class Compiler {
                         irCodeOptimizer.getOptimizationOutput(),
                         semanticCheck.getGlobalVariables(),
                         new ArrayList<ClassMetadata>());
-
                 // TODO: replace with polymorphism table
 
                 machineCodeGenerator.generateCode();

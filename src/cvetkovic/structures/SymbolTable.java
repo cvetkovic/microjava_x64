@@ -15,6 +15,7 @@ public class SymbolTable extends Tab {
 
     // immutable because of reference comparison later
     public static final Struct BooleanStruct = new Struct(5);
+    public static final Struct classType = new Struct(Struct.Class);
     public static final int AbstractMethodObject = 7;
     private static Stack<ScopeType> scopeKindStack = new Stack<>();
     private static HashMap<Struct, Struct> arrayStructs = new LinkedHashMap();

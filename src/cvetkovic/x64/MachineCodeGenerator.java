@@ -2,6 +2,7 @@ package cvetkovic.x64;
 
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.optimizer.CodeSequence;
@@ -219,7 +220,7 @@ public class MachineCodeGenerator {
 
                     switch (quadruple.getInstruction()) {
                         //////////////////////////////////////////////////////////////////////////////////
-                        // ARITHMETIC INSTRUCTION (allowed only on int type in MikroJava - 32-bit)
+                        // ARITHMETIC OPERATORS (allowed only on int type in MikroJava - 32-bit)
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case ADD: {
@@ -363,6 +364,10 @@ public class MachineCodeGenerator {
                             break;
                         }
 
+                        //////////////////////////////////////////////////////////////////////////////////
+                        // INSTRUCTIONS FOR MEMORY
+                        //////////////////////////////////////////////////////////////////////////////////
+
                         case STORE: {
                             RegisterDescriptor arg1_result_register = resourceManager.getRegister(objResult, quadruple);
 
@@ -381,6 +386,133 @@ public class MachineCodeGenerator {
 
                             break;
                         }
+
+                        case MALLOC: {
+                            int numberOfElements = obj1.getAdr();
+                            Struct elemType;
+                            if (objResult.getType().getKind() == Struct.Array)
+                                elemType = objResult.getType().getElemType();
+                            else
+                                elemType = objResult.getType();
+
+                            resourceManager.invalidateWithoutSave(objResult);
+
+                            List<String> tmp = new ArrayList<>();
+                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
+                            resourceManager.preserveContext(toPreserve, aux);
+                            issueAuxiliaryInstructions(aux);
+
+                            // num of elements
+                            writer.write("\tMOV rdi, " + String.valueOf(numberOfElements));
+                            writer.write(System.lineSeparator());
+                            // single element size in bytes
+                            writer.write("\tMOV rsi, " + SystemV_ABI.getX64VariableSize(elemType));
+                            writer.write(System.lineSeparator());
+                            // clear eax -> for variable number of vector registers
+                            writer.write("\tXOR eax, eax");
+                            writer.write(System.lineSeparator());
+                            // invoke calloc
+                            writer.write("\tCALL calloc");
+                            writer.write(System.lineSeparator());
+
+                            if (quadruple.getArg2() == null || quadruple.getArg2() instanceof QuadrupleARR) {
+                                // allocates array -> save pointer to objResult's address
+                                writer.write("\tMOV " + resourceManager.getAddressDescriptor(objResult) + ", rax");
+                                writer.write(System.lineSeparator());
+                            }
+                            else {
+                                // STORE as PTR
+                                throw new RuntimeException("Not yet implemented");
+                            }
+
+                            aux.clear();
+                            resourceManager.restoreContext(toPreserve, aux);
+                            issueAuxiliaryInstructions(aux);
+
+                            break;
+                        }
+
+                        case ALOAD: {
+                            Obj arrayReference = obj1;
+                            Obj arrayIndex = obj2;
+                            Obj destinationVariable = objResult;
+
+                            Struct elemTypeStruct = arrayReference.getType().getElemType();
+                            int elemTypeSizeInByte = SystemV_ABI.getX64VariableSize(elemTypeStruct);
+
+                            RegisterDescriptor regArrayReference = resourceManager.getRegister(arrayReference, quadruple);
+                            resourceManager.invalidate(regArrayReference, arrayReference, aux);
+                            resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
+                            resourceManager.validate(regArrayReference, arrayReference, aux, false);
+
+                            RegisterDescriptor regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
+                            while (regArrayReference == regArrayIndex)
+                                regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
+                            resourceManager.invalidate(regArrayIndex, arrayIndex, aux);
+                            resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
+                            resourceManager.validate(regArrayIndex, arrayIndex, aux, false);
+
+                            RegisterDescriptor regValue = resourceManager.getRegister(destinationVariable, quadruple);
+                            while (regValue == regArrayReference || regValue == regArrayIndex)
+                                regValue = resourceManager.getRegister(destinationVariable, quadruple);
+
+                            issueAuxiliaryInstructions(aux);
+                            String saveInstruction = "[" + regArrayReference.getNameBySize(8) + " + " + elemTypeSizeInByte + " * " + regArrayIndex.getNameBySize(8) + "]";
+
+                            writer.write("\tMOV " + regValue.getNameBySize(elemTypeSizeInByte) + ", " + SystemV_ABI.getPtrSpecifier(elemTypeStruct) + " " + saveInstruction);
+                            writer.write(System.lineSeparator());
+
+                            aux.clear();
+                            resourceManager.validate(regValue, destinationVariable, aux, false);
+                            issueAuxiliaryInstructions(aux);
+
+                            break;
+                        }
+
+                        case ASTORE: {
+                            Obj arrayReference = objResult;
+                            Obj arrayIndex = obj2;
+                            Obj valueToWrite = obj1;
+
+                            Struct elemTypeStruct = arrayReference.getType().getElemType();
+                            int elemTypeSizeInByte = SystemV_ABI.getX64VariableSize(elemTypeStruct);
+
+                            RegisterDescriptor regArrayReference = resourceManager.getRegister(arrayReference, quadruple);
+                            resourceManager.invalidate(regArrayReference, arrayReference, aux);
+                            resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
+                            resourceManager.validate(regArrayReference, arrayReference, aux, false);
+
+                            RegisterDescriptor regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
+                            while (regArrayReference == regArrayIndex)
+                                regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
+                            resourceManager.invalidate(regArrayIndex, arrayIndex, aux);
+                            resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
+                            resourceManager.validate(regArrayIndex, arrayIndex, aux, false);
+
+                            RegisterDescriptor regValue;
+                            if (valueToWrite != arrayIndex) {
+                                regValue = resourceManager.getRegister(valueToWrite, quadruple);
+                                while (regValue == regArrayReference || regValue == regArrayIndex)
+                                    regValue = resourceManager.getRegister(valueToWrite, quadruple);
+                                resourceManager.invalidate(regValue, valueToWrite, aux);
+                                resourceManager.fetchOperand(regValue, valueToWrite, aux);
+                                resourceManager.validate(regValue, valueToWrite, aux, false);
+                            }
+                            else
+                                regValue = regArrayIndex;
+
+                            issueAuxiliaryInstructions(aux);
+                            String saveInstruction = "[" + regArrayReference.getNameBySize(8) + " + " + elemTypeSizeInByte + " * " + regArrayIndex.getNameBySize(8) + "]";
+
+                            writer.write("\tMOV " + SystemV_ABI.getPtrSpecifier(elemTypeStruct) + " " + saveInstruction + ", " + regValue);
+                            writer.write(System.lineSeparator());
+
+                            break;
+                        }
+
+                        //////////////////////////////////////////////////////////////////////////////////
+                        // FUNCTION CALLS & STACK FRAME OPERATIONS
+                        //////////////////////////////////////////////////////////////////////////////////
 
                         case ENTER: {
                             writer.write("\tPUSH rbp");
@@ -624,7 +756,7 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         default:
-                            throw new RuntimeException("Instruction not supported by x86-64 code generator.");
+                            break;//throw new RuntimeException("Instruction not supported by x86-64 code generator.");
                     }
 
                     aux.clear();

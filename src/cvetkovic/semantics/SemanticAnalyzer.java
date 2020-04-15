@@ -347,9 +347,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             if (designatorArrayAccessMap.containsKey(DesignatorArrayAccess.getDesignator().obj))
                 DesignatorArrayAccess.obj = designatorArrayAccessMap.get(DesignatorArrayAccess.getDesignator().obj);
             else {
-                Obj tmp = new Obj(Obj.Elem, "ArrayAccess_" + DesignatorArrayAccess.getDesignator().obj.getName(), DesignatorArrayAccess.getDesignator().obj.getType().getElemType());
+                /*Obj tmp = new Obj(Obj.Elem, "ArrayAccess_" + DesignatorArrayAccess.getDesignator().obj.getName(), DesignatorArrayAccess.getDesignator().obj.getType().getElemType());
                 designatorArrayAccessMap.put(DesignatorArrayAccess.getDesignator().obj, tmp);
-                DesignatorArrayAccess.obj = tmp;
+                DesignatorArrayAccess.obj = tmp;*/
+
+                DesignatorArrayAccess.obj = DesignatorArrayAccess.getDesignator().obj;
             }
         }
     }
@@ -743,9 +745,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
     @Override
     public void visit(PrintStatement PrintStatement) {
-        if (PrintStatement.getExpr().struct != SymbolTable.intType &&
-                PrintStatement.getExpr().struct != SymbolTable.charType &&
-                PrintStatement.getExpr().struct != SymbolTable.BooleanStruct)
+        Struct structToCheck = (PrintStatement.getExpr().struct.getElemType() == null ? PrintStatement.getExpr().struct : PrintStatement.getExpr().struct.getElemType());
+
+        if (structToCheck != SymbolTable.intType &&
+                structToCheck != SymbolTable.charType &&
+                structToCheck != SymbolTable.BooleanStruct)
             throwError(PrintStatement.getLine(), "Print statement has to be used with integer, character or boolean data type.");
     }
 
@@ -765,7 +769,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 designator.obj.getKind() != Obj.Elem &&
                 designator.obj.getKind() != Obj.Fld)
             throwError(DesignatorAssign.getLine(), "Left side of assigment statement has to be variable, array element or class field.");
-        else if (!SymbolTable.assignmentPossible(designator.obj.getType(), expression.struct))
+        else if (!SymbolTable.assignmentPossible((designator.obj.getType().getKind() != Struct.Array ? designator.obj.getType() : designator.obj.getType().getElemType()), (expression.struct.getElemType() == null ? expression.struct : expression.struct.getElemType())))
             throwError(DesignatorAssign.getLine(), "Data types of left and right side of assigment statement don't match.");
     }
 

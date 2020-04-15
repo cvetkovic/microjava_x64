@@ -1,21 +1,34 @@
 program TestProgram
+    class Klasa
+    {
+        int polje1;
+        int polje2;
+
+        Klasa klasnoPolje;
+    }
+
     {
         void main()
-            int a; // -8
-            int b; // -12
-            int c; // -16
-            int d; // -20
+            int a;      // -8
+            int b;      // -12
+            int c;      // -16
+            int d;      // -20
+            int niz[];  // -24
+            Klasa k;    // -32
+            int i;      // -40
         {
-            a = -20;
-            a = -20 - a;    // -40
-            b = a + 15;     // -25
-            c = 13 * b;     // 38
+            //k = new Klasa;
+            //k.klasnoPolje = new Klasa;
+            //k.klasnoPolje.klasnoPolje = new Klasa;
 
-            print(a);
-            print(eol);
-            print(b);
-            print(eol);
-            print(c);
-            print(eol);
+            niz = new int[10];
+
+            for (i = 0; i < 10; i++) {
+                niz[i] = i;
+            }
+
+            for (i = 0; i < 10; i++) {
+                print(niz[i]);
+            }
         }
     }

@@ -19,7 +19,7 @@ public class RegisterDescriptor extends Descriptor {
         this.printWidth = width;
     }
 
-    public String getSizeByWidth(int size) {
+    public String getNameBySize(int size) {
         if (size == 1)
             return ISA_1_ByteName;
         else if (size == 4)
