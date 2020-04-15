@@ -364,8 +364,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(BinaryExpression BinaryExpression) {
         // combined arithmetic operators not supported by grammar currently
 
-        if (BinaryExpression.getExpr().struct == BinaryExpression.getTerm().struct &&
-                BinaryExpression.getExpr().struct == SymbolTable.intType)
+        Struct s1 = (BinaryExpression.getExpr().struct.getElemType() == null ? BinaryExpression.getExpr().struct : BinaryExpression.getExpr().struct.getElemType());
+        Struct s2 = (BinaryExpression.getTerm().struct.getElemType() == null ? BinaryExpression.getTerm().struct : BinaryExpression.getTerm().struct.getElemType());
+
+        if (s1 == s2 && s1 == SymbolTable.intType)
             BinaryExpression.struct = SymbolTable.intType;
         else
             throwError(BinaryExpression.getLine(), "Addition and subtraction of expressions have to be done on top of integer arguments.");

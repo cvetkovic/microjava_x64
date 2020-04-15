@@ -546,19 +546,18 @@ public class MachineCodeGenerator {
                             break;
                         }
 
-                        /*case RETURN: {
-                            RegisterDescriptor returnValueRegister = resourceManager.getRegisterSpecific("rax");
-                            Descriptor source = resourceManager.getRegister(obj1, aux);
+                        case RETURN: {
+                            RegisterDescriptor reg_a = mapToRegister.get("rax");
+                            RegisterDescriptor reg_source = resourceManager.getRegister(obj1, quadruple);
 
+                            resourceManager.invalidate(reg_a, obj1, aux);
+                            // NOTE: no need to register as the next instruction shall be call
                             issueAuxiliaryInstructions(aux);
-                            writer.write("\tmov " + returnValueRegister + ", " + (source != null ? source : obj2));
-                            writer.write(System.lineSeparator());
 
-                            resourceManager.invalidateFromRegister(returnValueRegister, aux);
-                            resourceManager.validate(objResult, returnValueRegister, true);
+                            writer.write("\tMOV " + reg_a + ", " + reg_source);
 
                             break;
-                        }*/
+                        }
 
                         //////////////////////////////////////////////////////////////////////////////////
                         // INPUT / OUTPUT
@@ -786,16 +785,9 @@ public class MachineCodeGenerator {
     }
 
     private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve, RegisterDescriptor reg) {
-        for (int i = 0; i < registerNames.length; i++) {
-            /*if (reg != null) {
-                String regName = reg.getWidest();
-                if (regName == registerNames[i][0] || regName == registerNames[1][0]) // ebx isn't preserved
-                    continue;
-            }*/
-
+        for (int i = 0; i < registerNames.length; i++)
             if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(registerNames[i][0])))
                 toPreserve.add(mapToRegister.get(registerNames[i][0]));
-        }
     }
 
     private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
