@@ -3,6 +3,7 @@ package cvetkovic.x64;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.optimizer.CodeSequence;
@@ -311,7 +312,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-/*
+
                         case MALLOC: {
                             int numberOfElements = obj1.getAdr();
                             Struct elemType;
@@ -319,8 +320,6 @@ public class MachineCodeGenerator {
                                 elemType = objResult.getType().getElemType();
                             else
                                 elemType = objResult.getType();
-
-                            resourceManager.invalidateWithoutSave(objResult);
 
                             List<String> tmp = new ArrayList<>();
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
@@ -356,7 +355,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-
+/*
                         case ALOAD: {
                             Obj arrayReference = obj1;
                             Obj arrayIndex = obj2;
@@ -435,6 +434,12 @@ public class MachineCodeGenerator {
                             break;
                         }
 */
+
+                        case GET_PTR: {
+
+                            break;
+                        }
+
                         //////////////////////////////////////////////////////////////////////////////////
                         // FUNCTION CALLS & STACK FRAME OPERATIONS
                         //////////////////////////////////////////////////////////////////////////////////

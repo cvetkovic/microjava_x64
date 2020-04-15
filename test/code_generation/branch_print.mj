@@ -17,10 +17,17 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
+            read(a);
+            read(b);
 
-            niz = new int[10];
-            k = new Klasa;
-            //k.klasnoPolje.klasnoPolje = new Klasa;
-
+            if (a == b) {
+                print('e');
+                print('q');
+            }
+            else {
+                print('n');
+                print('e');
+                print('q');
+            }
         }
     }
