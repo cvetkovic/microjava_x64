@@ -94,20 +94,16 @@ public class ResourceManager {
      * @param operand
      * @param out
      */
-    public boolean fetchOperand(RegisterDescriptor register, Obj operand, List<String> out) {
-        boolean retVal = false;
-
-        if (register != null && freeRegisters.contains(register)) {
-            retVal = true;
+    public void fetchOperand(RegisterDescriptor register, Obj operand, List<String> out) {
+        if (register != null && freeRegisters.contains(register))
             freeRegisters.remove(register);
-        }
 
         if (operand.getKind() == Obj.Con) {
             register.setPrintWidth(SystemV_ABI.getX64VariableSize(operand.getType()));
             out.add("\tMOV " + register + ", " + operand.getAdr());
         }
         else if (register.holdsValueOf == operand)
-            return retVal;
+            return;
         else if (register.holdsValueOf != operand) {
             PriorityQueue<Descriptor> newObjQueue = addressDescriptors.get(operand);
             if (newObjQueue == null) {
@@ -123,14 +119,9 @@ public class ResourceManager {
 
             newObjQueue.add(register);
         }
-
-        return retVal;
     }
 
-    public void invalidate(Descriptor targetDescriptor, Obj newObj, List<String> aux) {
-        if (targetDescriptor instanceof MemoryDescriptor)
-            return;
-
+    public void invalidate(RegisterDescriptor targetDescriptor, Obj newObj, List<String> aux) {
         Obj oldObj = targetDescriptor.holdsValueOf;
         targetDescriptor.holdsValueOf = null;
 
@@ -154,9 +145,8 @@ public class ResourceManager {
             }
             else {
                 // must save the old obj
-                ((RegisterDescriptor) targetDescriptor).setPrintWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
-
-                aux.add("\tMOV " + memoryDescriptors.get(oldObj) + ", " + targetDescriptor);
+                String targetDescriptorString = targetDescriptor.getSizeByWidth(SystemV_ABI.getX64VariableSize(oldObj.getType()));
+                aux.add("\tMOV " + memoryDescriptors.get(oldObj) + ", " + targetDescriptorString);
                 dirtyVariables.remove(oldObj);
             }
 
@@ -322,7 +312,7 @@ public class ResourceManager {
         dirtyVariables.clear();
     }
 
-    public RegisterDescriptor getRegisterByForce(List<String> out) {
+    public RegisterDescriptor getRegisterByForce() {
         // TODO: change allocation algorithm do this with LRU
         RegisterDescriptor register;
 
@@ -334,9 +324,6 @@ public class ResourceManager {
             for (PriorityQueue<Descriptor> queue : addressDescriptors.values()) {
                 if (queue.peek() instanceof RegisterDescriptor) {
                     register = (RegisterDescriptor) queue.poll();
-                    out.add("\tmov " + addressDescriptors.get(register.holdsValueOf) + ", " + register);
-                    register.holdsValueOf = null;
-
                     break;
                 }
             }

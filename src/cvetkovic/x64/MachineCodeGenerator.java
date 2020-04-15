@@ -287,25 +287,37 @@ public class MachineCodeGenerator {
                         }
 
                         case MUL: {
-                            /*boolean operandsSwapped = false;
-                            Descriptor destAndArg1 = resourceManager.getRegister(obj1, aux);
-                            if (destAndArg1 == null) {
-                                destAndArg1 = resourceManager.getRegister(obj2, aux);
-                                operandsSwapped = true;
-                            }
-                            Descriptor arg2 = (!operandsSwapped ? resourceManager.getRegister(obj2, aux, true) : resourceManager.getRegister(obj1, aux, true));
+                            // if first instruction is constant then load it to register first
+                            // if second operand is constant then encode it in instruction
+                            RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
+                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
 
-                            resourceManager.invalidateFromRegister(destAndArg1, aux);
-                            resourceManager.validate(objResult, destAndArg1, true);
+                            dest_arg1_register.setPrintWidth(4);
+                            resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
+
+                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
+                                numOfArgsInMemory++;
+                            else if (arg2_register != null)
+                                resourceManager.fetchOperand(arg2_register, obj2, aux);
+
+                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
+                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
 
                             issueAuxiliaryInstructions(aux);
-                            writer.write("\timul " + destAndArg1 + ", " + (arg2 != null ? arg2 : obj2));
-                            writer.write(System.lineSeparator());*/
+                            String secondOperand;
+                            if (arg2_register == null)
+                                secondOperand = String.valueOf(obj2.getAdr());
+                            else if (numOfArgsInMemory > 0)
+                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
+                            else
+                                secondOperand = arg2_register.toString();
 
-                            // TODO: take care of data width movsw -> extending to 32-bit
+                            writer.write("\tIMUL " + dest_arg1_register + ", " + secondOperand);
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
+
                         case DIV: {
                             /*RegisterDescriptor source = null; //("rax", obj1);
                             RegisterDescriptor divideBy = null;
@@ -321,27 +333,34 @@ public class MachineCodeGenerator {
 
                             break;*/
                         }
+
                         case REM: {
 
                             // EDX stores the result
 
                             break;
                         }
-                        case NEG: {
-                            /*RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce(aux);
-                            Descriptor source = resourceManager.getRegister(obj1, aux);
 
+                        case NEG: {
+                            RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce();
+                            RegisterDescriptor source = resourceManager.getRegister(obj1, quadruple);
+
+                            if (source.getHoldsValueOf() != obj1)
+                                resourceManager.fetchOperand(source, obj1, aux);
+
+                            resourceManager.invalidate(zeroRegister, null, aux);
+                            resourceManager.validate(zeroRegister, objResult, aux, true);
                             issueAuxiliaryInstructions(aux);
-                            writer.write("\txor " + zeroRegister + ", " + zeroRegister);
+
+                            writer.write("\tXOR " + zeroRegister + ", " + zeroRegister);
                             writer.write(System.lineSeparator());
                             zeroRegister.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
-                            writer.write("\tsub " + zeroRegister + ", " + (source != null ? source : obj2));
+                            if (source != null)
+                                source.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
+                            writer.write("\tSUB " + zeroRegister + ", " + (source != null ? source : obj2));
                             writer.write(System.lineSeparator());
 
-                            resourceManager.invalidateFromRegister(zeroRegister, aux);
-                            resourceManager.validate(objResult, zeroRegister, true);
-
-                            break;*/
+                            break;
                         }
 
                         case STORE: {
@@ -444,10 +463,12 @@ public class MachineCodeGenerator {
                         case PRINTF: {
                             RegisterDescriptor source = resourceManager.getRegister(obj2, quadruple);
 
+                            resourceManager.invalidate(source, obj2, aux);
+
                             List<String> tmp = new ArrayList<>();
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            boolean justRemovedFromFreeList = resourceManager.fetchOperand(source, obj2, tmp);
-                            makeRegisterPreservationList(toPreserve, (justRemovedFromFreeList ? source : null));
+                            resourceManager.fetchOperand(source, obj2, tmp);
+                            makeRegisterPreservationList(toPreserve);
 
                             // obj
                             int sourceSize;

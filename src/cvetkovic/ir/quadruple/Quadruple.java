@@ -141,11 +141,8 @@ public class Quadruple {
     }
 
     public int getFoldedValue() {
-        if (!(arg1 instanceof QuadrupleObjVar && arg2 instanceof QuadrupleObjVar))
-            throw new RuntimeException("Call not allowed on provided type of quadruple.");
-
         Obj obj1 = ((QuadrupleObjVar) arg1).getObj();
-        Obj obj2 = ((QuadrupleObjVar) arg2).getObj();
+        Obj obj2 = (arg2 != null ? ((QuadrupleObjVar) arg2).getObj() : null);
 
         if (!(obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) &&
                 !(obj1.getKind() == Obj.Con && obj2 == null && instruction == IRInstruction.NEG))

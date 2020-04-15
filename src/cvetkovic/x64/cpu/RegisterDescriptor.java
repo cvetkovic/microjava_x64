@@ -15,12 +15,19 @@ public class RegisterDescriptor extends Descriptor {
         this.ISA_8_ByteName = ISA_8_ByteName;
     }
 
-    public String getWidest() {
-        return ISA_8_ByteName;
-    }
-
     public void setPrintWidth(int width) {
         this.printWidth = width;
+    }
+
+    public String getSizeByWidth(int size) {
+        if (size == 1)
+            return ISA_1_ByteName;
+        else if (size == 4)
+            return ISA_4_ByteName;
+        else if (size == 8)
+            return ISA_8_ByteName;
+        else
+            throw new RuntimeException("Data width not supported by ISA.");
     }
 
     /*@Override

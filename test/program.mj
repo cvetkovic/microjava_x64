@@ -6,13 +6,13 @@ program TestProgram
             int c; // -16
             int d; // -20
         {
-            a = 1;
-            b = 3 + a + 2 - 3;
-            c = b - 2 + a;
+            a = -20;
+            a = -20 - a;    // -40
+            b = a + 15;     // -25
+            c = 13 - b;     // 38
 
+            print(a);
             print(b);
-
-            for (a = 0; a < 10; a++)
-                print(a);
+            print(c);
         }
     }
