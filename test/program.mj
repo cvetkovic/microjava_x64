@@ -9,10 +9,13 @@ program TestProgram
             a = -20;
             a = -20 - a;    // -40
             b = a + 15;     // -25
-            c = 13 - b;     // 38
+            c = 13 * b;     // 38
 
             print(a);
+            print(eol);
             print(b);
+            print(eol);
             print(c);
+            print(eol);
         }
     }

@@ -669,9 +669,11 @@ public class MachineCodeGenerator {
     private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
         Collection<Obj> tempVars = basicBlock.temporaryVariables;
         for (Obj obj : tempVars) {
-            int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
-            obj.setAdr(startValue + objSize);
-            startValue += objSize;
+            if (obj.tempVar && obj.getKind() != Obj.Con) {
+                int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
+                obj.setAdr(startValue + objSize);
+                startValue += objSize;
+            }
         }
     }
 
