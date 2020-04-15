@@ -6,6 +6,7 @@ import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.x64.cpu.Descriptor;
@@ -291,22 +292,33 @@ public class MachineCodeGenerator {
                         // INSTRUCTIONS FOR MEMORY
                         //////////////////////////////////////////////////////////////////////////////////
 
+                        case LOAD: {
+                            break;
+                        }
+
                         case STORE: {
                             RegisterDescriptor arg1_result_register = resourceManager.getRegister(obj1, quadruple);
 
-                            if (obj1.getKind() != Obj.Con) {
+                            if (quadruple.getArg2() instanceof QuadruplePTR) {
+                                // PTR -> load value that will be written
                                 resourceManager.fetchOperand(arg1_result_register, obj1, aux);
-                                resourceManager.validate(arg1_result_register, objResult, aux, true);
+
+                                RegisterDescriptor pointerToDestination = resourceManager.getRegister(objResult, quadruple, Collections.singletonList(arg1_result_register));
+                                resourceManager.fetchOperand(pointerToDestination, objResult, aux);
 
                                 issueAuxiliaryInstructions(aux);
 
-                                /*writer.write("\tMOV " + arg1_result_register + ", " + arg2_register);
-                                writer.write(System.lineSeparator());*/
+                                Struct targetStruct = objResult.getType().getElemType();
+                                String pointerTargetSize = SystemV_ABI.getPtrSpecifier(targetStruct);
+                                int dataSize = SystemV_ABI.getX64VariableSize(targetStruct);
+
+                                writer.write("\tMOV " + pointerTargetSize + " [" + pointerToDestination.getNameBySize(8) + "], " + arg1_result_register.getNameBySize(dataSize));
+                                writer.write(System.lineSeparator());
                             }
                             else {
+                                // NON PTR -> load value that will be written
                                 resourceManager.fetchOperand(arg1_result_register, obj1, aux);
                                 resourceManager.validate(arg1_result_register, objResult, aux, true);
-
                                 issueAuxiliaryInstructions(aux);
                             }
 
@@ -330,6 +342,7 @@ public class MachineCodeGenerator {
                             writer.write("\tMOV rdi, " + String.valueOf(numberOfElements));
                             writer.write(System.lineSeparator());
                             // single element size in bytes
+                            // TODO: if allocates class then set this to 1 fixed
                             writer.write("\tMOV rsi, " + SystemV_ABI.getX64VariableSize(elemType));
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
@@ -345,9 +358,20 @@ public class MachineCodeGenerator {
                                 writer.write(System.lineSeparator());
                             }
                             else {
-                                // STORE as PTR
-                                throw new RuntimeException("Not yet implemented");
+                                // MALLOC as PTR
+                                RegisterDescriptor a_reg = mapToRegister.get(registerNames[0][0]);
+                                RegisterDescriptor destination = resourceManager.getRegister(objResult, quadruple, Collections.singletonList(a_reg));
+
+                                resourceManager.fetchOperand(destination, objResult, aux);
+                                resourceManager.validate(destination, objResult, aux, true);
+
+                                // TODO: test this type of allocation
+                                issueAuxiliaryInstructions(aux);
+                                writer.write("\tMOV [" + destination + "], rax");
+                                writer.write(System.lineSeparator());
                             }
+
+                            // TODO: initialize VTP
 
                             aux.clear();
                             resourceManager.restoreContext(toPreserve, aux);
@@ -436,6 +460,16 @@ public class MachineCodeGenerator {
 */
 
                         case GET_PTR: {
+                            RegisterDescriptor basePointer = resourceManager.getRegister(obj1, quadruple);
+                            int fieldOffset = obj2.getAdr();
+
+                            resourceManager.fetchOperand(basePointer, obj1, aux);
+                            resourceManager.validate(basePointer, objResult, aux, true);
+
+                            issueAuxiliaryInstructions(aux);
+
+                            writer.write("\tADD " + basePointer + ", " + fieldOffset);
+                            writer.write(System.lineSeparator());
 
                             break;
                         }

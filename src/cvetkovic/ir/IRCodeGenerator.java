@@ -900,6 +900,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 getPtr.setArg2(new QuadrupleObjVar(obj));
                 getPtr.setResult(new QuadrupleObjVar(tmp));
 
+                // passing the size of the field
+                tmp.getType().setElementType(obj.getType());
+
                 code.add(getPtr);
                 expressionNodeStack.push(new ExpressionNode(tmp));
 
@@ -948,6 +951,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
         getPtr.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
         getPtr.setArg2(new QuadrupleObjVar(DesignatorNonArrayAccess.obj));
         getPtr.setResult(new QuadrupleObjVar(tmp));
+
+        // passing the size of the field
+        tmp.getType().setElementType(DesignatorNonArrayAccess.obj.getType());
 
         Quadruple load = null;
 

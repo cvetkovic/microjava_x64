@@ -17,9 +17,10 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
-            k = new Klasa;
 
-            k.polje1 = 1;
+            niz = new int[10];
+            k = new Klasa;
+            k.klasnoPolje.klasnoPolje = new Klasa;
 
         }
     }

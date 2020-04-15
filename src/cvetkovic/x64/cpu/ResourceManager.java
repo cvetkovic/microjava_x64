@@ -202,9 +202,11 @@ public class ResourceManager {
         }
     }*/
 
-    private RegisterDescriptor lastTimeReturned;
-
     public RegisterDescriptor getRegister(Obj obj, Quadruple instruction) {
+        return getRegister(obj, instruction, null);
+    }
+
+    public RegisterDescriptor getRegister(Obj obj, Quadruple instruction, List<RegisterDescriptor> reservedRegisters) {
         AddressDescriptor addressDescriptor = addressDescriptors.get(obj);
 
         if (addressDescriptor != null && addressDescriptor.getDescriptor() instanceof RegisterDescriptor) {
@@ -216,11 +218,13 @@ public class ResourceManager {
             // CASE: var not encountered before or is not in a register and there are free registers
             // take a register from the list and return
             RegisterDescriptor register = freeRegisters.get(0);
-            freeRegisters.remove(register);
+            if (reservedRegisters == null || !reservedRegisters.contains(register)) {
+                freeRegisters.remove(register);
 
-            return register;
+                return register;
+            }
         }
-        else {
+
             /*RegisterDescriptor duplicate = getRegisterIfDuplicated();
             if (duplicate != null)
                 return duplicate;*/
@@ -234,10 +238,23 @@ public class ResourceManager {
                 return livenessRegister;*/
 
             // return any register
+            int numberOfTries = 0;
             if (circularAllocation >= allRegisters.size())
                 circularAllocation = 0;
-            return allRegisters.get(circularAllocation++);
-        }
+
+            RegisterDescriptor reg = null;
+            while (numberOfTries < allRegisters.size()) {
+                reg = allRegisters.get(circularAllocation++);
+                numberOfTries++;
+
+                if (!reservedRegisters.contains(reg))
+                    break;
+            }
+
+            if (reg == null || numberOfTries == allRegisters.size())
+                throw new RuntimeException("Unable to allocate register.");
+
+            return reg;
     }
 
     public void makeDescriptorFree(RegisterDescriptor registerDescriptor) {
