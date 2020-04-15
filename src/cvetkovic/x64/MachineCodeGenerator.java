@@ -1,8 +1,8 @@
 package cvetkovic.x64;
 
+import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.optimizer.CodeSequence;
@@ -223,126 +223,48 @@ public class MachineCodeGenerator {
                         // ARITHMETIC OPERATORS (allowed only on int type in MikroJava - 32-bit)
                         //////////////////////////////////////////////////////////////////////////////////
 
-                        case ADD: {
-                            // if first instruction is constant then load it to register first
-                            // if second operand is constant then encode it in instruction
-                            RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
-
-                            dest_arg1_register.setPrintWidth(4);
-                            resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
-
-                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
-                                numOfArgsInMemory++;
-                            else if (arg2_register != null)
-                                resourceManager.fetchOperand(arg2_register, obj2, aux);
-
-                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
-                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
-
-                            issueAuxiliaryInstructions(aux);
-                            String secondOperand;
-                            if (arg2_register == null)
-                                secondOperand = String.valueOf(obj2.getAdr());
-                            else if (numOfArgsInMemory > 0)
-                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
-                            else
-                                secondOperand = arg2_register.toString();
-
-                            writer.write("\tADD " + dest_arg1_register + ", " + secondOperand);
-                            writer.write(System.lineSeparator());
-
-                            break;
-                        }
-
-                        case SUB: {
-                            // if first instruction is constant then load it to register first
-                            // if second operand is constant then encode it in instruction
-                            RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
-
-                            dest_arg1_register.setPrintWidth(4);
-                            resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
-
-                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
-                                numOfArgsInMemory++;
-                            else if (arg2_register != null)
-                                resourceManager.fetchOperand(arg2_register, obj2, aux);
-
-                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
-                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
-
-                            issueAuxiliaryInstructions(aux);
-                            String secondOperand;
-                            if (arg2_register == null)
-                                secondOperand = String.valueOf(obj2.getAdr());
-                            else if (numOfArgsInMemory > 0)
-                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
-                            else
-                                secondOperand = arg2_register.toString();
-
-                            writer.write("\tSUB " + dest_arg1_register + ", " + secondOperand);
-                            writer.write(System.lineSeparator());
-
-                            break;
-                        }
-
+                        case ADD:
+                        case SUB:
                         case MUL: {
-                            // if first instruction is constant then load it to register first
-                            // if second operand is constant then encode it in instruction
                             RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
+                            RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple);
 
-                            dest_arg1_register.setPrintWidth(4);
                             resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
+                            resourceManager.fetchOperand(arg2_register, obj2, aux);
 
-                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
-                                numOfArgsInMemory++;
-                            else if (arg2_register != null)
-                                resourceManager.fetchOperand(arg2_register, obj2, aux);
-
-                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
                             resourceManager.validate(dest_arg1_register, objResult, aux, true);
+                            resourceManager.makeDescriptorFree(arg2_register);
 
                             issueAuxiliaryInstructions(aux);
-                            String secondOperand;
-                            if (arg2_register == null)
-                                secondOperand = String.valueOf(obj2.getAdr());
-                            else if (numOfArgsInMemory > 0)
-                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
-                            else
-                                secondOperand = arg2_register.toString();
+                            String secondOperand = arg2_register.getNameBySize(SystemV_ABI.getX64VariableSize(obj2.getType()));
 
-                            writer.write("\tIMUL " + dest_arg1_register + ", " + secondOperand);
+                            String mnemonic;
+                            if (quadruple.getInstruction() == IRInstruction.ADD)
+                                mnemonic = "ADD";
+                            else if (quadruple.getInstruction() == IRInstruction.SUB)
+                                mnemonic = "SUB";
+                            else if (quadruple.getInstruction() == IRInstruction.MUL)
+                                mnemonic = "IMUL";
+                            else
+                                throw new RuntimeException("Not supported instruction type.");
+
+                            writer.write("\t" + mnemonic + " " + dest_arg1_register + ", " + secondOperand);
                             writer.write(System.lineSeparator());
 
                             break;
                         }
 
                         case DIV: {
-                            /*RegisterDescriptor source = null; //("rax", obj1);
-                            RegisterDescriptor divideBy = null;
-
-                            writer.write("\tmovsx eax, " + source);
-                            writer.write(System.lineSeparator());
-                            writer.write("\tcdq"); // TODO: AH -> EAX sign extension
-                            writer.write(System.lineSeparator());
-                            writer.write("\tidiv " + divideBy);
-                            writer.write(System.lineSeparator());
-
-                            // EAX stores the result
-
-                            break;*/
-                        }
-
-                        case REM: {
-
-                            // EDX stores the result
 
                             break;
                         }
 
-                        case NEG: {
+                        case REM: {
+
+                            break;
+                        }
+
+                        /*case NEG: {
                             RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce();
                             RegisterDescriptor source = resourceManager.getRegister(obj1, quadruple);
 
@@ -363,30 +285,33 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-
+*/
                         //////////////////////////////////////////////////////////////////////////////////
                         // INSTRUCTIONS FOR MEMORY
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case STORE: {
-                            RegisterDescriptor arg1_result_register = resourceManager.getRegister(objResult, quadruple);
+                            RegisterDescriptor arg1_result_register = resourceManager.getRegister(obj1, quadruple);
 
-                            resourceManager.fetchOperand(arg1_result_register, obj1, aux);
+                            if (obj1.getKind() != Obj.Con) {
+                                resourceManager.fetchOperand(arg1_result_register, obj1, aux);
+                                resourceManager.validate(arg1_result_register, objResult, aux, true);
 
-                            // optimization not to use new register to hold the value
-                            RegisterDescriptor result_register = resourceManager.getRegister(objResult, quadruple);
-                            if (result_register.getHoldsValueOf() == objResult)
-                                arg1_result_register = result_register;
+                                issueAuxiliaryInstructions(aux);
 
-                            // change the address descriptor of destination register so that it only holds obj1 value
-                            resourceManager.invalidate(arg1_result_register, objResult, aux);
-                            resourceManager.validate(arg1_result_register, objResult, aux, true);
+                                /*writer.write("\tMOV " + arg1_result_register + ", " + arg2_register);
+                                writer.write(System.lineSeparator());*/
+                            }
+                            else {
+                                resourceManager.fetchOperand(arg1_result_register, obj1, aux);
+                                resourceManager.validate(arg1_result_register, objResult, aux, true);
 
-                            issueAuxiliaryInstructions(aux);
+                                issueAuxiliaryInstructions(aux);
+                            }
 
                             break;
                         }
-
+/*
                         case MALLOC: {
                             int numberOfElements = obj1.getAdr();
                             Struct elemType;
@@ -509,7 +434,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-
+*/
                         //////////////////////////////////////////////////////////////////////////////////
                         // FUNCTION CALLS & STACK FRAME OPERATIONS
                         //////////////////////////////////////////////////////////////////////////////////
@@ -545,7 +470,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-
+/*
                         case RETURN: {
                             RegisterDescriptor reg_a = mapToRegister.get("rax");
                             RegisterDescriptor reg_source = resourceManager.getRegister(obj1, quadruple);
@@ -558,7 +483,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-
+*/
                         //////////////////////////////////////////////////////////////////////////////////
                         // INPUT / OUTPUT
                         //////////////////////////////////////////////////////////////////////////////////
@@ -593,8 +518,6 @@ public class MachineCodeGenerator {
 
                         case PRINTF: {
                             RegisterDescriptor source = resourceManager.getRegister(obj2, quadruple);
-
-                            resourceManager.invalidate(source, obj2, aux);
 
                             List<String> tmp = new ArrayList<>();
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
@@ -661,7 +584,7 @@ public class MachineCodeGenerator {
                             aux.clear();
                             cancelSaveDirtyVals = true;
 
-                            writer.write("\tjmp " + quadruple.getResult());
+                            writer.write("\tJMP " + quadruple.getResult());
                             writer.write(System.lineSeparator());
 
                             break;
@@ -673,30 +596,14 @@ public class MachineCodeGenerator {
                         case JGE:
                         case JE:
                         case JNE: {
-                            // if first instruction is constant then load it to register first
-                            // if second operand is constant then encode it in instruction
                             RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            RegisterDescriptor arg2_register = (obj2.getKind() != Obj.Con ? resourceManager.getRegister(obj2, quadruple) : null);
+                            RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple);
 
-                            dest_arg1_register.setPrintWidth(4);
                             resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
-
-                            if (arg2_register != null && arg2_register.getHoldsValueOf() != obj2)
-                                numOfArgsInMemory++;
-                            else if (arg2_register != null)
-                                resourceManager.fetchOperand(arg2_register, obj2, aux);
-
-                            resourceManager.invalidate(dest_arg1_register, objResult, aux);
-                            resourceManager.validate(dest_arg1_register, objResult, aux, true);
+                            resourceManager.fetchOperand(arg2_register, obj2, aux);
 
                             issueAuxiliaryInstructions(aux);
-                            String secondOperand;
-                            if (arg2_register == null)
-                                secondOperand = String.valueOf(obj2.getAdr());
-                            else if (numOfArgsInMemory > 0)
-                                secondOperand = resourceManager.getAddressDescriptor(obj2).toString();
-                            else
-                                secondOperand = arg2_register.toString();
+                            String secondOperand = arg2_register.getNameBySize(SystemV_ABI.getX64VariableSize(obj2.getType()));
 
                             dest_arg1_register.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
                             writer.write("\tCMP " + dest_arg1_register + ", " + secondOperand);
@@ -755,7 +662,7 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         default:
-                            break;//throw new RuntimeException("Instruction not supported by x86-64 code generator.");
+                            throw new RuntimeException("Instruction not supported by x86-64 code generator.");
                     }
 
                     aux.clear();
