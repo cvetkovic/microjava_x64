@@ -18,10 +18,12 @@ program TestProgram
             int i;      // -40
         {
             k = new Klasa;
+            read(k.polje1);
 
-read(k.polje1);
-            //k.polje1 = 4;
+            a = k.polje1;
 
             print(k.polje1);
+            print(eol);
+            print(a + 1);
         }
     }

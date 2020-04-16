@@ -203,7 +203,7 @@ public class ResourceManager {
     }*/
 
     public RegisterDescriptor getRegister(Obj obj, Quadruple instruction) {
-        return getRegister(obj, instruction, null);
+        return getRegister(obj, instruction, new ArrayList<>());
     }
 
     public RegisterDescriptor getRegister(Obj obj, Quadruple instruction, List<RegisterDescriptor> reservedRegisters) {

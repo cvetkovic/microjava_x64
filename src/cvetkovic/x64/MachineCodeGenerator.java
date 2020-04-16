@@ -498,7 +498,8 @@ public class MachineCodeGenerator {
 
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
                             int sizeToAllocate = allocateSize.getValue() + resourceManager.getSizeOfTempVars();
-                            giveAddressToTemps(basicBlock, allocateSize.getValue());
+                            // because rsp + 0 -> is old ebp, offset 8 is the first element on stack
+                            giveAddressToTemps(basicBlock, 8 + allocateSize.getValue());
 
                             // has to be divisible by 16 by System V ABI
                             writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(sizeToAllocate));
@@ -548,16 +549,16 @@ public class MachineCodeGenerator {
                             issueAuxiliaryInstructions(aux);
 
                             // print format -> equivalent with mov rdi, offset FORMAT
-                            writer.write("\tlea rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
+                            writer.write("\tLEA rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
                             // obj
-                            writer.write("\tlea rsi, " + destination);
+                            writer.write("\tLEA rsi, " + destination);
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
-                            writer.write("\txor eax, eax");
+                            writer.write("\tXOR eax, eax");
                             writer.write(System.lineSeparator());
                             // invoke
-                            writer.write("\tcall scanf");
+                            writer.write("\tCALL scanf");
                             writer.write(System.lineSeparator());
 
                             aux.clear();
