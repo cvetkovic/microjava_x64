@@ -30,15 +30,6 @@ public class RegisterDescriptor extends Descriptor {
             throw new RuntimeException("Data width not supported by ISA.");
     }
 
-    /*@Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof RegisterDescriptor))
-            throw new RuntimeException("Register descriptor cannot be compared");
-
-        RegisterDescriptor descriptor = (RegisterDescriptor)obj;
-        return
-    }*/
-
     @Override
     public String toString() {
         if (printWidth == 1) {

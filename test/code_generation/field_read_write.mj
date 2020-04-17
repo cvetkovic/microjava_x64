@@ -17,11 +17,13 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
-            print(5 / 2);
-            print(6 / 2);
-            print(7 / 2);
-            print(5 % 2);
-            print(6 % 2);
-            print(7 % 2);
+            k = new Klasa;
+            read(k.polje1);
+
+            a = k.polje1;
+
+            print(k.polje1);
+            print(eol);
+            print(a + 1);
         }
     }

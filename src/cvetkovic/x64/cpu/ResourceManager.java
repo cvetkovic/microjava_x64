@@ -18,9 +18,13 @@ public class ResourceManager {
 
     private int sizeOfTempVars = 0;
 
+    private Map<String, RegisterDescriptor> _64_bit_name_to_reg_descriptor = new HashMap<>();
+
     public ResourceManager(List<RegisterDescriptor> freeRegisters, List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         this.freeRegisters = freeRegisters;
         this.allRegisters.addAll(freeRegisters);
+
+        this.allRegisters.forEach(p -> _64_bit_name_to_reg_descriptor.put(p.ISA_8_ByteName, p));
 
         createAddressDescriptors(variables);
         sizeOfTempVars = calculateSizeOfTempVariables(variables);
@@ -90,6 +94,24 @@ public class ResourceManager {
     }
 
     /**
+     * Saves the content of register into memory if register holds value, otherwise does nothing
+     * @param register
+     * @param out
+     */
+    public void forceTransferToMemory(RegisterDescriptor register, List<String> out) {
+        Obj oldObj = register.holdsValueOf;
+        AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
+        if (oldObj != null) {
+            out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
+
+            assert oldObjDescriptor.getDescriptor() == register;
+            oldObjDescriptor.setRegisterLocation(null);
+
+            dirtyVariables.remove(oldObj);
+        }
+    }
+
+    /**
      * Saves old value in register if dirty and load new value from memory. Issue those instruction and
      * remove from free register list if is present there.
      *
@@ -124,83 +146,6 @@ public class ResourceManager {
             newObjDescriptor.setRegisterLocation(register);
         }
     }
-
-    public void validate(RegisterDescriptor register, Obj newObj) {
-
-        /*// removing old variable
-        Obj oldObj = register.holdsValueOf;
-        AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
-        out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
-
-        assert oldObjDescriptor.getDescriptor() == register;
-        oldObjDescriptor.setRegisterLocation(null);
-
-        // loading new variable
-        AddressDescriptor newObjDescriptor = addressDescriptors.get(newObj);
-        register.holdsValueOf = newObj;
-        register.setPrintWidth(SystemV_ABI.getX64VariableSize(newObj.getType()));
-        out.add("\tMOV " + register + ", " + addressDescriptors.get(newObj).getMemoryDescriptor());
-
-        newObjDescriptor.setRegisterLocation(register);*/
-    }
-
-    /**
-     * Load operand to specified register if it's not already there
-     *
-     * @param register
-     * @param operand
-     * @param out
-     */
-    /*public void fetchOperand(RegisterDescriptor register, Obj operand, List<String> out) {
-        if (register != null && freeRegisters.contains(register))
-            freeRegisters.remove(register);
-
-        if (operand.getKind() == Obj.Con) {
-            register.setPrintWidth(SystemV_ABI.getX64VariableSize(operand.getType()));
-            out.add("\tMOV " + register + ", " + operand.getAdr());
-        }
-        else if (register.holdsValueOf == operand)
-            return;
-        else if (register.holdsValueOf != operand) {
-            AddressDescriptor newObjQueue = addressDescriptors.get(operand);
-            Descriptor operandDescriptor = newObjQueue.getDescriptor();
-
-            register.holdsValueOf = operand;
-            register.setPrintWidth(SystemV_ABI.getX64VariableSize(operandDescriptor.getHoldsValueOf().getType()));
-            out.add("\tMOV " + register + ", " + operandDescriptor);
-
-            newObjQueue.setRegisterLocation(register);
-        }
-    }
-
-    public void invalidateWithoutSave(Obj obj) {
-        AddressDescriptor addressDescriptor = addressDescriptors.get(obj);
-
-        if (addressDescriptor.getDescriptor() instanceof RegisterDescriptor)
-            addressDescriptor.setRegisterLocation(null);
-    }
-
-    public void invalidate(RegisterDescriptor targetDescriptor, Obj newObj, List<String> aux) {
-        Obj oldObj = targetDescriptor.holdsValueOf;
-        targetDescriptor.holdsValueOf = null;
-
-        if (oldObj == null || oldObj == newObj)
-            return;
-        else {
-            AddressDescriptor addressDescriptor = addressDescriptors.get(oldObj);
-
-            // don't save old obj unless it's dirty
-            if (!dirtyVariables.contains(oldObj)) {
-                addressDescriptor.setRegisterLocation(null);
-                return;
-            }
-
-            // must save the old obj
-            String targetDescriptorString = targetDescriptor.getNameBySize(SystemV_ABI.getX64VariableSize(oldObj.getType()));
-            aux.add("\tMOV " + addressDescriptors.get(oldObj).getMemoryDescriptor() + ", " + targetDescriptorString);
-            dirtyVariables.remove(oldObj);
-        }
-    }*/
 
     public RegisterDescriptor getRegister(Obj obj, Quadruple instruction) {
         return getRegister(obj, instruction, new ArrayList<>());
@@ -374,7 +319,15 @@ public class ResourceManager {
         dirtyVariables.clear();
     }
 
-    public RegisterDescriptor getRegisterByForce() {
+    public RegisterDescriptor getRegisterByName(String _64_bit_name) {
+        RegisterDescriptor res = _64_bit_name_to_reg_descriptor.get(_64_bit_name);
+        if (res == null)
+            throw new RuntimeException("Required register doesn't exist.");
+
+        return res;
+    }
+
+    /*public RegisterDescriptor getRegisterByForce() {
         // TODO: change allocation algorithm do this with LRU
         RegisterDescriptor register;
 
@@ -394,7 +347,7 @@ public class ResourceManager {
         }
 
         return register;
-    }
+    }*/
 
     /**
      * Checks whether object node is loaded in memory

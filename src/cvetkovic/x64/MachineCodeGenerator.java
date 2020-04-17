@@ -256,12 +256,48 @@ public class MachineCodeGenerator {
                             break;
                         }
 
-                        case DIV: {
-
-                            break;
-                        }
-
+                        case DIV:
                         case REM: {
+                            // EDX:EAX  -> number to divide
+                            // CDQ      ->
+                            // IDIV     -> divisor
+                            // result:  EAX -> quotient
+                            //          EDX -> remainder
+                            RegisterDescriptor rax = resourceManager.getRegisterByName("rax");
+                            RegisterDescriptor rdx = resourceManager.getRegisterByName("rdx");
+                            List<RegisterDescriptor> forbidden = new ArrayList<>();
+                            forbidden.add(rax);
+                            forbidden.add(rdx);
+                            RegisterDescriptor divisor = resourceManager.getRegister(obj2, quadruple, forbidden);
+                            forbidden.add(divisor);
+                            RegisterDescriptor result = resourceManager.getRegister(objResult, quadruple, forbidden);
+
+                            resourceManager.forceTransferToMemory(rdx, aux);
+                            resourceManager.fetchOperand(rax, obj1, aux);
+                            issueAuxiliaryInstructions(aux);
+                            aux.clear();
+
+                            resourceManager.fetchOperand(divisor, obj2, aux);
+                            resourceManager.validate(result, objResult, aux, true);
+
+                            writer.write("\tCDQ");
+                            writer.write(System.lineSeparator());
+
+                            issueAuxiliaryInstructions(aux);
+
+                            writer.write("\tIDIV " + divisor.getNameBySize(4));
+                            writer.write(System.lineSeparator());
+
+                            RegisterDescriptor resultRegSelection;
+                            if (quadruple.getInstruction() == IRInstruction.DIV)
+                                resultRegSelection = rax;
+                            else if (quadruple.getInstruction() == IRInstruction.REM)
+                                resultRegSelection = rdx;
+                            else
+                                throw new RuntimeException("Not supported instruction type.");
+
+                            writer.write("\tMOV " + result + ", " + resultRegSelection.getNameBySize(4));
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
