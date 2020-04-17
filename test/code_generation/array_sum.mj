@@ -17,7 +17,15 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
-            a = -3 + (-4 + 1);
+            niz = new int[10];
+            a = 0;
+
+            for (i = 0; i < 10; i++)
+                niz[i] = i;
+
+            for (i = 0; i < 10; i++)
+                a = a + niz[i];
+
             print(a);
         }
     }

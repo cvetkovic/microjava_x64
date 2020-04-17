@@ -121,8 +121,8 @@ public class ResourceManager {
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
         if (newObj.getKind() == Obj.Con) {
-            register.setPrintWidth(SystemV_ABI.getX64VariableSize(newObj.getType()));
-            out.add("\tMOV " + register + ", " + newObj.getAdr());
+            int size = SystemV_ABI.getX64VariableSize(newObj.getType());
+            out.add("\tMOV " + register.getNameBySize(size) + ", " + newObj.getAdr());
         }
         else if (register.holdsValueOf == newObj)
             return;

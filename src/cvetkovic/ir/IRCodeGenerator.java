@@ -249,12 +249,13 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Quadruple instruction = new Quadruple(IRInstruction.SCANF);
 
         Obj targetObj = ReadStatement.getDesignator().obj;
+        Struct type = targetObj.getType().getElemType() == null ? targetObj.getType() : targetObj.getType().getElemType();
 
-        if (targetObj.getType().getKind() == Struct.Int)
+        if (type.getKind() == Struct.Int)
             instruction.setArg2(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.WORD));
-        else if (targetObj.getType().getKind() == Struct.Char)
+        else if (type.getKind() == Struct.Char)
             instruction.setArg2(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.BYTE));
-        else if (targetObj.getType().getKind() == Struct.Bool)
+        else if (type.getKind() == Struct.Bool)
             instruction.setArg2(new QuadrupleIODataWidth(QuadrupleIODataWidth.DataWidth.BIT));
         else
             throw new RuntimeException("IR instruction 'scanf' is not supported with other data types than integer, character or boolean.");
@@ -522,7 +523,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     private void resolveIncDec(Obj var, Quadruple instruction, Obj ptrDestination) {
-        Obj constValue = new Obj(Obj.Con, "", SymbolTable.BooleanStruct);
+        Obj constValue = new Obj(Obj.Con, "", SymbolTable.intType);
         constValue.setAdr(1);
 
         instruction.setArg1(new QuadrupleObjVar(var));

@@ -734,14 +734,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     @Override
     public void visit(ReadStatement ReadStatement) {
         Designator designator = ReadStatement.getDesignator();
+        Struct type = designator.obj.getType().getElemType() == null ? designator.obj.getType() : designator.obj.getType().getElemType();
 
         if (designator.obj.getKind() != Obj.Var &&
                 designator.obj.getKind() != Obj.Elem &&
                 designator.obj.getKind() != Obj.Fld)
             throwError(ReadStatement.getLine(), "Read statement has to be used with variable, array element or class field.");
-        else if (designator.obj.getType() != SymbolTable.intType &&
-                designator.obj.getType() != SymbolTable.charType &&
-                designator.obj.getType() != SymbolTable.BooleanStruct)
+        else if (type != SymbolTable.intType &&
+                type != SymbolTable.charType &&
+                type != SymbolTable.BooleanStruct)
             throwError(ReadStatement.getLine(), "Read statement operand has to be of integer, character or boolean data type.");
     }
 
@@ -808,9 +809,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
         if (!left.compatibleWith(right))
             throwError(CondFactBinary.getLine(), "Types are not compatible for comparison with relation operators.");
-        else if ((left.getKind() == Struct.Array || left.getKind() == Struct.Class || right.getKind() == Struct.Array || right.getKind() == Struct.Class) &&
+        /*else if ((left.getKind() == Struct.Array || left.getKind() == Struct.Class || right.getKind() == Struct.Array || right.getKind() == Struct.Class) &&
                 !(op instanceof OperatorEqual || op instanceof OperatorNotEqual))
             throwError(CondFactBinary.getLine(), "Conditionals with reference types can only be used with equals and not equals operators.");
+        */
         else
             CondFactBinary.struct = SymbolTable.BooleanStruct;
     }

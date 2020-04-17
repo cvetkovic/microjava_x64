@@ -1,0 +1,45 @@
+program TestProgram
+    class Klasa
+    {
+        int polje1;
+        int polje2;
+
+        Klasa klasnoPolje;
+    }
+
+    {
+        void main()
+            int a;      // -8
+            int b;      // -12
+            int c;      // -16
+            int d;      // -20
+            int niz[];  // -24
+            Klasa k;    // -32
+            int i;      // -40
+        {
+            niz = new int[10];
+
+            for (i = 0; i < 5; i++)
+                read(niz[i]);
+
+            for (a = 0; a < 5; a++)
+            {
+                for (b = 0; b < 5; b++)
+                {
+                    if (niz[a] < niz[b])
+                    {
+                        c = niz[a];
+                        niz[a] = niz[b];
+                        niz[b] = c;
+                    }
+                }
+            }
+
+            for (i = 0; i < 5; i++) {
+                print(niz[i]);
+                print(' ');
+            }
+
+            print(eol);
+        }
+    }

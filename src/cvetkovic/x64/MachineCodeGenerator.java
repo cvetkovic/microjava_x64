@@ -229,7 +229,7 @@ public class MachineCodeGenerator {
                         case SUB:
                         case MUL: {
                             RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple);
+                            RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple, Collections.singletonList(dest_arg1_register));
 
                             resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
                             resourceManager.fetchOperand(arg2_register, obj2, aux);
@@ -302,28 +302,22 @@ public class MachineCodeGenerator {
                             break;
                         }
 
-                        /*case NEG: {
-                            RegisterDescriptor zeroRegister = resourceManager.getRegisterByForce();
-                            RegisterDescriptor source = resourceManager.getRegister(obj1, quadruple);
+                        case NEG: {
+                            RegisterDescriptor zeroRegister = resourceManager.getRegister(null, quadruple);
+                            RegisterDescriptor source = resourceManager.getRegister(obj1, quadruple, Collections.singletonList(zeroRegister));
 
-                            if (source.getHoldsValueOf() != obj1)
-                                resourceManager.fetchOperand(source, obj1, aux);
-
-                            resourceManager.invalidate(zeroRegister, null, aux);
+                            resourceManager.fetchOperand(source, obj1, aux);
                             resourceManager.validate(zeroRegister, objResult, aux, true);
                             issueAuxiliaryInstructions(aux);
 
                             writer.write("\tXOR " + zeroRegister + ", " + zeroRegister);
                             writer.write(System.lineSeparator());
-                            zeroRegister.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
-                            if (source != null)
-                                source.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
-                            writer.write("\tSUB " + zeroRegister + ", " + (source != null ? source : obj2));
+                            writer.write("\tSUB " + zeroRegister + ", " + source.getNameBySize(4));
                             writer.write(System.lineSeparator());
 
                             break;
                         }
-*/
+
                         //////////////////////////////////////////////////////////////////////////////////
                         // INSTRUCTIONS FOR MEMORY
                         //////////////////////////////////////////////////////////////////////////////////
@@ -472,6 +466,7 @@ public class MachineCodeGenerator {
                             forbidden.add(regArrayIndex);
                             RegisterDescriptor regValue = resourceManager.getRegister(valueToWrite, quadruple, forbidden);
 
+                            // TODO: put MOVSXD for index variable -> signed extension
                             resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
                             resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
                             resourceManager.fetchOperand(regValue, valueToWrite, aux);
@@ -484,7 +479,6 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-
 
                         case GET_PTR: {
                             RegisterDescriptor basePointer = resourceManager.getRegister(obj1, quadruple);
@@ -504,6 +498,18 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
                         // FUNCTION CALLS & STACK FRAME OPERATIONS
                         //////////////////////////////////////////////////////////////////////////////////
+
+                        case PARAM: {
+                            break;
+                        }
+
+                        case CALL: {
+                            break;
+                        }
+
+                        case INVOKE_VIRTUAL: {
+                            break;
+                        }
 
                         case ENTER: {
                             writer.write("\tPUSH rbp");
@@ -664,7 +670,7 @@ public class MachineCodeGenerator {
                         case JE:
                         case JNE: {
                             RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
-                            RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple);
+                            RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple, Collections.singletonList(dest_arg1_register));
 
                             resourceManager.fetchOperand(dest_arg1_register, obj1, aux);
                             resourceManager.fetchOperand(arg2_register, obj2, aux);
