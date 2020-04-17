@@ -8,6 +8,11 @@ program TestProgram
     }
 
     {
+        int test()
+        {
+            return 5;
+        }
+
         void main()
             int a;      // -8
             int b;      // -12

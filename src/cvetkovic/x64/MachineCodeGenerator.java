@@ -547,20 +547,22 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-/*
-                        case RETURN: {
-                            RegisterDescriptor reg_a = mapToRegister.get("rax");
-                            RegisterDescriptor reg_source = resourceManager.getRegister(obj1, quadruple);
 
-                            resourceManager.invalidate(reg_a, obj1, aux);
+                        case RETURN: {
+                            RegisterDescriptor reg_a = resourceManager.getRegisterByName("rax");
+                            RegisterDescriptor reg_source = resourceManager.getRegister(obj1, quadruple, Collections.singletonList(reg_a));
+
+                            resourceManager.fetchOperand(reg_source, obj1, aux);
+                            //resourceManager.validate(reg_a, obj1, aux, true);
                             // NOTE: no need to register as the next instruction shall be call
                             issueAuxiliaryInstructions(aux);
 
                             writer.write("\tMOV " + reg_a + ", " + reg_source);
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
-*/
+
                         //////////////////////////////////////////////////////////////////////////////////
                         // INPUT / OUTPUT
                         //////////////////////////////////////////////////////////////////////////////////
@@ -761,6 +763,8 @@ public class MachineCodeGenerator {
                 // TODO: writer.write( machine code );
                 // TODO: resourceManager.restoreContext();
             }
+
+            instructionCounter = 0;
         }
     }
 
