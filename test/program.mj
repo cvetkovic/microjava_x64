@@ -17,11 +17,12 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
-            print(5 / 2);
-            print(6 / 2);
-            print(7 / 2);
-            print(5 % 2);
-            print(6 % 2);
-            print(7 % 2);
+            niz = new int[10];
+
+            for (i = 0; i < 10; i++)
+                niz[i] = i;
+
+            for (i = 0; i < 10; i++)
+                print(niz[i]);
         }
     }

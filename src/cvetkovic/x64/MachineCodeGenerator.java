@@ -427,7 +427,7 @@ public class MachineCodeGenerator {
 
                             break;
                         }
-/*
+
                         case ALOAD: {
                             Obj arrayReference = obj1;
                             Obj arrayIndex = obj2;
@@ -436,31 +436,23 @@ public class MachineCodeGenerator {
                             Struct elemTypeStruct = arrayReference.getType().getElemType();
                             int elemTypeSizeInByte = SystemV_ABI.getX64VariableSize(elemTypeStruct);
 
+                            List<RegisterDescriptor> forbidden = new ArrayList<>();
                             RegisterDescriptor regArrayReference = resourceManager.getRegister(arrayReference, quadruple);
-                            resourceManager.invalidate(regArrayReference, arrayReference, aux);
+                            forbidden.add(regArrayReference);
+                            RegisterDescriptor regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple, forbidden);
+                            forbidden.add(regArrayIndex);
+                            RegisterDescriptor regDestination = resourceManager.getRegister(destinationVariable, quadruple, forbidden);
+
                             resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
-                            resourceManager.validate(regArrayReference, arrayReference, aux, false);
-
-                            RegisterDescriptor regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
-                            while (regArrayReference == regArrayIndex)
-                                regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
-                            resourceManager.invalidate(regArrayIndex, arrayIndex, aux);
                             resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
-                            resourceManager.validate(regArrayIndex, arrayIndex, aux, false);
-
-                            RegisterDescriptor regValue = resourceManager.getRegister(destinationVariable, quadruple);
-                            while (regValue == regArrayReference || regValue == regArrayIndex)
-                                regValue = resourceManager.getRegister(destinationVariable, quadruple);
+                            resourceManager.validate(regDestination, destinationVariable, aux, true);
 
                             issueAuxiliaryInstructions(aux);
                             String saveInstruction = "[" + regArrayReference.getNameBySize(8) + " + " + elemTypeSizeInByte + " * " + regArrayIndex.getNameBySize(8) + "]";
 
-                            writer.write("\tMOV " + regValue.getNameBySize(elemTypeSizeInByte) + ", " + SystemV_ABI.getPtrSpecifier(elemTypeStruct) + " " + saveInstruction);
+                            writer.write("\tMOV " + regDestination.getNameBySize(elemTypeSizeInByte) + ", " + SystemV_ABI.getPtrSpecifier(elemTypeStruct) + " " + saveInstruction);
                             writer.write(System.lineSeparator());
 
-                            aux.clear();
-                            resourceManager.validate(regValue, destinationVariable, aux, false);
-                            issueAuxiliaryInstructions(aux);
 
                             break;
                         }
@@ -473,39 +465,26 @@ public class MachineCodeGenerator {
                             Struct elemTypeStruct = arrayReference.getType().getElemType();
                             int elemTypeSizeInByte = SystemV_ABI.getX64VariableSize(elemTypeStruct);
 
+                            List<RegisterDescriptor> forbidden = new ArrayList<>();
                             RegisterDescriptor regArrayReference = resourceManager.getRegister(arrayReference, quadruple);
-                            resourceManager.invalidate(regArrayReference, arrayReference, aux);
+                            forbidden.add(regArrayReference);
+                            RegisterDescriptor regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple, forbidden);
+                            forbidden.add(regArrayIndex);
+                            RegisterDescriptor regValue = resourceManager.getRegister(valueToWrite, quadruple, forbidden);
+
                             resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
-                            resourceManager.validate(regArrayReference, arrayReference, aux, false);
-
-                            RegisterDescriptor regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
-                            while (regArrayReference == regArrayIndex)
-                                regArrayIndex = resourceManager.getRegister(arrayIndex, quadruple);
-                            resourceManager.invalidate(regArrayIndex, arrayIndex, aux);
                             resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
-                            resourceManager.validate(regArrayIndex, arrayIndex, aux, false);
-
-                            RegisterDescriptor regValue;
-                            if (valueToWrite != arrayIndex) {
-                                regValue = resourceManager.getRegister(valueToWrite, quadruple);
-                                while (regValue == regArrayReference || regValue == regArrayIndex)
-                                    regValue = resourceManager.getRegister(valueToWrite, quadruple);
-                                resourceManager.invalidate(regValue, valueToWrite, aux);
-                                resourceManager.fetchOperand(regValue, valueToWrite, aux);
-                                resourceManager.validate(regValue, valueToWrite, aux, false);
-                            }
-                            else
-                                regValue = regArrayIndex;
+                            resourceManager.fetchOperand(regValue, valueToWrite, aux);
 
                             issueAuxiliaryInstructions(aux);
                             String saveInstruction = "[" + regArrayReference.getNameBySize(8) + " + " + elemTypeSizeInByte + " * " + regArrayIndex.getNameBySize(8) + "]";
 
-                            writer.write("\tMOV " + SystemV_ABI.getPtrSpecifier(elemTypeStruct) + " " + saveInstruction + ", " + regValue);
+                            writer.write("\tMOV " + SystemV_ABI.getPtrSpecifier(elemTypeStruct) + " " + saveInstruction + ", " + regValue.getNameBySize(elemTypeSizeInByte));
                             writer.write(System.lineSeparator());
 
                             break;
                         }
-*/
+
 
                         case GET_PTR: {
                             RegisterDescriptor basePointer = resourceManager.getRegister(obj1, quadruple);
