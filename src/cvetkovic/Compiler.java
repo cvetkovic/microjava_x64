@@ -12,6 +12,7 @@ import cvetkovic.semantics.SemanticAnalyzer;
 import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.MachineCodeGenerator;
 import java_cup.runtime.Symbol;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -112,7 +113,8 @@ public class Compiler {
 
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
-                IROptimizer irCodeOptimizer = new IROptimizer(irCode);
+                List<Obj> functions = irCodeGenerator.getFunctionsObj();
+                IROptimizer irCodeOptimizer = new IROptimizer(irCode, functions);
                 String IRCodeToPrint = null;
 
                 if (optimize_ir) {

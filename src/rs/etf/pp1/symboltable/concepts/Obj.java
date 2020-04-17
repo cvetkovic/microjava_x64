@@ -1,5 +1,6 @@
 package rs.etf.pp1.symboltable.concepts;
 
+import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.structure.SymbolDataStructure;
 import rs.etf.pp1.symboltable.visitors.SymbolTableVisitor;
 
@@ -19,8 +20,9 @@ public class Obj {
 
     public static final int NO_VALUE = -1;
 
-    // temp var
+    // aditional specifier
     public boolean tempVar = false;
+    public boolean parameter = false;
 
     private String name;
 
@@ -33,6 +35,7 @@ public class Obj {
     // konstanta(Con): vrednost
     // Meth, Var, Fld: memorijski ofset
     private int adr;
+    public RegisterDescriptor parameterDescriptor;
 
     // Var: nivo ugnezdavanja
     // Meth: broj formalnih argumenata

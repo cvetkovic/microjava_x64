@@ -3,9 +3,9 @@ package cvetkovic.x64.cpu;
 import cvetkovic.x64.SystemV_ABI;
 
 public class RegisterDescriptor extends Descriptor {
-    protected String ISA_1_ByteName;
-    protected String ISA_4_ByteName;
-    protected String ISA_8_ByteName;
+    public final String ISA_1_ByteName;
+    public final String ISA_4_ByteName;
+    public final String ISA_8_ByteName;
 
     protected int printWidth = -1;
 

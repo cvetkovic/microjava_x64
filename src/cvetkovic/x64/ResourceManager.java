@@ -1,9 +1,11 @@
-package cvetkovic.x64.cpu;
+package cvetkovic.x64;
 
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
-import cvetkovic.x64.SystemV_ABI;
+import cvetkovic.x64.cpu.AddressDescriptor;
+import cvetkovic.x64.cpu.Descriptor;
+import cvetkovic.x64.cpu.MemoryDescriptor;
+import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -95,6 +97,7 @@ public class ResourceManager {
 
     /**
      * Saves the content of register into memory if register holds value, otherwise does nothing
+     *
      * @param register
      * @param out
      */
@@ -182,24 +185,24 @@ public class ResourceManager {
             if (livenessRegister != null)
                 return livenessRegister;*/
 
-            // return any register
-            int numberOfTries = 0;
-            if (circularAllocation >= allRegisters.size())
-                circularAllocation = 0;
+        // return any register
+        int numberOfTries = 0;
+        if (circularAllocation >= allRegisters.size())
+            circularAllocation = 0;
 
-            RegisterDescriptor reg = null;
-            while (numberOfTries < allRegisters.size()) {
-                reg = allRegisters.get(circularAllocation++);
-                numberOfTries++;
+        RegisterDescriptor reg = null;
+        while (numberOfTries < allRegisters.size()) {
+            reg = allRegisters.get(circularAllocation++);
+            numberOfTries++;
 
-                if (!reservedRegisters.contains(reg))
-                    break;
-            }
+            if (!reservedRegisters.contains(reg))
+                break;
+        }
 
-            if (reg == null || numberOfTries == allRegisters.size())
-                throw new RuntimeException("Unable to allocate register.");
+        if (reg == null || numberOfTries == allRegisters.size())
+            throw new RuntimeException("Unable to allocate register.");
 
-            return reg;
+        return reg;
     }
 
     public void makeDescriptorFree(RegisterDescriptor registerDescriptor) {
@@ -249,7 +252,7 @@ public class ResourceManager {
      * @param instruction Quadruple instruction.
      * @return Register descriptor if condition is satisfied, otherwise null.
      */
-    private RegisterDescriptor getRegisterIfDestination(Quadruple instruction) {
+    /*private RegisterDescriptor getRegisterIfDestination(Quadruple instruction) {
         if ((!(instruction.getArg1() instanceof QuadrupleObjVar) && !(instruction.getArg2() instanceof QuadrupleObjVar) && !(instruction.getResult() instanceof QuadrupleObjVar)) ||
                 (!(instruction.getArg1() instanceof QuadrupleObjVar) && !(instruction.getArg2() == null) && !(instruction.getResult() instanceof QuadrupleObjVar)))
             return null;
@@ -266,7 +269,7 @@ public class ResourceManager {
         }
 
         return null;
-    }
+    }*/
 
     /**
      * Instruction is x = y + z. Prospective register is R that holds v obj node.
@@ -350,16 +353,6 @@ public class ResourceManager {
     }*/
 
     /**
-     * Checks whether object node is loaded in memory
-     *
-     * @param obj
-     * @return
-     */
-    public boolean checkIfObjIsInRegister(Obj obj) {
-        return addressDescriptors.get(obj).getDescriptor() instanceof RegisterDescriptor;
-    }
-
-    /**
      * Checks whether register is free
      *
      * @param descriptor
@@ -403,5 +396,21 @@ public class ResourceManager {
             out.add("\tMOV " + descriptor + ", " +
                     (descriptor.holdsValueOf.getKind() != Obj.Con ? addressDescriptors.get(descriptor.holdsValueOf).getMemoryDescriptor() : descriptor.holdsValueOf.getAdr()));
         }
+    }
+
+    public void putParametersToRegisters(Obj function) {
+        if (function.getKind() == Obj.Meth) {
+            for (Obj var : function.getLocalSymbols()) {
+                if (var.parameter && var.parameterDescriptor != null) {
+                    AddressDescriptor addressDescriptor = addressDescriptors.get(var);
+                    addressDescriptor.setRegisterLocation(var.parameterDescriptor);
+
+                    var.parameterDescriptor.holdsValueOf = var;
+                    freeRegisters.remove(var.parameterDescriptor);
+                }
+            }
+        }
+        else
+            throw new RuntimeException("Invalid parameter.");
     }
 }

@@ -690,6 +690,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     @Override
     public void visit(AbstractMethodWithReturn AbstractMethodWithReturn) {
         abstractMethodReturnType = AbstractMethodWithReturn.getType().struct;
+        Struct struct = AbstractMethodWithReturn.getType().struct;
+
+        if (struct.getKind() != Struct.Int &&
+                struct.getKind() != Struct.Char &&
+                struct != SymbolTable.BooleanStruct) {
+            throw new RuntimeException("Method cannot return other type than boolean, character or integer type.");
+        }
     }
 
     @Override
@@ -833,6 +840,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     @Override
     public void visit(MethodWithReturn MethodWithReturn) {
         currentMethodReturnType = MethodWithReturn.struct = MethodWithReturn.getType().struct;
+        Struct struct = MethodWithReturn.getType().struct;
+
+        if (struct.getKind() != Struct.Int &&
+                struct.getKind() != Struct.Char &&
+                struct != SymbolTable.BooleanStruct) {
+            throw new RuntimeException("Method cannot return other type than boolean, character or integer type.");
+        }
     }
 
     @Override
@@ -1019,6 +1033,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             //////////////////////////////////////////////////////////////////////////////////
             // set position in formal parameter list for current method
             SingleFormParameter.obj.setFpPos(currentMethod.getLevel());
+            SingleFormParameter.obj.parameter = true;
             // update number of parameters in current method
             currentMethod.setLevel(currentMethod.getLevel() + 1);
         }

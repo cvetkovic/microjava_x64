@@ -57,6 +57,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private Obj currentMethod = null;
     private boolean cancelFactorFunctionCall = false;
 
+    private List<Obj> functionsObj = new ArrayList<>();
+
     //////////////////////////////////////////////////////////////////////////////////
     // CONSTRUCTOR & STATIC INITIALIZATION
     //////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +196,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         if (code != null) {
             outputCode.add(code);
+            functionsObj.add(MethodDecl.obj);
             code = new ArrayList<>();
         }
     }
@@ -362,10 +365,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
     }
 
     private void endFunctionCall() {
-        Stack<ParameterContainer> container = reverseParameterStack.pop();
+        if (!reverseParameterStack.empty()) {
+            Stack<ParameterContainer> container = reverseParameterStack.pop();
 
-        while (!container.empty())
-            code.addAll(container.pop().instructions);
+            while (!container.empty())
+                code.addAll(container.pop().instructions);
+        }
+    }
+
+    public List<Obj> getFunctionsObj() {
+        return functionsObj;
     }
 
     private static class ParameterContainer {
@@ -568,7 +577,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (!(DesignatorInvoke.getDesignator() instanceof DesignatorRoot))
             pushImplicitThisForFunctionCall();
 
-        Quadruple instruction = new Quadruple(DesignatorInvoke.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL: INVOKE_VIRTUAL);
+        Quadruple instruction = new Quadruple(DesignatorInvoke.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL : INVOKE_VIRTUAL);
         instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
 
         if (postponeUpdateVarList) {
@@ -580,6 +589,16 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
         else
             code.add(instruction);
+    }
+
+    @Override
+    public void visit(AbstractMethodName AbstractMethodName) {
+        throw new RuntimeException("Not yet implemented.");
+    }
+
+    @Override
+    public void visit(AbstractMethodDecl AbstractMethodDecl) {
+        throw new RuntimeException("Not yet implemented.");
     }
 
     @Override

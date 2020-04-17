@@ -11,7 +11,6 @@ import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.x64.cpu.Descriptor;
 import cvetkovic.x64.cpu.RegisterDescriptor;
-import cvetkovic.x64.cpu.ResourceManager;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
@@ -23,14 +22,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MachineCodeGenerator {
-
     private static final String[][] registerNames = {
             new String[]{"rax", "eax", "al"},
             new String[]{"rbx", "ebx", "bl"},
             new String[]{"rcx", "ecx", "cl"},
             new String[]{"rdx", "edx", "dl"},
             new String[]{"rdi", "edi", "dil"},
-            new String[]{"rsi", "esi", "sil"}};
+            new String[]{"rsi", "esi", "sil"},
+            new String[]{"r8", "r8d", "r8b"},
+            new String[]{"r9", "r9d", "r9b"}};
+    // TODO: add more registers (r10-r15)
 
     private String outputFileUrl;
     private File outputFileHandle;
@@ -195,16 +196,16 @@ public class MachineCodeGenerator {
         writer.write(".section .text");
         writer.write(System.lineSeparator());
 
-        for (CodeSequence function : codeSequences) {
+        for (CodeSequence codeSequence : codeSequences) {
             BasicBlock basicBlock = null;
 
-            for (int i = 0; i < function.basicBlocks.size(); i++) {
+            for (int i = 0; i < codeSequence.basicBlocks.size(); i++) {
                 if (basicBlock == null) {
                     // assign new basic block to compile
                     if (instructionCounter == 0)
-                        basicBlock = function.entryBlock;
+                        basicBlock = codeSequence.entryBlock;
                     else
-                        basicBlock = function.basicBlocks.stream().filter(p -> checkEquality(p.firstQuadruple, instructionCounter)).collect(Collectors.toList()).get(0);
+                        basicBlock = codeSequence.basicBlocks.stream().filter(p -> checkEquality(p.firstQuadruple, instructionCounter)).collect(Collectors.toList()).get(0);
                 }
 
                 List<String> aux = new ArrayList<>();
@@ -212,6 +213,9 @@ public class MachineCodeGenerator {
 
                 // old register/memory descriptors are discarded
                 initializeISATables(basicBlock);
+
+                SystemV_ABI_Call functionCall = new SystemV_ABI_Call(resourceManager);
+                Obj currentFunction = codeSequence.function;
 
                 for (Quadruple quadruple : basicBlock.instructions) {
                     Obj obj1 = (quadruple.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) quadruple.getArg1()).getObj() : null);
@@ -504,10 +508,30 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case PARAM: {
+                            functionCall.putParameter(obj1);
+
                             break;
                         }
 
                         case CALL: {
+                            Obj methodToInvoke = obj1;
+
+                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
+                            makeRegisterPreservationList(toPreserve);
+                            resourceManager.preserveContext(toPreserve, aux);
+
+                            List<String> params = functionCall.generateCallForParameters(methodToInvoke);
+                            issueAuxiliaryInstructions(params);
+                            aux.clear();
+
+                            writer.write("\tCALL " + methodToInvoke);
+                            writer.write(System.lineSeparator());
+
+                            // TODO: clear the stack here
+
+                            resourceManager.restoreContext(toPreserve, aux);
+                            issueAuxiliaryInstructions(aux);
+
                             break;
                         }
 
@@ -515,6 +539,7 @@ public class MachineCodeGenerator {
                             break;
                         }
 
+                        // TODO: do register preservation on function call entrance
                         case ENTER: {
                             writer.write("\tPUSH rbp");
                             writer.write(System.lineSeparator());
@@ -529,6 +554,8 @@ public class MachineCodeGenerator {
                             // has to be divisible by 16 by System V ABI
                             writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(sizeToAllocate));
                             writer.write(System.lineSeparator());
+
+                            resourceManager.putParametersToRegisters(currentFunction);
 
                             break;
                         }
@@ -554,7 +581,7 @@ public class MachineCodeGenerator {
 
                             resourceManager.fetchOperand(reg_source, obj1, aux);
                             //resourceManager.validate(reg_a, obj1, aux, true);
-                            // NOTE: no need to register as the next instruction shall be call
+                            // NOTE: no need to register as the next instruction shall be LEAVE
                             issueAuxiliaryInstructions(aux);
 
                             writer.write("\tMOV " + reg_a + ", " + reg_source);
@@ -604,11 +631,7 @@ public class MachineCodeGenerator {
                             makeRegisterPreservationList(toPreserve);
 
                             // obj
-                            int sourceSize;
-                            if (source.getHoldsValueOf() != null)
-                                sourceSize = SystemV_ABI.getX64VariableSize(source.getHoldsValueOf().getType());
-                            else
-                                sourceSize = 1; // char
+                            int sourceSize = SystemV_ABI.getX64VariableSize(obj2.getType());
 
                             String regName;
                             switch (sourceSize) {
@@ -769,10 +792,6 @@ public class MachineCodeGenerator {
     }
 
     private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve) {
-        makeRegisterPreservationList(toPreserve, null);
-    }
-
-    private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve, RegisterDescriptor reg) {
         for (int i = 0; i < registerNames.length; i++)
             if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(registerNames[i][0])))
                 toPreserve.add(mapToRegister.get(registerNames[i][0]));

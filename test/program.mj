@@ -8,9 +8,10 @@ program TestProgram
     }
 
     {
-        int test()
+        void test(int a, int b)
+            int var1;
         {
-            return 5;
+            print(a + b);
         }
 
         void main()
@@ -22,6 +23,6 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
-            k = new Klasa;
+            test(1, 2);
         }
     }

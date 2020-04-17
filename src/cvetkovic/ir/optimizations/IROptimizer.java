@@ -4,14 +4,18 @@ import cvetkovic.ir.optimizations.local.LocalValueNumbering;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.Optimizer;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.List;
 
 public class IROptimizer extends Optimizer {
-    public IROptimizer(List<List<Quadruple>> code) {
+    public IROptimizer(List<List<Quadruple>> code, List<Obj> functions) {
+        int i = 0;
+
         for (List<Quadruple> quadrupleList : code) {
             CodeSequence sequence = new CodeSequence();
 
+            sequence.function = functions.get(i);
             sequence.code = quadrupleList;
             sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
             sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(quadrupleList, sequence.labelIndices);
@@ -23,6 +27,7 @@ public class IROptimizer extends Optimizer {
                 throw new RuntimeException("Invalid code sequence for loop discovery as entry block has not been found.");
 
             codeSequenceList.add(sequence);
+            i++;
         }
 
         createOptimizationList();
