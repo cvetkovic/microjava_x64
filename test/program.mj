@@ -17,7 +17,6 @@ program TestProgram
             Klasa k;    // -32
             int i;      // -40
         {
-            a = -3 + (-4 + 1);
-            print(a);
+            k = new Klasa;
         }
     }

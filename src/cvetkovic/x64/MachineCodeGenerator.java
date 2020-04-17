@@ -384,8 +384,12 @@ public class MachineCodeGenerator {
                             writer.write("\tMOV rdi, " + String.valueOf(numberOfElements));
                             writer.write(System.lineSeparator());
                             // single element size in bytes
-                            // TODO: if allocates class then set this to 1 fixed
-                            writer.write("\tMOV rsi, " + SystemV_ABI.getX64VariableSize(elemType));
+                            int allocationSize;
+                            if (objResult.getType().getKind() == Struct.Class)
+                                allocationSize = 1;
+                            else
+                                allocationSize = SystemV_ABI.getX64VariableSize(elemType);
+                            writer.write("\tMOV rsi, " + allocationSize);
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
                             writer.write("\tXOR eax, eax");
