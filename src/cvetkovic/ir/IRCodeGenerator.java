@@ -39,7 +39,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private ExpressionDAG expressionDAG;
     private Stack<ExpressionNode> expressionNodeStack = new Stack<>();
 
-    private Stack<Stack<ParameterContainer>> reverseParameterStack = new Stack<>();
+    private Stack<List<ParameterContainer>> reverseParameterStack = new Stack<>();
 
     private Stack<ControlFlow.ForStatementFixPoint> jumpForFixPoints = new Stack<>();
 
@@ -329,7 +329,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
         container.instructions.add(instruction);
-        reverseParameterStack.peek().push(container);
+        reverseParameterStack.peek().add(container);
         expressionDAG = new ExpressionDAG();
     }
 
@@ -366,10 +366,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private void endFunctionCall() {
         if (!reverseParameterStack.empty()) {
-            Stack<ParameterContainer> container = reverseParameterStack.pop();
+            List<ParameterContainer> container = reverseParameterStack.pop();
 
-            while (!container.empty())
-                code.addAll(container.pop().instructions);
+            container.forEach(p -> code.addAll(p.instructions));
         }
     }
 

@@ -225,6 +225,7 @@ public class MachineCodeGenerator {
                 createRegisters(basicBlock);
 
                 SystemV_ABI_Call functionCall = new SystemV_ABI_Call(resourceManager);
+                Stack<String> stackParameters = new Stack<>();
                 Obj currentFunction = codeSequence.function;
                 int paramIndex = 0;
 
@@ -533,9 +534,12 @@ public class MachineCodeGenerator {
                                 RegisterDescriptor value = resourceManager.getRegister(obj1, quadruple, Collections.singletonList(paramRegister));
 
                                 resourceManager.fetchOperand(value, obj1, aux);
-                                issueAuxiliaryInstructions(aux);
-                                writer.write("\tPUSHQ " + value);
-                                writer.write(System.lineSeparator());
+                                stackParameters.push(System.lineSeparator());
+                                stackParameters.push("\tPUSHQ " + value);
+                                for (int k = aux.size() - 1; k >= 0; k--) {
+                                    stackParameters.push(System.lineSeparator());
+                                    stackParameters.push(aux.get(k));
+                                }
                             }
 
                             break;
@@ -543,6 +547,9 @@ public class MachineCodeGenerator {
 
                         case CALL: {
                             Obj methodToInvoke = obj1;
+
+                            while (!stackParameters.empty())
+                                writer.write(stackParameters.pop());
 
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
                             makeRegisterPreservationList(toPreserve);
