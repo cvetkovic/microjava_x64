@@ -533,6 +533,7 @@ public class MachineCodeGenerator {
                             else {
                                 RegisterDescriptor value = resourceManager.getRegister(obj1, quadruple, Collections.singletonList(paramRegister));
 
+                                // TODO: should I always push QWORD?
                                 resourceManager.fetchOperand(value, obj1, aux);
                                 stackParameters.push(System.lineSeparator());
                                 stackParameters.push("\tPUSHQ " + value);
@@ -839,7 +840,7 @@ public class MachineCodeGenerator {
     private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
         Collection<Obj> tempVars = basicBlock.allVariables;
         for (Obj obj : tempVars) {
-            if ((obj.tempVar || obj.parameter) && obj.getKind() != Obj.Con) {
+            if ((obj.tempVar || obj.parameter) && obj.getKind() != Obj.Con && obj.stackParameter == false) {
                 int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
                 obj.setAdr(startValue + objSize);
                 startValue += objSize;

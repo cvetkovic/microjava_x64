@@ -26,10 +26,11 @@ public class SystemV_ABI_Call {
         List<String> instructions = new ArrayList<>();
 
         List<Obj> iterator = function.getLocalSymbols().stream().filter(p -> p.parameter).collect(Collectors.toList());
+        int stackParameterCount = (int) function.getLocalSymbols().stream().filter(p -> p.stackParameter).count();
+        int stackOffset = 16;
         for (int i = 0; i < iterator.size(); i++) {
             RegisterDescriptor destination = getParameterRegister(i);
             Obj parameterVar = iterator.get(i);
-            //Obj parameterValue = arguments.get(i);
 
             // TODO: set addresses of parameters in symbol table
             if (destination != null) {
@@ -37,7 +38,8 @@ public class SystemV_ABI_Call {
             }
             else {
                 parameterVar.stackParameter = true;
-                //parameter.setAdr();
+                parameterVar.setAdr(stackOffset);
+                stackOffset += 8;
                 //throw new RuntimeException("Argument stacking not yet implemented.");
             }
         }

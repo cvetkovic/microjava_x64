@@ -8,18 +8,11 @@ program TestProgram
     }
 
     {
+        // g -> +16, h -> +24
         void test(int a, int b, int c, int d, int e, int f, int g, int h)
             int var1;
         {
             print(a + b);
-        }
-
-        void test2(int a) {
-            print(a);
-        }
-
-        void test3() {
-            print(3);
         }
 
         void main()
