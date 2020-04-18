@@ -9,6 +9,7 @@ import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.semantics.ClassMetadata;
+import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.cpu.Descriptor;
 import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -182,8 +183,9 @@ public class MachineCodeGenerator {
             StringBuilder table = new StringBuilder();
 
             for (ClassMetadata metadata : classMetadata) {
-                table.append("; VFT for ").append(metadata.className).append("\n");
-                metadata.pointersToFunction.forEach((n, p) -> table.append(n).append(":\n\t.quad ").append(p.getName()));
+                table.append("# VFT for ").append(metadata.className).append("\n");
+                List<Obj> methods = metadata.pointersToFunction.values().stream().filter(p -> p.getKind() == Obj.Meth || p.getKind() == SymbolTable.AbstractMethodObject).collect(Collectors.toList());
+                methods.forEach((n) -> table.append(n).append(":\n\t.quad ").append(n.getName()).append("\n"));
                 table.append(System.lineSeparator());
             }
 
@@ -531,12 +533,12 @@ public class MachineCodeGenerator {
                                 issueAuxiliaryInstructions(aux);
                             }
                             else {
-                                RegisterDescriptor value = resourceManager.getRegister(obj1, quadruple, Collections.singletonList(paramRegister));
+                                List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
+                                RegisterDescriptor value = resourceManager.getRegister(obj1, quadruple, forbiddenList);
 
-                                // TODO: should I always push QWORD?
-                                resourceManager.fetchOperand(value, obj1, aux);
+                                resourceManager.pushParameter(value, obj1, aux);
                                 stackParameters.push(System.lineSeparator());
-                                stackParameters.push("\tPUSHQ " + value);
+                                stackParameters.push("\tPUSHQ " + value.getNameBySize(8));
                                 for (int k = aux.size() - 1; k >= 0; k--) {
                                     stackParameters.push(System.lineSeparator());
                                     stackParameters.push(aux.get(k));
@@ -569,6 +571,12 @@ public class MachineCodeGenerator {
                                 writer.write(System.lineSeparator());
                             }
 
+                            if (methodToInvoke.getType().getKind() != Struct.None) {
+                                RegisterDescriptor rax = resourceManager.getRegisterByName("rax");
+                                //resourceManager.validate(rax, objResult, aux, true);
+                                resourceManager.saveReturnedValueToMemory(rax, objResult, aux);
+                            }
+
                             resourceManager.restoreContext(toPreserve, aux);
                             issueAuxiliaryInstructions(aux);
 
@@ -581,7 +589,7 @@ public class MachineCodeGenerator {
                             break;
                         }
 
-                        // TODO: do register preservation on function call entrance
+                        // TODO: do register file preservation on function call entrance
                         case ENTER: {
                             writer.write("\tPUSH rbp");
                             writer.write(System.lineSeparator());
@@ -591,10 +599,10 @@ public class MachineCodeGenerator {
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
                             int sizeToAllocate = allocateSize.getValue() + resourceManager.getSizeOfTempVars();
                             // because rsp + 0 -> is old ebp, offset 8 is the first element on stack
-                            giveAddressToTemps(basicBlock, 8 + allocateSize.getValue());
+                            int lastSize = giveAddressToTemps(basicBlock, 8 + allocateSize.getValue());
 
                             // has to be divisible by 16 by System V ABI
-                            writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(sizeToAllocate));
+                            writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(lastSize));
                             writer.write(System.lineSeparator());
 
                             break;
@@ -624,7 +632,7 @@ public class MachineCodeGenerator {
                             // NOTE: no need to register as the next instruction shall be LEAVE
                             issueAuxiliaryInstructions(aux);
 
-                            writer.write("\tMOV " + reg_a + ", " + reg_source);
+                            writer.write("\tMOV " + reg_a.getNameBySize(SystemV_ABI.getX64VariableSize(obj1.getType())) + ", " + reg_source);
                             writer.write(System.lineSeparator());
 
                             break;
@@ -831,21 +839,36 @@ public class MachineCodeGenerator {
         }
     }
 
+    private List<RegisterDescriptor> getParamStackCallForbiddenList(SystemV_ABI_Call functionCall) {
+        List<RegisterDescriptor> regs = new ArrayList<>();
+        for (int i = 0; i < 6; i++)
+            regs.add(functionCall.getParameterRegister(i));
+
+        return regs;
+    }
+
     private void makeRegisterPreservationList(List<RegisterDescriptor> toPreserve) {
         for (int i = 0; i < registerNames.length; i++)
             if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(registerNames[i][0])))
                 toPreserve.add(mapToRegister.get(registerNames[i][0]));
     }
 
-    private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
-        Collection<Obj> tempVars = basicBlock.allVariables;
+    private int giveAddressToTemps(BasicBlock basicBlock, int startValue) {
+        List<Obj> tempVars = basicBlock.enclosingFunction.getLocalSymbols().stream().collect(Collectors.toList());
+        tempVars.addAll(basicBlock.temporaryVariables);
         for (Obj obj : tempVars) {
             if ((obj.tempVar || obj.parameter) && obj.getKind() != Obj.Con && obj.stackParameter == false) {
                 int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
                 obj.setAdr(startValue + objSize);
                 startValue += objSize;
             }
+
+            System.out.println(obj.getName() + " -> " + obj.getAdr());
         }
+
+        System.out.println();
+
+        return startValue;
     }
 
     private void issueAuxiliaryInstructions(List<String> aux) throws IOException {

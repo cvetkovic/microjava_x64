@@ -1,10 +1,25 @@
 program TestProgram
-    class Klasa
+    abstract class ApstraktnaKlasa
+    {
+        {
+            void ametoda()
+            {
+            }
+        }
+    }
+
+    class Klasa extends ApstraktnaKlasa
     {
         int polje1;
         int polje2;
 
         Klasa klasnoPolje;
+        {
+            void metoda()
+            {
+                print(1);
+            }
+        }
     }
 
     {
@@ -12,7 +27,14 @@ program TestProgram
         void test(int a, int b, int c, int d, int e, int f, int g, int h)
             int var1;
         {
-            print(a + b);
+            print(a);
+            print(b);
+            print(c);
+            print(d);
+            print(e);
+            print(f);
+            print(g);
+            print(h);
         }
 
         void main()
@@ -21,10 +43,17 @@ program TestProgram
             int c;      // -16
             int d;      // -20
             int niz[];  // -24
-            Klasa k;    // -32
+            Klasa klasa;// -32
             int i;      // -40
+            int j;
+            int k;
+            int l;
         {
-            test(1, 2, 3, 4, 5, 6, 7, 8);
+
+            //test(1,2,3,4,5,6,7,8);
+            //print(eol);
+            //test(a,b,c,d,i,j,k,l);
+
             //test2(1);
             //test3();
         }

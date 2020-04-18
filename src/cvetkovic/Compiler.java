@@ -7,7 +7,6 @@ import cvetkovic.lexer.Yylex;
 import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
-import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.semantics.SemanticAnalyzer;
 import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.MachineCodeGenerator;
@@ -17,7 +16,6 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Compiler {
@@ -131,7 +129,7 @@ public class Compiler {
                 MachineCodeGenerator machineCodeGenerator = new MachineCodeGenerator(Compiler.outputFile,
                         irCodeOptimizer.getOptimizationOutput(),
                         semanticCheck.getGlobalVariables(),
-                        new ArrayList<ClassMetadata>());
+                        semanticCheck.getClassMetadata());
                 // TODO: replace with polymorphism table
 
                 machineCodeGenerator.generateCode();

@@ -37,6 +37,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     // AUXILIARY INTERNAL STRUCTURES
     //////////////////////////////////////////////////////////////////////////////////
     private String currentMethodName = "";
+    private List<ClassMetadata> classMetadata = new ArrayList<>();
 
     //////////////////////////////////////////////////////////////////////////////////
     // ERROR REPORTING METHODS
@@ -542,6 +543,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentClassName = "";
         currentClassExtends = null;
         currentAddressOffset.pop();
+
+        ClassMetadata metadata = new ClassMetadata();
+        metadata.className = ClassDecl.obj.getName();
+        ClassDecl.obj.getType().getMembers().stream().forEach(
+                p -> metadata.pointersToFunction.put(p.getName(), p)
+        );
+        classMetadata.add(metadata);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -599,6 +607,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         SymbolTable.closeScope();
         currentClass = null;
         currentAddressOffset.pop();
+
+        ClassMetadata metadata = new ClassMetadata();
+        metadata.className = AbstractClassDecl.obj.getName();
+        AbstractClassDecl.obj.getType().getMembers().stream().forEach(
+                p -> metadata.pointersToFunction.put(p.getName(), p)
+        );
+        classMetadata.add(metadata);
     }
 
     private void prepareClassSymbolTable() {
@@ -1167,6 +1182,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     @Override
     public void visit(DesignatorInvokeMethodNameEnd DesignatorInvokeMethodNameEnd) {
         //currentFunctionCall.pop();
+    }
+
+    public List<ClassMetadata> getClassMetadata() {
+        return classMetadata;
     }
 
     public static class SharedData {

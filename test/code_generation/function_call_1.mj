@@ -1,0 +1,36 @@
+program TestProgram
+    class Klasa
+    {
+        int polje1;
+        int polje2;
+
+        Klasa klasnoPolje;
+    }
+
+    {
+        int test2(int a) {
+            return a + 1;
+        }
+
+        void test3() {
+            print(3);
+        }
+
+        void main()
+            int a;      // -8
+            int b;      // -12
+            int c;      // -16
+            int d;      // -20
+            int niz[];  // -24
+            Klasa klasa;// -32
+            int i;      // -40
+            int j;
+            int k;
+            int l;
+        {
+            print(test2(test2(test2(test2(1)))));
+            print(0);
+            test2(1);
+            test3();
+        }
+    }
