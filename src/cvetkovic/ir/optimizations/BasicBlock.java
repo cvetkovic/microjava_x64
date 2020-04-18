@@ -31,6 +31,12 @@ public class BasicBlock {
     public Collection<Obj> allVariables;
     public Collection<Obj> nonTemporaryVariables;
 
+    public Obj enclosingFunction;
+
+    public BasicBlock(Obj enclosingFunction) {
+        this.enclosingFunction = enclosingFunction;
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     // BASIC BLOCK INFORMATION EXTRACTION
     //////////////////////////////////////////////////////////////////////////////////
@@ -235,7 +241,7 @@ public class BasicBlock {
         return result;
     }
 
-    public static List<BasicBlock> extractBasicBlocksFromSequence(List<Quadruple> code, Map<String, Integer> labelIndices) {
+    public static List<BasicBlock> extractBasicBlocksFromSequence(Obj function, List<Quadruple> code, Map<String, Integer> labelIndices) {
         if (code.size() == 0)
             return null;
 
@@ -268,7 +274,7 @@ public class BasicBlock {
         // extract basic blocks
         for (Integer l : leaders) {
             // set first instruction
-            BasicBlock block = new BasicBlock();
+            BasicBlock block = new BasicBlock(function);
             block.firstQuadruple = l;
             block.instructions.add(code.get(l));
 

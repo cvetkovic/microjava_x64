@@ -90,7 +90,7 @@ public class MachineCodeGenerator {
     /**
      * Initializes register and memory descriptors
      */
-    private void initializeISATables(BasicBlock basicBlock) {
+    private void createRegisters(BasicBlock basicBlock) {
         registers.clear();
         mapToRegister.clear();
 
@@ -102,11 +102,21 @@ public class MachineCodeGenerator {
                 mapToRegister.put(id[i], newRegister);
         }
 
+        resourceManager = new ResourceManager(registers);
+    }
+
+    private void createAddressDescriptors(BasicBlock basicBlock) {
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.allVariables)
-            memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
+            if (var.parameter == false)
+                memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
+        for (Obj var : basicBlock.enclosingFunction.getLocalSymbols()) {
+            if (var.parameter) {
+                memoryLocationList.add(new BasicBlock.Tuple<>(var, false));
+            }
+        }
 
-        resourceManager = new ResourceManager(registers, memoryLocationList);
+        resourceManager.configureAddressDescriptors(memoryLocationList);
     }
 
     /**
@@ -212,10 +222,15 @@ public class MachineCodeGenerator {
                 boolean cancelSaveDirtyVals = false;
 
                 // old register/memory descriptors are discarded
-                initializeISATables(basicBlock);
+                createRegisters(basicBlock);
 
                 SystemV_ABI_Call functionCall = new SystemV_ABI_Call(resourceManager);
                 Obj currentFunction = codeSequence.function;
+                int paramIndex = 0;
+
+                functionCall.generateCallForParameters(currentFunction);
+                createAddressDescriptors(basicBlock);
+                resourceManager.putParametersToRegisters(currentFunction);
 
                 for (Quadruple quadruple : basicBlock.instructions) {
                     Obj obj1 = (quadruple.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) quadruple.getArg1()).getObj() : null);
@@ -508,7 +523,20 @@ public class MachineCodeGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case PARAM: {
-                            functionCall.putParameter(obj1);
+                            RegisterDescriptor paramRegister = functionCall.getParameterRegister(paramIndex++);
+
+                            if (paramRegister != null) {
+                                resourceManager.fetchOperand(paramRegister, obj1, aux);
+                                issueAuxiliaryInstructions(aux);
+                            }
+                            else {
+                                RegisterDescriptor value = resourceManager.getRegister(obj1, quadruple, Collections.singletonList(paramRegister));
+
+                                resourceManager.fetchOperand(value, obj1, aux);
+                                issueAuxiliaryInstructions(aux);
+                                writer.write("\tPUSHQ " + value);
+                                writer.write(System.lineSeparator());
+                            }
 
                             break;
                         }
@@ -527,10 +555,16 @@ public class MachineCodeGenerator {
                             writer.write("\tCALL " + methodToInvoke);
                             writer.write(System.lineSeparator());
 
-                            // TODO: clear the stack here
+                            long numberOfStackParameters = methodToInvoke.getLocalSymbols().stream().filter(p -> p.stackParameter).count();
+                            if (numberOfStackParameters > 1) {
+                                writer.write("\tADD rsp, " + numberOfStackParameters * 8);
+                                writer.write(System.lineSeparator());
+                            }
 
                             resourceManager.restoreContext(toPreserve, aux);
                             issueAuxiliaryInstructions(aux);
+
+                            paramIndex = 0;
 
                             break;
                         }
@@ -554,8 +588,6 @@ public class MachineCodeGenerator {
                             // has to be divisible by 16 by System V ABI
                             writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(sizeToAllocate));
                             writer.write(System.lineSeparator());
-
-                            resourceManager.putParametersToRegisters(currentFunction);
 
                             break;
                         }
@@ -798,9 +830,9 @@ public class MachineCodeGenerator {
     }
 
     private void giveAddressToTemps(BasicBlock basicBlock, int startValue) {
-        Collection<Obj> tempVars = basicBlock.temporaryVariables;
+        Collection<Obj> tempVars = basicBlock.allVariables;
         for (Obj obj : tempVars) {
-            if (obj.tempVar && obj.getKind() != Obj.Con) {
+            if ((obj.tempVar || obj.parameter) && obj.getKind() != Obj.Con) {
                 int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
                 obj.setAdr(startValue + objSize);
                 startValue += objSize;

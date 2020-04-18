@@ -22,12 +22,14 @@ public class ResourceManager {
 
     private Map<String, RegisterDescriptor> _64_bit_name_to_reg_descriptor = new HashMap<>();
 
-    public ResourceManager(List<RegisterDescriptor> freeRegisters, List<BasicBlock.Tuple<Obj, Boolean>> variables) {
+    public ResourceManager(List<RegisterDescriptor> freeRegisters) {
         this.freeRegisters = freeRegisters;
         this.allRegisters.addAll(freeRegisters);
 
         this.allRegisters.forEach(p -> _64_bit_name_to_reg_descriptor.put(p.ISA_8_ByteName, p));
+    }
 
+    public void configureAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         createAddressDescriptors(variables);
         sizeOfTempVars = calculateSizeOfTempVariables(variables);
     }

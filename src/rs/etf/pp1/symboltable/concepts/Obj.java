@@ -23,6 +23,7 @@ public class Obj {
     // aditional specifier
     public boolean tempVar = false;
     public boolean parameter = false;
+    public boolean stackParameter = false;
 
     private String name;
 

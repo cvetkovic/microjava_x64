@@ -18,7 +18,7 @@ public class IROptimizer extends Optimizer {
             sequence.function = functions.get(i);
             sequence.code = quadrupleList;
             sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
-            sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(quadrupleList, sequence.labelIndices);
+            sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(sequence.function, quadrupleList, sequence.labelIndices);
 
             for (BasicBlock b : sequence.basicBlocks)
                 if (b.isEntryBlock())

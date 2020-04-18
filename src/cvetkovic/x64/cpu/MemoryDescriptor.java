@@ -24,8 +24,11 @@ public class MemoryDescriptor extends Descriptor {
             case Obj.Con:
                 return String.valueOf(new Integer(holdsValueOf.getAdr()));
             case Obj.Var:
-                if (!isGlobalVar)
-                    return SystemV_ABI.getPtrSpecifier(holdsValueOf.getType()) + " [RBP - " + holdsValueOf.getAdr() + "]";
+                if (!isGlobalVar) {
+                    String operator = (!holdsValueOf.stackParameter ? " - " : " + ");
+
+                    return SystemV_ABI.getPtrSpecifier(holdsValueOf.getType()) + " [RBP" + operator + holdsValueOf.getAdr() + "]";
+                }
                 else
                     return holdsValueOf.getName();
             case Obj.Fld:
