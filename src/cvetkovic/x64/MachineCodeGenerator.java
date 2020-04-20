@@ -477,6 +477,8 @@ public class MachineCodeGenerator {
                             break;
                         }
 
+                        // TODO: change MOV to MOVSXD
+
                         case ALOAD: {
                             Obj arrayReference = obj1;
                             Obj arrayIndex = obj2;

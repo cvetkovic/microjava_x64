@@ -245,8 +245,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             }
 
             // determine address
-            newlyCreatedVar.setAdr(currentAddressOffset.peek());
-            currentAddressOffset.push(currentAddressOffset.pop() + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
+            int lastTaken = currentAddressOffset.pop();
+            int thisVarAddress;
+            if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()))
+                lastTaken =  SystemV_ABI.alignTo16(SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
+            thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType());
+            newlyCreatedVar.setAdr(thisVarAddress);
+            currentAddressOffset.push(thisVarAddress);
 
             if (currentDataType.struct.getKind() == Struct.Class)
                 classInstances.put(variableName, currentDataType.getTypeIdent());
@@ -631,7 +636,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         // needed to add, otherwise fields cannot be accesed properly during
         // code generation as first field would point to VTP, etc.
         SymbolTable.insert(Obj.Fld, "_vtp", Tab.noType).setAdr(0);
-        currentAddressOffset.push(SystemV_ABI.getX64VariableSize(new Struct(Struct.Class)));
+        currentAddressOffset.push(8);
     }
 
     @Override
@@ -724,7 +729,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(AbstractMethodName AbstractMethodName) {
         String methodName = AbstractMethodName.getI1();
         currentMethodName = methodName;
-        currentAddressOffset.push(8);
+        currentAddressOffset.push(0);
 
         Obj object = SymbolTable.currentScope.findSymbol(methodName);
         if (object == SymbolTable.noObj || object == null) {
@@ -801,7 +806,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 designator.obj.getKind() != Obj.Fld)
             throwError(DesignatorAssign.getLine(), "Left side of assigment statement has to be variable, array element or class field.");
         else if (!SymbolTable.assignmentPossible((designator.obj.getType().getKind() != Struct.Array ? designator.obj.getType() : designator.obj.getType().getElemType()), (expression.struct.getElemType() == null ? expression.struct : expression.struct.getElemType())))
-            throwError(DesignatorAssign.getLine(), "Data types of left and right side of assigment statement don't match.");
+        {
+            if (!SymbolTable.assignmentPossible((designator.obj.getType().getKind() != Struct.Class ? designator.obj.getType() : designator.obj.getType().getElemType()), (expression.struct.getElemType() == null ? expression.struct : expression.struct.getElemType())))
+                throwError(DesignatorAssign.getLine(), "Data types of left and right side of assigment statement don't match.");
+        }
     }
 
     private void designatorIncrementDecrement(Designator designator, int line) {
@@ -876,7 +884,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(MethodName MethodName) {
         // NOTE: ord, chr, len shall not be added to symbol table as they already exist on its creation
 
-        currentAddressOffset.push(8);
+        currentAddressOffset.push(0);
         Struct returnType = currentMethodReturnType;
         String methodName = MethodName.getMethodName();
 

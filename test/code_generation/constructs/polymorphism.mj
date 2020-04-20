@@ -1,0 +1,46 @@
+program TestProgram
+    class AbstractClass
+    {
+        {
+            void metoda()
+            {
+                print('a');
+                print('_');
+            }
+        }
+    }
+
+    class Class extends AbstractClass
+    {
+        {
+            void metoda()
+            {
+                print('e');
+                print('_');
+            }
+
+            void metoda2()
+            {
+                print('e');
+                print('2');
+                print('_');
+            }
+        }
+    }
+
+    {
+        void main()
+            AbstractClass base;
+            Class extended;
+        {
+            base = new AbstractClass;
+            base.metoda();
+
+            base = new Class;
+            base.metoda();
+
+            extended = new Class;
+            extended.metoda();
+            extended.metoda2();
+        }
+    }
