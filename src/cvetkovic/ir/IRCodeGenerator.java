@@ -211,25 +211,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (FactorArrayDeclaration.getFactorArrayDecl() instanceof NoArrayDeclaration) {
             allocateClass = true;
 
-            // instantiating new class
-            Struct type = FactorArrayDeclaration.struct;
-            int classSize = 0;
+            String dataTypeName = ((DataType)FactorArrayDeclaration.getType()).getTypeIdent();
+            Obj objNode = SymbolTable.find(dataTypeName);
 
-            for (Obj member : type.getMembers()) {
-                if (member.getName().equals("extends"))
-                    continue;
-                else if (member.getKind() == Obj.Meth)
-                    continue;
-
-                if (member.getName().equals("_vtp"))
-                    classSize += SystemV_ABI.getX64VariableSize(new Struct(Struct.Class));
-                else
-                    classSize += SystemV_ABI.getX64VariableSize(member.getType());
-            }
-
-            Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
-            result.setAdr(classSize);
-            expressionNodeStack.push(new ExpressionNode(result));
+            expressionNodeStack.push(new ExpressionNode(objNode));
 
             if (code.size() > 0 && code.get(code.size() - 1).getInstruction() == GET_PTR)
                 storeToPtr = true;
@@ -449,7 +434,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.addAll(expressionDAG.emitQuadruples());
 
             Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
-            instruction.setArg1(new QuadrupleObjVar(src.getObj()));
+            instruction.setArg1(new QuadrupleIntegerConst(src.getObj().getAdr()));
             instruction.setArg2(new QuadrupleARR());
             instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
 

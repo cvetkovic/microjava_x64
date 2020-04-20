@@ -391,7 +391,6 @@ public class MachineCodeGenerator {
                         }
 
                         case MALLOC: {
-                            int numberOfElements = obj1.getAdr();
                             Struct elemType;
                             if (objResult.getType().getKind() == Struct.Array)
                                 elemType = objResult.getType().getElemType();
@@ -402,6 +401,29 @@ public class MachineCodeGenerator {
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
                             resourceManager.preserveContext(toPreserve, aux);
                             issueAuxiliaryInstructions(aux);
+
+                            int numberOfElements;
+                            if (quadruple.getArg1() instanceof QuadrupleObjVar) {
+                                // instantiating new class
+                                Struct type = obj1.getType();
+                                int classSize = 0;
+
+                                for (Obj member : type.getMembers()) {
+                                    if (member.getName().equals("extends"))
+                                        continue;
+                                    else if (member.getKind() == Obj.Meth)
+                                        continue;
+
+                                    if (member.getName().equals("_vtp"))
+                                        classSize += SystemV_ABI.getX64VariableSize(new Struct(Struct.Class));
+                                    else
+                                        classSize += SystemV_ABI.getX64VariableSize(member.getType());
+                                }
+
+                                numberOfElements = classSize;
+                            }
+                            else
+                                numberOfElements = ((QuadrupleIntegerConst)quadruple.getArg1()).getValue();
 
                             // num of elements
                             writer.write("\tMOV rdi, " + String.valueOf(numberOfElements));
@@ -422,9 +444,7 @@ public class MachineCodeGenerator {
                             writer.write(System.lineSeparator());
 
                             if (objResult.getType().getKind() == Struct.Class) {
-                                Obj classObj = classMetadata.stream().filter(p -> p.classObj.getType().getMembers() == objResult.getType().getMembers()).collect(Collectors.toList()).get(0).classObj;
-
-                                writer.write("\tMOV QWORD PTR [rax], OFFSET _vft_" + classObj.getName());
+                                writer.write("\tMOV QWORD PTR [rax], OFFSET _vft_" + obj1.getName());
                                 writer.write(System.lineSeparator());
                             }
 
@@ -447,8 +467,6 @@ public class MachineCodeGenerator {
                                 writer.write("\tMOV [" + destination + "], rax");
                                 writer.write(System.lineSeparator());
                             }
-
-                            // TODO: initialize VTP
 
                             aux.clear();
                             resourceManager.restoreContext(toPreserve, aux);
