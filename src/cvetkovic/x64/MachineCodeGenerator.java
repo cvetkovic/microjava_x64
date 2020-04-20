@@ -9,7 +9,6 @@ import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.semantics.ClassMetadata;
-import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.cpu.Descriptor;
 import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -183,10 +182,10 @@ public class MachineCodeGenerator {
             StringBuilder table = new StringBuilder();
 
             for (ClassMetadata metadata : classMetadata) {
-                table.append("# VFT for ").append(metadata.className).append("\n");
+                /*table.append("# VFT for ").append(metadata.className).append("\n");
                 List<Obj> methods = metadata.pointersToFunction.values().stream().filter(p -> p.getKind() == Obj.Meth || p.getKind() == SymbolTable.AbstractMethodObject).collect(Collectors.toList());
                 methods.forEach((n) -> table.append(n).append(":\n\t.quad ").append(n.getName()).append("\n"));
-                table.append(System.lineSeparator());
+                table.append(System.lineSeparator());*/
             }
 
             writer.write(table.toString());
@@ -227,7 +226,7 @@ public class MachineCodeGenerator {
                 createRegisters(basicBlock);
 
                 SystemV_ABI_Call functionCall = new SystemV_ABI_Call(resourceManager);
-                Stack<String> stackParameters = new Stack<>();
+                Stack<Obj> stackObjParameters = new Stack<>();
                 Obj currentFunction = codeSequence.function;
                 int paramIndex = 0;
 
@@ -533,16 +532,7 @@ public class MachineCodeGenerator {
                                 issueAuxiliaryInstructions(aux);
                             }
                             else {
-                                List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
-                                RegisterDescriptor value = resourceManager.getRegister(obj1, quadruple, forbiddenList);
-
-                                resourceManager.pushParameter(value, obj1, aux);
-                                stackParameters.push(System.lineSeparator());
-                                stackParameters.push("\tPUSHQ " + value.getNameBySize(8));
-                                for (int k = aux.size() - 1; k >= 0; k--) {
-                                    stackParameters.push(System.lineSeparator());
-                                    stackParameters.push(aux.get(k));
-                                }
+                                stackObjParameters.push(obj1);
                             }
 
                             break;
@@ -551,16 +541,26 @@ public class MachineCodeGenerator {
                         case CALL: {
                             Obj methodToInvoke = obj1;
 
-                            while (!stackParameters.empty())
-                                writer.write(stackParameters.pop());
-
-                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            makeRegisterPreservationList(toPreserve);
-                            resourceManager.preserveContext(toPreserve, aux);
-
+                            // passing parameters through register
                             List<String> params = functionCall.generateCallForParameters(methodToInvoke);
+
+                            // passing parameters through stack
+                            while (!stackObjParameters.empty()) {
+                                Obj param = stackObjParameters.pop();
+
+                                List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
+                                RegisterDescriptor argToPush = resourceManager.getRegister(param, quadruple, forbiddenList);
+                                resourceManager.fetchOperand(argToPush, param, params);
+
+                                params.add("\tPUSHQ " + argToPush.getNameBySize(8));
+                            }
+
+                            // emitting instructions for parameters
                             issueAuxiliaryInstructions(params);
-                            aux.clear();
+                            params.clear();
+
+                            resourceManager.saveDirtyVariables(aux, true);
+                            issueAuxiliaryInstructions(aux);
 
                             writer.write("\tCALL " + methodToInvoke);
                             writer.write(System.lineSeparator());
@@ -573,11 +573,10 @@ public class MachineCodeGenerator {
 
                             if (methodToInvoke.getType().getKind() != Struct.None) {
                                 RegisterDescriptor rax = resourceManager.getRegisterByName("rax");
-                                //resourceManager.validate(rax, objResult, aux, true);
+                                resourceManager.validate(rax, objResult, aux, true);
                                 resourceManager.saveReturnedValueToMemory(rax, objResult, aux);
                             }
 
-                            resourceManager.restoreContext(toPreserve, aux);
                             issueAuxiliaryInstructions(aux);
 
                             paramIndex = 0;
@@ -605,6 +604,9 @@ public class MachineCodeGenerator {
                             writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(lastSize));
                             writer.write(System.lineSeparator());
 
+                            resourceManager.saveRegisterFile(aux);
+                            issueAuxiliaryInstructions(aux);
+
                             break;
                         }
 
@@ -614,6 +616,9 @@ public class MachineCodeGenerator {
                             issueAuxiliaryInstructions(aux);
                             aux.clear();
                             cancelSaveDirtyVals = true;
+
+                            resourceManager.restoreRegisterFile(aux);
+                            issueAuxiliaryInstructions(aux);
 
                             writer.write("\tLEAVE");
                             writer.write(System.lineSeparator());

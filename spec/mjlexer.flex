@@ -40,6 +40,7 @@ LineTerminator = "\r" | "\n" | "\r\n"
 <COMMENT>   .                { yybegin(COMMENT); }
 
 <YYINITIAL>         "/*"             { yybegin(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT> {LineTerminator} { yybegin(MULTILINE_COMMENT); }
 <MULTILINE_COMMENT> "*/"             { yybegin(YYINITIAL); }
 <MULTILINE_COMMENT> .                { yybegin(MULTILINE_COMMENT); }
 

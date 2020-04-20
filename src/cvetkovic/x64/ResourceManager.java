@@ -147,7 +147,9 @@ public class ResourceManager {
                 out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
 
                 assert oldObjDescriptor.getDescriptor() == register;
+                register.setHoldsValueOf(null);
                 oldObjDescriptor.setRegisterLocation(null);
+                dirtyVariables.remove(oldObj);
             }
 
             if (newObj.getKind() == Obj.Con) {
@@ -459,5 +461,25 @@ public class ResourceManager {
         }
         else
             throw new RuntimeException("Invalid parameter.");
+    }
+
+    public void saveRegisterFile(List<String> out) {
+        out.add("\tpushq rbx");
+        out.add("\tpushq r12");
+        out.add("\tpushq r13");
+        out.add("\tpushq r14");
+        out.add("\tpushq r15");
+        out.add("\tsub rsp, 24");
+        out.add(System.lineSeparator());
+    }
+
+    public void restoreRegisterFile(List<String> out) {
+        out.add(System.lineSeparator());
+        out.add("\tadd rsp, 24");
+        out.add("\tpopq r15");
+        out.add("\tpopq r14");
+        out.add("\tpopq r13");
+        out.add("\tpopq r12");
+        out.add("\tpopq rbx");
     }
 }
