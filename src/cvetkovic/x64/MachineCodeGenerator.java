@@ -596,7 +596,7 @@ public class MachineCodeGenerator {
                             issueAuxiliaryInstructions(aux);
 
                             if (quadruple.getInstruction() == IRInstruction.CALL) {
-                                writer.write("\tCALL " + methodToInvoke);
+                                writer.write("\tCALL " + methodToInvoke + "_" + methodToInvoke.uniqueID);
                                 writer.write(System.lineSeparator());
                             }
                             else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {

@@ -1,18 +1,46 @@
 program TestProgram
+    class AbstractClass
+    {
+        {
+            void metoda()
+            {
+                print('a');
+                print('_');
+            }
+        }
+    }
+
+    class Class extends AbstractClass
+    {
+        {
+            void metoda()
+            {
+                print('e');
+                print('_');
+            }
+
+            void metoda2()
+            {
+                print('e');
+                print('2');
+                print('_');
+            }
+        }
+    }
+
     {
         void main()
-            int i;      // -4
-            int j;      // -8
-            int k;      // -12
-            int niz[];  // -24
+            AbstractClass base;
+            Class extended;
         {
-            niz = new int[10];
+            base = new AbstractClass;
+            base.metoda();
 
-            for (j = 0; j < 10; j++)
-                niz[j] = j;
+            base = new Class;
+            base.metoda();
 
-            for (j = 0; j < 10; j++)
-                print(niz[j]);
+            extended = new Class;
+            extended.metoda();
+            extended.metoda2();
         }
-
     }

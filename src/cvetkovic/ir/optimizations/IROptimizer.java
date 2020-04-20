@@ -38,12 +38,9 @@ public class IROptimizer extends Optimizer {
 
             Collection<Obj> allVariables = extractAllVariables(sequence.code);
             allVariables.addAll(sequence.function.getLocalSymbols().stream().collect(Collectors.toSet()));
-            int sizeOfTempVars = calculateSizeOfTempVariables(allVariables);
-            int oldAllocationValue = ((QuadrupleIntegerConst)enterInstruction.getArg1()).getValue();
+            int oldAllocationValue = ((QuadrupleIntegerConst) enterInstruction.getArg1()).getValue();
 
-            int sizeToAllocate = oldAllocationValue + sizeOfTempVars;
-            // because rsp + 0 -> is old ebp, offset 8 is the first element on stack
-            int lastSize = giveAddressToTemps(allVariables, sizeToAllocate);
+            int lastSize = giveAddressToTemps(allVariables, oldAllocationValue);
 
             enterInstruction.setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
 
@@ -54,23 +51,13 @@ public class IROptimizer extends Optimizer {
         createOptimizationList();
     }
 
-    private int calculateSizeOfTempVariables(Collection<Obj> variables) {
-        int tempVarSize = 0;
-
-        List<Obj> tempVars = variables.stream().filter(p -> p.tempVar).collect(Collectors.toList());
-        for (Obj obj : tempVars)
-            tempVarSize += SystemV_ABI.getX64VariableSize(obj.getType());
-
-        return tempVarSize;
-    }
-
     private Collection<Obj> extractAllVariables(List<Quadruple> allInstructions) {
         Set<Obj> objs = new HashSet<>();
 
         for (Quadruple q : allInstructions) {
-            Obj obj1 = (q.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar)q.getArg1()).getObj() : null);
-            Obj obj2 = (q.getArg2() instanceof QuadrupleObjVar ? ((QuadrupleObjVar)q.getArg2()).getObj() : null);
-            Obj objResult = (q.getResult() instanceof QuadrupleObjVar ? ((QuadrupleObjVar)q.getResult()).getObj() : null);
+            Obj obj1 = (q.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) q.getArg1()).getObj() : null);
+            Obj obj2 = (q.getArg2() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) q.getArg2()).getObj() : null);
+            Obj objResult = (q.getResult() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) q.getResult()).getObj() : null);
 
             if (obj1 != null && obj1.getKind() != Obj.Con)
                 objs.add(obj1);
@@ -88,12 +75,16 @@ public class IROptimizer extends Optimizer {
     private int giveAddressToTemps(Collection<Obj> variables, int startValue) {
         for (Obj obj : variables) {
             if ((obj.tempVar || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
-                int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
-                obj.setAdr(startValue + objSize);
-                startValue += objSize;
+                int lastTaken = startValue;
+                if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(obj.getType()))
+                    lastTaken = SystemV_ABI.alignTo16(SystemV_ABI.getX64VariableSize(obj.getType()));
+                int thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(obj.getType());
+                obj.setAdr(thisVarAddress);
+                startValue = thisVarAddress;
             }
 
-            System.out.println(obj.getName() + " -> " + obj.getAdr());
+            if (obj.getKind() == Obj.Var || obj.getKind() == Obj.Fld)
+                System.out.println(obj.getName() + " -> " + obj.getAdr());
         }
 
         System.out.println();

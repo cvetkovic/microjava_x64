@@ -4,7 +4,7 @@ program TestProgram
             int i;      // -4
             int j;      // -8
             int k;      // -12
-            int niz[];  // -20
+            int niz[];  // -24
         {
             niz = new int[10];
 

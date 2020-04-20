@@ -593,21 +593,22 @@ public class IRCodeGenerator extends VisitorAdaptor {
         currentMethod = MethodName.obj;
 
         Quadruple instruction = new Quadruple(IRInstruction.ENTER);
-        int numberOfBytes = 0;
         int i = 0;
 
         // determine number of bytes to allocate
+        int max = 0;
         for (Obj current : MethodName.obj.getLocalSymbols()) {
             // skip all parameters because space only for local variables shall be allocated
             if (i >= MethodName.obj.getLevel()) {
                 Struct type = current.getType();
-                numberOfBytes += SystemV_ABI.getX64VariableSize(type);
+                if (current.getAdr() > max)
+                    max = current.getAdr();
             }
 
             i++;
         }
 
-        instruction.setArg1(new QuadrupleIntegerConst(numberOfBytes));
+        instruction.setArg1(new QuadrupleIntegerConst(max));
 
         code.add(instruction);
     }
