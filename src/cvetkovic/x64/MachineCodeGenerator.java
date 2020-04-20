@@ -9,6 +9,7 @@ import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.semantics.ClassMetadata;
+import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.cpu.Descriptor;
 import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -182,10 +183,11 @@ public class MachineCodeGenerator {
             StringBuilder table = new StringBuilder();
 
             for (ClassMetadata metadata : classMetadata) {
-                /*table.append("# VFT for ").append(metadata.className).append("\n");
+                table.append(System.lineSeparator());
+
+                table.append("_vft_" + metadata.classObj.getName()).append(":").append(System.lineSeparator());
                 List<Obj> methods = metadata.pointersToFunction.values().stream().filter(p -> p.getKind() == Obj.Meth || p.getKind() == SymbolTable.AbstractMethodObject).collect(Collectors.toList());
-                methods.forEach((n) -> table.append(n).append(":\n\t.quad ").append(n.getName()).append("\n"));
-                table.append(System.lineSeparator());*/
+                methods.forEach((n) -> table.append("\t.quad ").append(n.getName() + "_" + n.uniqueID).append("\n"));
             }
 
             writer.write(table.toString());
@@ -419,6 +421,13 @@ public class MachineCodeGenerator {
                             writer.write("\tCALL calloc");
                             writer.write(System.lineSeparator());
 
+                            if (objResult.getType().getKind() == Struct.Class) {
+                                Obj classObj = classMetadata.stream().filter(p -> p.classObj.getType().getMembers() == objResult.getType().getMembers()).collect(Collectors.toList()).get(0).classObj;
+
+                                writer.write("\tMOV QWORD PTR [rax], OFFSET _vft_" + classObj.getName());
+                                writer.write(System.lineSeparator());
+                            }
+
                             if (quadruple.getArg2() == null || quadruple.getArg2() instanceof QuadrupleARR) {
                                 // allocates array -> save pointer to objResult's address
                                 writer.write("\tMOV " + resourceManager.getAddressDescriptor(objResult) + ", rax");
@@ -434,6 +443,7 @@ public class MachineCodeGenerator {
 
                                 // TODO: test this type of allocation
                                 issueAuxiliaryInstructions(aux);
+                                // save PTR
                                 writer.write("\tMOV [" + destination + "], rax");
                                 writer.write(System.lineSeparator());
                             }
@@ -443,6 +453,8 @@ public class MachineCodeGenerator {
                             aux.clear();
                             resourceManager.restoreContext(toPreserve, aux);
                             issueAuxiliaryInstructions(aux);
+
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
@@ -538,7 +550,8 @@ public class MachineCodeGenerator {
                             break;
                         }
 
-                        case CALL: {
+                        case CALL:
+                        case INVOKE_VIRTUAL: {
                             Obj methodToInvoke = obj1;
 
                             // passing parameters through register
@@ -562,8 +575,29 @@ public class MachineCodeGenerator {
                             resourceManager.saveDirtyVariables(aux, true);
                             issueAuxiliaryInstructions(aux);
 
-                            writer.write("\tCALL " + methodToInvoke);
-                            writer.write(System.lineSeparator());
+                            if (quadruple.getInstruction() == IRInstruction.CALL) {
+                                writer.write("\tCALL " + methodToInvoke);
+                                writer.write(System.lineSeparator());
+                            }
+                            else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
+                                List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
+
+                                RegisterDescriptor edi = resourceManager.getRegisterByName("rdi");
+                                Obj method = edi.getHoldsValueOf();
+
+                                RegisterDescriptor ptrToClass = resourceManager.getRegister(method, quadruple, forbiddenList);
+                                resourceManager.fetchOperand(ptrToClass, method, aux);
+
+                                issueAuxiliaryInstructions(aux);
+                                aux.clear();
+
+                                writer.write("\tMOV " + ptrToClass + ", [" + ptrToClass + "]");
+                                writer.write(System.lineSeparator());
+                                writer.write("\tCALL [" + ptrToClass + "]");
+                                writer.write(System.lineSeparator());
+                            }
+                            else
+                                throw new RuntimeException("Not supported type of method call.");
 
                             long numberOfStackParameters = methodToInvoke.getLocalSymbols().stream().filter(p -> p.stackParameter).count();
                             if (numberOfStackParameters > 1) {
@@ -581,14 +615,11 @@ public class MachineCodeGenerator {
 
                             paramIndex = 0;
 
+                            writer.write(System.lineSeparator());
+
                             break;
                         }
 
-                        case INVOKE_VIRTUAL: {
-                            break;
-                        }
-
-                        // TODO: do register file preservation on function call entrance
                         case ENTER: {
                             writer.write("\tPUSH rbp");
                             writer.write(System.lineSeparator());
@@ -598,7 +629,7 @@ public class MachineCodeGenerator {
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
 
                             // has to be divisible by 16 by System V ABI
-                            writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(allocateSize.getValue()));
+                            writer.write("\tSUB rsp, " + allocateSize.getValue());
                             writer.write(System.lineSeparator());
 
                             resourceManager.saveRegisterFile(aux);
@@ -804,8 +835,16 @@ public class MachineCodeGenerator {
                         }
 
                         case GEN_LABEL: {
-                            writer.write(quadruple.getArg1().toString() + ":");
+                            String labelName;
+
+                            if (instructionCounter == 0 && !currentFunction.getName().equals("main"))
+                                labelName = currentFunction.getName() + "_" + currentFunction.uniqueID;
+                            else
+                                labelName = quadruple.getArg1().toString();
+
+                            writer.write(labelName + ":");
                             writer.write(System.lineSeparator());
+
                             break;
                         }
 

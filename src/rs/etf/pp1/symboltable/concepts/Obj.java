@@ -26,6 +26,7 @@ public class Obj {
     public boolean stackParameter = false;
 
     private String name;
+    public int uniqueID;
 
     // Con, Var, Type, Meth, Fld, Prog
     private int kind;

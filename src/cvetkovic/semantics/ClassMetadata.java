@@ -6,6 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ClassMetadata {
-    public String className;
+    public Obj classObj;
     public Map<String, Obj> pointersToFunction = new HashMap<>();
 }

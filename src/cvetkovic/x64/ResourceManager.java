@@ -183,11 +183,12 @@ public class ResourceManager {
         return getRegister(obj, instruction, new ArrayList<>());
     }
 
-    public RegisterDescriptor getRegister(Obj obj, Quadruple
-            instruction, List<RegisterDescriptor> reservedRegisters) {
+    public RegisterDescriptor getRegister(Obj obj, Quadruple instruction, List<RegisterDescriptor> reservedRegisters) {
         AddressDescriptor addressDescriptor = addressDescriptors.get(obj);
 
-        if (addressDescriptor != null && addressDescriptor.getDescriptor() instanceof RegisterDescriptor) {
+        if (addressDescriptor != null &&
+                addressDescriptor.getDescriptor() instanceof RegisterDescriptor &&
+                !reservedRegisters.contains(addressDescriptor.getDescriptor())) {
             // CASE: obj is already in register, no action needed
             return (RegisterDescriptor) addressDescriptor.getDescriptor();
         }

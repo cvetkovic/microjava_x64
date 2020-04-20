@@ -490,6 +490,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         resolveClassDeclaration(ClassDeclarationErrorInExtends);
     }
 
+    private Map<String, Integer> uniqueMethodName = new HashMap<>();
+
     public void resolveClassDeclaration(ClassDecl ClassDecl) {
         SymbolTable.chainLocalSymbols(currentClass.getType());
 
@@ -549,7 +551,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentAddressOffset.pop();
 
         ClassMetadata metadata = new ClassMetadata();
-        metadata.className = ClassDecl.obj.getName();
+        metadata.classObj = ClassDecl.obj;
         ClassDecl.obj.getType().getMembers().stream().forEach(
                 p -> metadata.pointersToFunction.put(p.getName(), p)
         );
@@ -613,7 +615,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentAddressOffset.pop();
 
         ClassMetadata metadata = new ClassMetadata();
-        metadata.className = AbstractClassDecl.obj.getName();
+        metadata.classObj = AbstractClassDecl.obj;
         AbstractClassDecl.obj.getType().getMembers().stream().forEach(
                 p -> metadata.pointersToFunction.put(p.getName(), p)
         );
@@ -901,6 +903,16 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 newSymbol = SymbolTable.insert(Obj.Meth, methodName, returnType);
 
             MethodName.obj = newSymbol;
+
+            Integer uniqueRef = uniqueMethodName.get(methodName);
+            if (uniqueRef == null) {
+                newSymbol.uniqueID = 1;
+                uniqueMethodName.put(methodName, 1);
+            }
+            else {
+                newSymbol.uniqueID = ++uniqueRef;
+                uniqueMethodName.replace(methodName, uniqueRef);
+            }
         }
         else
             throwError(MethodName.getLine(), "Method with name '" + methodName + "' has already been defined.");
