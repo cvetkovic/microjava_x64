@@ -1,0 +1,18 @@
+program TestProgram
+    {
+        void main()
+            int a;      // -8
+            int b;      // -12
+            int sum;    // -16
+        {
+            sum = 0;
+            read(b);
+
+            for (a = 0; a < b; a++)
+            {
+                sum = sum + a;
+            }
+
+            print(sum);
+        }
+    }

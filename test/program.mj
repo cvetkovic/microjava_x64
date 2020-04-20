@@ -1,17 +1,18 @@
 program TestProgram
     {
         void main()
-            int a;      // -8
-            int b;      // -12
-            int sum;    // -16
+            int i;      // -8
+            int j;      // -12
+            int niz[];  // -16
         {
-            read(b);
+            niz = new int[10];
 
-            for (a = 0; a < b; a++)
-            {
-                sum++;
+            /*for (i = 0; i < 10; i++)
+                niz[i] = i;*/
+
+            for (j = 0; j < 10; j++) {
+                print(niz[j]);
+                print(eol);
             }
-
-            print(sum);
         }
     }

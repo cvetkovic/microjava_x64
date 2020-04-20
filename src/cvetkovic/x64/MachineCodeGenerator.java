@@ -596,12 +596,9 @@ public class MachineCodeGenerator {
                             writer.write(System.lineSeparator());
 
                             QuadrupleIntegerConst allocateSize = (QuadrupleIntegerConst) quadruple.getArg1();
-                            int sizeToAllocate = allocateSize.getValue() + resourceManager.getSizeOfTempVars();
-                            // because rsp + 0 -> is old ebp, offset 8 is the first element on stack
-                            int lastSize = giveAddressToTemps(basicBlock, 8 + allocateSize.getValue());
 
                             // has to be divisible by 16 by System V ABI
-                            writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(lastSize));
+                            writer.write("\tSUB rsp, " + SystemV_ABI.alignTo16(allocateSize.getValue()));
                             writer.write(System.lineSeparator());
 
                             resourceManager.saveRegisterFile(aux);
@@ -856,24 +853,6 @@ public class MachineCodeGenerator {
         for (int i = 0; i < registerNames.length; i++)
             if (resourceManager.checkIfRegisterIsTaken(mapToRegister.get(registerNames[i][0])))
                 toPreserve.add(mapToRegister.get(registerNames[i][0]));
-    }
-
-    private int giveAddressToTemps(BasicBlock basicBlock, int startValue) {
-        List<Obj> tempVars = basicBlock.enclosingFunction.getLocalSymbols().stream().collect(Collectors.toList());
-        tempVars.addAll(basicBlock.temporaryVariables);
-        for (Obj obj : tempVars) {
-            if ((obj.tempVar || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
-                int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
-                obj.setAdr(startValue + objSize);
-                startValue += objSize;
-            }
-
-            System.out.println(obj.getName() + " -> " + obj.getAdr());
-        }
-
-        System.out.println();
-
-        return startValue;
     }
 
     private void issueAuxiliaryInstructions(List<String> aux) throws IOException {

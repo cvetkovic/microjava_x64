@@ -9,7 +9,6 @@ import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ResourceManager {
     private Map<Obj, AddressDescriptor> addressDescriptors = new HashMap<>();
@@ -31,7 +30,6 @@ public class ResourceManager {
 
     public void configureAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
         createAddressDescriptors(variables);
-        sizeOfTempVars = calculateSizeOfTempVariables(variables);
     }
 
     /**
@@ -47,20 +45,6 @@ public class ResourceManager {
             AddressDescriptor addressDescriptor = new AddressDescriptor(new MemoryDescriptor(tuple.u, tuple.v));
             addressDescriptors.put(tuple.u, addressDescriptor);
         }
-    }
-
-    private int calculateSizeOfTempVariables(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
-        int tempVarSize = 0;
-
-        List<Obj> tempVars = variables.stream().filter(p -> p.u.tempVar).map(p -> p.u).collect(Collectors.toList());
-        for (Obj obj : tempVars)
-            tempVarSize += SystemV_ABI.getX64VariableSize(obj.getType());
-
-        return tempVarSize;
-    }
-
-    public int getSizeOfTempVars() {
-        return sizeOfTempVars;
     }
 
     /**
