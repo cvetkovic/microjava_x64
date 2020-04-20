@@ -340,9 +340,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         else
             parentName = ((DesignatorNonArrayAccess) DesignatorArrayAccess.getDesignator()).getDesignatorName();
 
+        Struct elemType = (DesignatorArrayAccess.getExpr().struct.getElemType() == null ? DesignatorArrayAccess.getExpr().struct : DesignatorArrayAccess.getExpr().struct.getElemType());
+
         if (DesignatorArrayAccess.getDesignator().obj.getType().getKind() != Struct.Array)
             throwError(DesignatorArrayAccess.getLine(), "Identifier '" + parentName + "' is not declared as array, therefore it cannot be accessed.");
-        else if (DesignatorArrayAccess.getExpr().struct != SymbolTable.intType)
+        else if (elemType != SymbolTable.intType)
             throwError(DesignatorArrayAccess.getLine(), "Indexer of '" + parentName + "' has to be of type integer.");
         else {
             if (designatorArrayAccessMap.containsKey(DesignatorArrayAccess.getDesignator().obj))
@@ -386,8 +388,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(TermMultiple TermMultiple) {
         // combined arithmetic operators not supported by grammar currently
 
-        if (TermMultiple.getFactor().struct == TermMultiple.getTerm().struct &&
-                TermMultiple.getFactor().struct == SymbolTable.intType)
+        Struct t1 = TermMultiple.getFactor().struct.getElemType() == null ? TermMultiple.getFactor().struct : TermMultiple.getFactor().struct.getElemType();
+        Struct t2 = TermMultiple.getTerm().struct.getElemType() == null ? TermMultiple.getTerm().struct : TermMultiple.getTerm().struct.getElemType();
+
+        if (t1 == t2 && t1 == SymbolTable.intType)
             TermMultiple.struct = SymbolTable.intType;
         else
             throwError(TermMultiple.getLine(), "Multiplication and division of expressions have to be done on top of integer arguments.");
@@ -802,11 +806,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         if (errorDetected)
             return;
 
+        Struct t2 = designator.obj.getType().getElemType() == null ? designator.obj.getType() : designator.obj.getType().getElemType();
+
         if (designator.obj.getKind() != Obj.Var &&
                 designator.obj.getKind() != Obj.Elem &&
                 designator.obj.getKind() != Obj.Fld)
             throwError(line, "Increment/Decrement statement has to be done on top of variable, array element or class field.");
-        else if (designator.obj.getType() != SymbolTable.intType)
+        else if (t2 != SymbolTable.intType)
             throwError(line, "Increment/Decrement statement has to be done on top of integer data type.");
     }
 

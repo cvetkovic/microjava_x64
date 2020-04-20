@@ -1,0 +1,78 @@
+program TestProgram
+    {
+        int test2(int a) {
+            return a + 1;
+        }
+
+        void test3() {
+            print(3);
+        }
+
+        void main()
+            int a;      // -8
+            int b;      // -12
+            int c;      // -16
+            int d;      // -20
+            int e;      // -24
+            int f;      // -28
+            int g;      // -32
+            int h;      // -36
+            int niz[];  // -40
+            int sum;    // -48
+            int sub;    // -52
+            int mul;    // -56
+            int div;    // -60
+            int neg;    // -64
+
+            int expr1, expr2, expr3;
+        {
+            a = 0;
+            b = 1;
+            c = 2;
+            d = 3;
+            e = 4;
+            f = 5;
+            g = 6;
+            h = 7;
+
+            /*print(a);
+            print(b);
+            print(c);
+            print(d);
+            print(e);
+            print(f);
+            print(g);
+            print(h);
+            print(eol);*/
+
+            sum = a + b + c + d + e + f + g + h;
+            sub = a - b - c - d - e - f - g - h;
+            mul = b * c * d * e * f * g * h;
+            div = g / c / c;
+            neg = -h;
+
+            expr1 = sum + sub;
+            expr2 = (sum - sub) * mul;
+            expr3 = neg * mul + 3;
+
+            print(sum);
+            print(eol);
+            print(sub);
+            print(eol);
+            print(mul);
+            print(eol);
+            print(div);
+            print(eol);
+            print(neg);
+            print(eol);
+
+            print('-');
+            print(eol);
+            print(expr1);
+            print(eol);
+            print(expr2);
+            print(eol);
+            print(expr3);
+            print(eol);
+        }
+    }

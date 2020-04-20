@@ -288,7 +288,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.add(astoreInstruction);
         }
         else {
-            instruction.setResult(new QuadrupleObjVar(targetObj));
+            instruction.setResult(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
             code.add(instruction);
         }
     }

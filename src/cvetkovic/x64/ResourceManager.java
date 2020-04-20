@@ -111,7 +111,7 @@ public class ResourceManager {
     public void forceTransferToMemory(RegisterDescriptor register, List<String> out) {
         Obj oldObj = register.holdsValueOf;
         AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
-        if (oldObj != null) {
+        if (oldObj != null && oldObjDescriptor.getDescriptor() instanceof RegisterDescriptor) {
             out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
 
             assert oldObjDescriptor.getDescriptor() == register;
@@ -255,11 +255,6 @@ public class ResourceManager {
 
         return reg;
     }
-
-    public void makeDescriptorFree(RegisterDescriptor registerDescriptor) {
-        freeRegisters.add(registerDescriptor);
-    }
-
 
     /**
      * If v is not used later (that is, after the instruction I, there

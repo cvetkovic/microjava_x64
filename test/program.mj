@@ -1,84 +1,17 @@
 program TestProgram
-    abstract class ApstraktnaKlasa
     {
-        {
-            void ametoda()
-            {
-            }
-        }
-    }
-
-    class Klasa extends ApstraktnaKlasa
-    {
-        int polje1;
-        int polje2;
-
-        Klasa klasnoPolje;
-        {
-            void metoda()
-            {
-                print(1);
-            }
-        }
-    }
-
-    {
-        // g -> +16, h -> +24
-        void test(int a, int b, int c, int d, int e, int f, int g, int h)
-            int var1;
-        {
-            print(a);
-            print(b);
-            print(c);
-            print(d);
-            print(e);
-            print(f);
-            print(g);
-            print(h);
-        }
-
         void main()
             int a;      // -8
             int b;      // -12
-            int c;      // -16
-            int d;      // -20
-            int niz[];  // -24
-            Klasa klasa;// -32
-            int i;      // -40
-            int j;      // -44
-            int k;      // -48
-            int l;      // -52
+            int sum;    // -16
         {
-            a = 8;
-            b = 7;
-            c = 6;
-            d = 5;
-            i = 4;
-            j = 3;
-            k = 2;
-            l = 1;
+            read(b);
 
-            test(1,2,3,4,5,6,7,8);
+            for (a = 0; a < b; a++)
+            {
+                sum++;
+            }
 
-            print(eol);
-            print(a);
-            print(b);
-            print(c);
-            print(d);
-            print(i);
-            print(j);
-            print(k);
-            print(l);
-
-            print(eol);
-            test(a,b,c,d,i,j,k,l);
-            print(eol);
-            test(1,2,3,4,5,6,7,8);
-            print(eol);
-            test(a,b,c,d,i,j,k,l);
-            print(eol);
-
-            //test2(1);
-            //test3();
+            print(sum);
         }
     }

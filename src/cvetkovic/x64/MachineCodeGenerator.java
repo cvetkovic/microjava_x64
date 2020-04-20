@@ -256,7 +256,7 @@ public class MachineCodeGenerator {
                             resourceManager.fetchOperand(arg2_register, obj2, aux);
 
                             resourceManager.validate(dest_arg1_register, objResult, aux, true);
-                            resourceManager.makeDescriptorFree(arg2_register);
+                            //resourceManager.makeDescriptorFree(arg2_register);
 
                             issueAuxiliaryInstructions(aux);
                             String secondOperand = arg2_register.getNameBySize(SystemV_ABI.getX64VariableSize(obj2.getType()));
@@ -862,7 +862,7 @@ public class MachineCodeGenerator {
         List<Obj> tempVars = basicBlock.enclosingFunction.getLocalSymbols().stream().collect(Collectors.toList());
         tempVars.addAll(basicBlock.temporaryVariables);
         for (Obj obj : tempVars) {
-            if ((obj.tempVar || obj.parameter) && obj.getKind() != Obj.Con && obj.stackParameter == false) {
+            if ((obj.tempVar || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
                 int objSize = SystemV_ABI.getX64VariableSize(obj.getType());
                 obj.setAdr(startValue + objSize);
                 startValue += objSize;
