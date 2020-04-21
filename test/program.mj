@@ -5,10 +5,15 @@ program TestProgram
         int polje2;
 
         {
-            void metoda()
+            void metoda1()
             {
                 print('a');
                 print('_');
+            }
+
+            void metoda2()
+            {
+
             }
         }
     }
@@ -19,16 +24,10 @@ program TestProgram
         int polje4;
 
         {
-            void metoda()
-            {
-                print('e');
-                print('_');
-            }
 
-            void metoda2()
+            void metoda3()
             {
                 print('e');
-                print('2');
                 print('_');
             }
         }

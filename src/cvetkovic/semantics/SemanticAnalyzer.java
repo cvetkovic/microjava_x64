@@ -130,6 +130,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         ProgramName.obj = SymbolTable.insert(Obj.Prog, ProgramName.getProgramName(), SymbolTable.noType);
         SymbolTable.openScope(SymbolTable.ScopeType.OUTSIDE_CLASS);
         currentAddressOffset.push(0);
+        currentFunctionOffset.push(0);
     }
 
     /**
@@ -215,6 +216,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
     // stack for giving variables and fields its offset in data structure
     private Stack<Integer> currentAddressOffset = new Stack<>();
+    private Stack<Integer> currentFunctionOffset = new Stack<>();
 
     /**
      * Variable declaration
@@ -563,6 +565,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentClassName = "";
         currentClassExtends = null;
         currentAddressOffset.pop();
+        currentFunctionOffset.pop();
 
         ClassMetadata metadata = new ClassMetadata();
         metadata.classObj = ClassDecl.obj;
@@ -627,6 +630,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         SymbolTable.closeScope();
         currentClass = null;
         currentAddressOffset.pop();
+        currentFunctionOffset.pop();
 
         ClassMetadata metadata = new ClassMetadata();
         metadata.classObj = AbstractClassDecl.obj;
@@ -642,10 +646,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         if (implementedAbstractMethods.get(currentClassName) == null)
             implementedAbstractMethods.put(currentClassName, new LinkedList<Obj>());
 
-        // needed to add, otherwise fields cannot be accesed properly during
+        // needed to add, otherwise fields cannot be accessed properly during
         // code generation as first field would point to VTP, etc.
         SymbolTable.insert(Obj.Fld, "_vtp", Tab.noType).setAdr(0);
         currentAddressOffset.push(8);
+        currentFunctionOffset.push(0);
     }
 
     @Override
@@ -689,6 +694,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         // inherit fields and methods of base class
         Iterator<Obj> classIterator = baseClassType.getMembers().iterator();
         int maxAddress = 8;
+        int maxFunction = 0;
         while (classIterator.hasNext()) {
             Obj current = classIterator.next();
 
@@ -702,25 +708,19 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                     maxAddress = current.getAdr() + SystemV_ABI.getX64VariableSize(current.getType());
             }
             else if (current.getKind() == Obj.Meth || current.getKind() == SymbolTable.AbstractMethodObject) {
-                Iterator t = current.getLocalSymbols().iterator();
-
-                // bugfix for not inheriting the address which is generated during code generation phase
+                // bug fix for not inheriting the address which is generated during code generation phase
                 SymbolTable.currentScope.addToLocals(current);
 
-				/*HashTableDataStructure hashTableDataStructure = new HashTableDataStructure();
-				while (t.hasNext())
-					hashTableDataStructure.insertKey((Obj)t.next());
-
-				Obj root = SymbolTable.insert(current.getKind(), current.getName(), current.getType());
-				root.setLevel(current.getLevel());
-				root.setFpPos(current.getFpPos());
-				root.setLocals(hashTableDataStructure);
-				root.setAdr(current.getAdr());*/
+                if (current.getAdr() >= maxFunction)
+                    maxFunction = current.getAdr();
             }
         }
 
         currentAddressOffset.pop();
         currentAddressOffset.push(maxAddress);
+
+        currentFunctionOffset.pop();
+        currentFunctionOffset.push(maxFunction + 1);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -924,9 +924,17 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 list.add(object);
                 SymbolTable.currentScope.getLocals().deleteKey(object.getName());
                 newSymbol = SymbolTable.insert(Obj.Meth, methodName, returnType);
+
+                newSymbol.setAdr(object.getAdr());
             }
-            else
+            else {
+                // member not inherited
                 newSymbol = SymbolTable.insert(Obj.Meth, methodName, returnType);
+
+                int vtpFunctionOffset = currentFunctionOffset.pop();
+                newSymbol.setAdr(vtpFunctionOffset);
+                currentFunctionOffset.push(vtpFunctionOffset + 1);
+            }
 
             MethodName.obj = newSymbol;
 
