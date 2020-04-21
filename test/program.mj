@@ -1,6 +1,9 @@
 program TestProgram
     class AbstractClass
     {
+        int polje1;
+        int polje2;
+
         {
             void metoda()
             {
@@ -12,6 +15,9 @@ program TestProgram
 
     class Class extends AbstractClass
     {
+        int polje3;
+        int polje4;
+
         {
             void metoda()
             {
@@ -33,14 +39,14 @@ program TestProgram
             AbstractClass base;
             Class extended;
         {
-            base = new AbstractClass;
+            /*base = new AbstractClass;
             base.metoda();
 
             base = new Class;
-            base.metoda();
+            base.metoda();*/
 
             extended = new Class;
-            extended.metoda();
+            //extended.metoda();
             extended.metoda2();
         }
     }

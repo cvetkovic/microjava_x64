@@ -248,10 +248,19 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             int lastTaken = currentAddressOffset.pop();
             int thisVarAddress;
             if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()))
-                lastTaken =  SystemV_ABI.alignTo16(SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
-            thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType());
-            newlyCreatedVar.setAdr(thisVarAddress);
-            currentAddressOffset.push(thisVarAddress);
+                lastTaken = SystemV_ABI.alignTo16(SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
+
+            if (SymbolTable.getCurrentScopeKind() == SymbolTable.ScopeType.OUTSIDE_CLASS.ordinal()) {
+                thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType());
+                newlyCreatedVar.setAdr(thisVarAddress);
+                currentAddressOffset.push(thisVarAddress);
+            }
+            else {
+                thisVarAddress = lastTaken;
+                newlyCreatedVar.setAdr(thisVarAddress);
+                currentAddressOffset.push(thisVarAddress + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
+            }
+
 
             if (currentDataType.struct.getKind() == Struct.Class)
                 classInstances.put(variableName, currentDataType.getTypeIdent());
@@ -679,11 +688,18 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
         // inherit fields and methods of base class
         Iterator<Obj> classIterator = baseClassType.getMembers().iterator();
+        int maxAddress = 8;
         while (classIterator.hasNext()) {
             Obj current = classIterator.next();
 
             if (current.getKind() == Obj.Fld) {
-                SymbolTable.insert(current.getKind(), current.getName(), current.getType());
+                if (current.getName().equals("_vtp"))
+                    continue;
+
+                Obj obj = SymbolTable.insert(current.getKind(), current.getName(), current.getType());
+                obj.setAdr(current.getAdr());
+                if (current.getAdr() >= maxAddress)
+                    maxAddress = current.getAdr() + SystemV_ABI.getX64VariableSize(current.getType());
             }
             else if (current.getKind() == Obj.Meth || current.getKind() == SymbolTable.AbstractMethodObject) {
                 Iterator t = current.getLocalSymbols().iterator();
@@ -702,6 +718,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				root.setAdr(current.getAdr());*/
             }
         }
+
+        currentAddressOffset.pop();
+        currentAddressOffset.push(maxAddress);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -805,8 +824,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 designator.obj.getKind() != Obj.Elem &&
                 designator.obj.getKind() != Obj.Fld)
             throwError(DesignatorAssign.getLine(), "Left side of assigment statement has to be variable, array element or class field.");
-        else if (!SymbolTable.assignmentPossible((designator.obj.getType().getKind() != Struct.Array ? designator.obj.getType() : designator.obj.getType().getElemType()), (expression.struct.getElemType() == null ? expression.struct : expression.struct.getElemType())))
-        {
+        else if (!SymbolTable.assignmentPossible((designator.obj.getType().getKind() != Struct.Array ? designator.obj.getType() : designator.obj.getType().getElemType()), (expression.struct.getElemType() == null ? expression.struct : expression.struct.getElemType()))) {
             if (!SymbolTable.assignmentPossible((designator.obj.getType().getKind() != Struct.Class ? designator.obj.getType() : designator.obj.getType().getElemType()), (expression.struct.getElemType() == null ? expression.struct : expression.struct.getElemType())))
                 throwError(DesignatorAssign.getLine(), "Data types of left and right side of assigment statement don't match.");
         }

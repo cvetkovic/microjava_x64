@@ -423,7 +423,7 @@ public class MachineCodeGenerator {
                                 numberOfElements = classSize;
                             }
                             else
-                                numberOfElements = ((QuadrupleIntegerConst)quadruple.getArg1()).getValue();
+                                numberOfElements = ((QuadrupleIntegerConst) quadruple.getArg1()).getValue();
 
                             // num of elements
                             writer.write("\tMOV rdi, " + String.valueOf(numberOfElements));
@@ -613,7 +613,7 @@ public class MachineCodeGenerator {
 
                                 writer.write("\tMOV " + ptrToClass + ", [" + ptrToClass + "]");
                                 writer.write(System.lineSeparator());
-                                writer.write("\tCALL [" + ptrToClass + "]");
+                                writer.write("\tCALL [" + ptrToClass + " + 8 * " + methodToInvoke.getAdr() + "]");
                                 writer.write(System.lineSeparator());
                             }
                             else

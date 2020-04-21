@@ -35,7 +35,7 @@ public class MemoryDescriptor extends Descriptor {
                 return indexBy.toString() + " + " + holdsValueOf.getAdr();
 
             default:
-                throw new RuntimeException("Not implemented address descriptor access.");
+                throw new RuntimeException("Not implemented memory descriptor access.");
         }
     }
 }

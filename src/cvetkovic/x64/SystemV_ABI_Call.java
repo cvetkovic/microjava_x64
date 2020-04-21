@@ -31,7 +31,6 @@ public class SystemV_ABI_Call {
             RegisterDescriptor destination = getParameterRegister(i);
             Obj parameterVar = iterator.get(i);
 
-            // TODO: set addresses of parameters in symbol table
             if (destination != null) {
                 parameterVar.parameterDescriptor = destination;
             }
@@ -39,7 +38,6 @@ public class SystemV_ABI_Call {
                 parameterVar.stackParameter = true;
                 parameterVar.setAdr(stackOffset);
                 stackOffset += 8;
-                //throw new RuntimeException("Argument stacking not yet implemented.");
             }
         }
 
