@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MachineCodeGenerator {
+public class AssemblyGenerator {
     private static final String[][] registerNames = {
             new String[]{"rax", "eax", "al"},
             new String[]{"rbx", "ebx", "bl"},
@@ -59,8 +59,8 @@ public class MachineCodeGenerator {
      * @param globalVariables
      * @param classMetadata
      */
-    public MachineCodeGenerator(String outputFileUrl, List<CodeSequence> codeSequences,
-                                Set<Obj> globalVariables, List<ClassMetadata> classMetadata) {
+    public AssemblyGenerator(String outputFileUrl, List<CodeSequence> codeSequences,
+                             Set<Obj> globalVariables, List<ClassMetadata> classMetadata) {
         this.outputFileUrl = outputFileUrl;
         this.codeSequences = codeSequences;
         this.globalVariables = globalVariables;
@@ -186,7 +186,8 @@ public class MachineCodeGenerator {
                 table.append(System.lineSeparator());
 
                 table.append("_vft_" + metadata.classObj.getName()).append(":").append(System.lineSeparator());
-                List<Obj> methods = metadata.pointersToFunction.values().stream().filter(p -> p.getKind() == Obj.Meth || p.getKind() == SymbolTable.AbstractMethodObject).collect(Collectors.toList());
+
+                List<Obj> methods = metadata.pointersToFunction.values().stream().filter(p -> p.getKind() == Obj.Meth || p.getKind() == SymbolTable.AbstractMethodObject).sorted(Comparator.comparingInt(Obj::getAdr)).collect(Collectors.toList());
                 methods.forEach((n) -> table.append("\t.quad ").append(n.getName() + "_" + n.uniqueID).append("\n"));
             }
 

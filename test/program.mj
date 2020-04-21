@@ -24,6 +24,12 @@ program TestProgram
         int polje4;
 
         {
+            void metoda2()
+            {
+                print('e');
+                print('2');
+                print('_');
+            }
 
             void metoda3()
             {
