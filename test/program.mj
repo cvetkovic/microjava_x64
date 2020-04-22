@@ -1,61 +1,45 @@
 program TestProgram
-    class AbstractClass
+    class Klasa
     {
         int polje1;
         int polje2;
 
-        {
-            void metoda1()
-            {
-                print('a');
-                print('_');
-            }
-
-            void metoda2()
-            {
-                print('a');
-                print('2');
-                print('_');
-            }
-        }
-    }
-
-    class Class extends AbstractClass
-    {
-        int polje3;
-        int polje4;
-
-        {
-            void metoda2()
-            {
-                print('e');
-                print('2');
-                print('_');
-            }
-
-            void metoda3()
-            {
-                print('e');
-                print('3');
-                print('_');
-            }
-        }
+        Klasa klasnoPolje;
     }
 
     {
         void main()
-            AbstractClass base;
-            Class extended;
+            int a;      // -8
+            int b;      // -12
+            int c;      // -16
+            int d;      // -20
+            int niz[];  // -24
+            Klasa k;    // -32
+            int i;      // -40
         {
-            /*base = new AbstractClass;
-            base.metoda();
+            niz = new int[10];
 
-            base = new Class;
-            base.metoda();*/
+            for (i = 0; i < 5; i++)
+                read(niz[i]);
 
-            extended = new Class;
-            extended.metoda1();
-            extended.metoda2();
-            extended.metoda3();
+            for (a = 0; a < 5; a++)
+            {
+                for (b = 0; b < 5; b++)
+                {
+                    if (niz[a] < niz[b])
+                    {
+                        c = niz[a];
+                        niz[a] = niz[b];
+                        niz[b] = c;
+                    }
+                }
+            }
+
+            for (i = 0; i < 5; i++) {
+                print(niz[i]);
+                print(' ');
+            }
+
+            print(eol);
         }
     }

@@ -1,10 +1,20 @@
 program TestProgram
     class AbstractClass
     {
+        int polje1;
+        int polje2;
+
         {
-            void metoda()
+            void metoda1()
             {
                 print('a');
+                print('_');
+            }
+
+            void metoda2()
+            {
+                print('a');
+                print('2');
                 print('_');
             }
         }
@@ -12,17 +22,21 @@ program TestProgram
 
     class Class extends AbstractClass
     {
-        {
-            void metoda()
-            {
-                print('e');
-                print('_');
-            }
+        int polje3;
+        int polje4;
 
+        {
             void metoda2()
             {
                 print('e');
                 print('2');
+                print('_');
+            }
+
+            void metoda3()
+            {
+                print('e');
+                print('3');
                 print('_');
             }
         }
@@ -34,13 +48,16 @@ program TestProgram
             Class extended;
         {
             base = new AbstractClass;
-            base.metoda();
+            base.metoda2();
+            print(eol);
 
             base = new Class;
-            base.metoda();
+            base.metoda2();
+            print(eol);
 
             extended = new Class;
-            extended.metoda();
+            extended.metoda1();
             extended.metoda2();
+            extended.metoda3();
         }
     }

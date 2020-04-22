@@ -55,9 +55,6 @@ public class Quadruple {
         this.arg2 = arg2;
     }
 
-    // TODO: add to setters RuntimeException if that parameter cannot be set because of instruction format specification
-    // TODO: add explicit typechecking
-
     public void setInstruction(IRInstruction add) {
         this.instruction = add;
     }

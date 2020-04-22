@@ -130,7 +130,6 @@ public class Compiler {
                         irCodeOptimizer.getOptimizationOutput(),
                         semanticCheck.getGlobalVariables(),
                         semanticCheck.getClassMetadata());
-                // TODO: replace with polymorphism table
 
                 assemblyGenerator.generateCode();
                 if (dump_asm) {

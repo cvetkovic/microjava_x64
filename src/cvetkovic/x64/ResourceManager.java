@@ -53,7 +53,7 @@ public class ResourceManager {
      * @param var
      * @return
      */
-    public MemoryDescriptor getAddressDescriptor(Obj var) {
+    public MemoryDescriptor getMemoryDescriptor(Obj var) {
         return addressDescriptors.get(var).getMemoryDescriptor();
     }
 
@@ -72,6 +72,7 @@ public class ResourceManager {
 
             if (newObj != oldObj) {
                 aux.add("\tMOV " + addressDescriptors.get(oldObj).getMemoryDescriptor() + ", " + targetDescriptor);
+                dirtyVariables.remove(oldObj);
             }
         }
 
@@ -97,11 +98,10 @@ public class ResourceManager {
         AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
         if (oldObj != null && oldObjDescriptor.getDescriptor() instanceof RegisterDescriptor) {
             out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
+            dirtyVariables.remove(oldObj);
 
             assert oldObjDescriptor.getDescriptor() == register;
             oldObjDescriptor.setRegisterLocation(null);
-
-            dirtyVariables.remove(oldObj);
         }
     }
 
@@ -109,7 +109,14 @@ public class ResourceManager {
         if (addressDescriptors.get(destination) != null) {
             addressDescriptors.get(destination).setRegisterLocation(null);
             out.add("\tMOV " + addressDescriptors.get(destination).getMemoryDescriptor() + ", " + reg.getNameBySize(SystemV_ABI.getX64VariableSize(destination.getType())));
+            dirtyVariables.remove(destination);
         }
+    }
+
+    private boolean sxd = false;
+
+    public void setSXD() {
+        sxd = true;
     }
 
     /**
@@ -129,11 +136,11 @@ public class ResourceManager {
             AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
             if (oldObj != null && oldObjDescriptor.getDescriptor() instanceof RegisterDescriptor) {
                 out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
+                dirtyVariables.remove(oldObj);
 
                 assert oldObjDescriptor.getDescriptor() == register;
                 register.setHoldsValueOf(null);
                 oldObjDescriptor.setRegisterLocation(null);
-                dirtyVariables.remove(oldObj);
             }
 
             if (newObj.getKind() == Obj.Con) {
@@ -145,9 +152,9 @@ public class ResourceManager {
             // loading new variable
             AddressDescriptor newObjDescriptor = addressDescriptors.get(newObj);
             register.holdsValueOf = newObj;
-            register.setPrintWidth(SystemV_ABI.getX64VariableSize(newObj.getType()));
-            out.add("\tMOV " + register + ", " + addressDescriptors.get(newObj).getDescriptor());
+            out.add("\t" + (sxd ? "MOVSXD " + register.getNameBySize(8) : "MOV " + register.getNameBySize(SystemV_ABI.getX64VariableSize(newObj.getType()))) + ", " + addressDescriptors.get(newObj).getDescriptor());
 
+            sxd = false;
             newObjDescriptor.setRegisterLocation(register);
         }
     }
@@ -165,6 +172,7 @@ public class ResourceManager {
             AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
             if (oldObj != null && oldObjDescriptor.getDescriptor() instanceof RegisterDescriptor) {
                 out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
+                dirtyVariables.remove(oldObj);
 
                 assert oldObjDescriptor.getDescriptor() == register;
                 oldObjDescriptor.setRegisterLocation(null);
@@ -364,28 +372,6 @@ public class ResourceManager {
 
         return res;
     }
-
-    /*public RegisterDescriptor getRegisterByForce() {
-        // TODO: change allocation algorithm do this with LRU
-        RegisterDescriptor register;
-
-        if (freeRegisters.size() > 0) {
-            register = freeRegisters.get(0);
-            freeRegisters.remove(register);
-        }
-        else {
-            for (AddressDescriptor addressDescriptor : addressDescriptors.values()) {
-                if (addressDescriptor.getDescriptor() instanceof RegisterDescriptor) {
-                    register = (RegisterDescriptor) addressDescriptor.getDescriptor();
-                    break;
-                }
-            }
-
-            throw new RuntimeException("Register not allocatable by force.");
-        }
-
-        return register;
-    }*/
 
     /**
      * Checks whether register is free

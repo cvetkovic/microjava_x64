@@ -44,7 +44,6 @@ public enum IRInstruction {
 
     public static boolean isBasicBlockSplitInstruction(IRInstruction instruction)
     {
-        // TODO: see here what to do with CALL instruction
         switch (instruction){
             case JMP:
             case JL:
@@ -53,8 +52,6 @@ public enum IRInstruction {
             case JGE:
             case JE:
             case JNE:
-
-            //case CALL:
                 return true;
 
             default:

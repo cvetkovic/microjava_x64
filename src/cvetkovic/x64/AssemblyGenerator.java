@@ -451,7 +451,7 @@ public class AssemblyGenerator {
 
                             if (quadruple.getArg2() == null || quadruple.getArg2() instanceof QuadrupleARR) {
                                 // allocates array -> save pointer to objResult's address
-                                writer.write("\tMOV " + resourceManager.getAddressDescriptor(objResult) + ", rax");
+                                writer.write("\tMOV " + resourceManager.getMemoryDescriptor(objResult) + ", rax");
                                 writer.write(System.lineSeparator());
                             }
                             else {
@@ -478,8 +478,6 @@ public class AssemblyGenerator {
                             break;
                         }
 
-                        // TODO: change MOV to MOVSXD
-
                         case ALOAD: {
                             Obj arrayReference = obj1;
                             Obj arrayIndex = obj2;
@@ -496,6 +494,7 @@ public class AssemblyGenerator {
                             RegisterDescriptor regDestination = resourceManager.getRegister(destinationVariable, quadruple, forbidden);
 
                             resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
+                            resourceManager.setSXD();
                             resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
                             resourceManager.validate(regDestination, destinationVariable, aux, true);
 
@@ -524,8 +523,8 @@ public class AssemblyGenerator {
                             forbidden.add(regArrayIndex);
                             RegisterDescriptor regValue = resourceManager.getRegister(valueToWrite, quadruple, forbidden);
 
-                            // TODO: put MOVSXD for index variable -> signed extension
                             resourceManager.fetchOperand(regArrayReference, arrayReference, aux);
+                            resourceManager.setSXD();
                             resourceManager.fetchOperand(regArrayIndex, arrayIndex, aux);
                             resourceManager.fetchOperand(regValue, valueToWrite, aux);
 
@@ -706,7 +705,7 @@ public class AssemblyGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
 
                         case SCANF: {
-                            Descriptor destination = resourceManager.getAddressDescriptor(objResult);
+                            Descriptor destination = resourceManager.getMemoryDescriptor(objResult);
 
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
                             makeRegisterPreservationList(toPreserve);
@@ -898,12 +897,6 @@ public class AssemblyGenerator {
                 }
 
                 basicBlock = null;
-
-                // TODO: resourceManager.saveDirtyVariables(aux);
-                // TODO: issueAuxiliaryInstructions(aux);
-                // TODO: resourceManager.saveContext();
-                // TODO: writer.write( machine code );
-                // TODO: resourceManager.restoreContext();
             }
 
             instructionCounter = 0;
