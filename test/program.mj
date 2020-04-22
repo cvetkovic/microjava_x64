@@ -13,7 +13,9 @@ program TestProgram
 
             void metoda2()
             {
-
+                print('a');
+                print('2');
+                print('_');
             }
         }
     }
@@ -34,6 +36,7 @@ program TestProgram
             void metoda3()
             {
                 print('e');
+                print('3');
                 print('_');
             }
         }
@@ -51,7 +54,8 @@ program TestProgram
             base.metoda();*/
 
             extended = new Class;
-            //extended.metoda();
+            extended.metoda1();
             extended.metoda2();
+            extended.metoda3();
         }
     }

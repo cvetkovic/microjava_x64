@@ -152,6 +152,10 @@ public class ResourceManager {
         }
     }
 
+    public void clearRegisterFromAddressDescriptors(Obj obj) {
+        addressDescriptors.get(obj).setRegisterLocation(null);
+    }
+
     public void pushParameter(RegisterDescriptor register, Obj newObj, List<String> out) {
         if (register.holdsValueOf == newObj)
             return;
@@ -344,8 +348,10 @@ public class ResourceManager {
 
             AddressDescriptor addressDescriptor = addressDescriptors.get(obj);
 
-            if (addressDescriptor.getDescriptor() instanceof RegisterDescriptor)
+            if (addressDescriptor.getDescriptor() instanceof RegisterDescriptor) {
                 out.add("\tMOV " + addressDescriptor.getMemoryDescriptor() + ", " + addressDescriptor.getDescriptor().toString());
+                addressDescriptor.setRegisterLocation(null);
+            }
         }
 
         dirtyVariables.clear();

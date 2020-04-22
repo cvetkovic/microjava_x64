@@ -587,6 +587,9 @@ public class AssemblyGenerator {
                                 resourceManager.fetchOperand(argToPush, param, params);
 
                                 params.add("\tPUSHQ " + argToPush.getNameBySize(8));
+
+                                resourceManager.clearRegisterFromAddressDescriptors(param);
+                                argToPush.setHoldsValueOf(null);
                             }
 
                             // emitting instructions for parameters
@@ -599,6 +602,8 @@ public class AssemblyGenerator {
                             if (quadruple.getInstruction() == IRInstruction.CALL) {
                                 writer.write("\tCALL " + methodToInvoke + "_" + methodToInvoke.uniqueID);
                                 writer.write(System.lineSeparator());
+
+                                resourceManager.clearRegisterFromAddressDescriptors(methodToInvoke);
                             }
                             else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
                                 List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
@@ -616,6 +621,10 @@ public class AssemblyGenerator {
                                 writer.write(System.lineSeparator());
                                 writer.write("\tCALL [" + ptrToClass + " + 8 * " + methodToInvoke.getAdr() + "]");
                                 writer.write(System.lineSeparator());
+
+                                ptrToClass.setHoldsValueOf(null);
+                                edi.setHoldsValueOf(null);
+                                resourceManager.clearRegisterFromAddressDescriptors(method);
                             }
                             else
                                 throw new RuntimeException("Not supported type of method call.");
