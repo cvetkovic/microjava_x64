@@ -646,6 +646,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             }
         }
 
+        compilerAddedInstructionsToFix.removeAll(toRemove);
         ifFixPointStack.removeAll(toRemove);
     }
 
@@ -659,7 +660,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         Quadruple instruction = new Quadruple(operationCode);
         instruction.setArg1(new QuadrupleObjVar(arg1Obj));
-        instruction.setArg2(alwaysTrueConstant);
+
+        Obj alwaysTrue = new Obj(Obj.Con, "const", SymbolTable.intType);
+        alwaysTrue.setAdr(1);
+        instruction.setArg2(new QuadrupleObjVar(alwaysTrue));
+
         code.add(instruction);
 
         if (!inForCondition)
@@ -686,6 +691,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
             ifFixPointStack.push(new ControlFlow.IfFixPoint(instruction, ifStatementDepth));
         else
             jumpForFixPoints.peek().forEndFixPoint.add(instruction);
+
+        expressionDAG = new ExpressionDAG();
     }
 
     @Override

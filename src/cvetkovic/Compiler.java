@@ -131,10 +131,10 @@ public class Compiler {
                         semanticCheck.getGlobalVariables(),
                         semanticCheck.getClassMetadata());
 
-                assemblyGenerator.generateCode();
+                /*assemblyGenerator.generateCode();
                 if (dump_asm) {
                     readOutputFile(Compiler.outputFile);
-                }
+                }*/
 
                 System.out.println("================ COMPILATION DONE ================");
             }

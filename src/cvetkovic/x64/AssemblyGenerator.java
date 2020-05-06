@@ -77,6 +77,8 @@ public class AssemblyGenerator {
 
             writer = new BufferedWriter(new FileWriter(outputFileHandle));
 
+            // TODO: generate code for embedded functions (e.g. ord() and others)
+
             generateDirectives();
             generateBSS();
             generatePolymorphismTables();
