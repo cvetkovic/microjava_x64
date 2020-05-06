@@ -1,20 +1,33 @@
-//Test 302
+//Test 303
 
-program test302
+program test_303
 
-const int jedan = 1;
-
-int i;
-bool ibool;
-
-int niz[];
+const int cinilac = 4, delilac = 3;
+abstract class AbsPredmet
 {
-	void main()
 	{
-		for(i = 0; i < 10; i++)
-		{
-			continue;
-		}
+		int zapremina() { return 0; }
+		int Q() { return 0; }
 	}
+}
+class Predmet extends AbsPredmet
+{
+	 int tezina;
+	 char vrsta;
+
+	{
+		 //void postaviTezinu(int tezina) {this.tezina = tezina;}
+
+		 void ucitajTezinu() {  }
+
+		 int Q() {return zapremina() * tezina;}
+	}
+}
+
+{
+    void main()
+    {
+
+    }
 }
 

@@ -314,9 +314,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                 parentDesignator.obj.getKind() == Obj.Elem ||   // array element
                 parentDesignator.obj.getKind() == Obj.Type)     // class
         {
-            if (parentDesignator.obj.getType().getKind() == Struct.Class ||
-                    parentDesignator.obj.getType().getKind() == Struct.Interface) {
-                Iterator<Obj> iterator = parentDesignator.obj.getType().getMembers().iterator();
+            Struct parentStruct = (parentDesignator.obj.getType().getKind() == Struct.Array ? parentDesignator.obj.getType().getElemType() : parentDesignator.obj.getType());
+
+            if (parentStruct.getKind() == Struct.Class ||
+                    parentStruct.getKind() == Struct.Interface) {
+                Iterator<Obj> iterator = parentStruct.getMembers().iterator();
 
                 boolean found = false;
                 while (iterator.hasNext()) {

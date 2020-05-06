@@ -211,7 +211,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (FactorArrayDeclaration.getFactorArrayDecl() instanceof NoArrayDeclaration) {
             allocateClass = true;
 
-            String dataTypeName = ((DataType)FactorArrayDeclaration.getType()).getTypeIdent();
+            String dataTypeName = ((DataType) FactorArrayDeclaration.getType()).getTypeIdent();
             Obj objNode = SymbolTable.find(dataTypeName);
 
             expressionNodeStack.push(new ExpressionNode(objNode));
@@ -260,7 +260,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.add(instruction);
             code.add(astoreInstruction);
         }
-        else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess) {
+        else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess || expressionNodeStack.size() > 1) {
             Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct(), true);
             instruction.setResult(new QuadrupleObjVar(tmp));
 
@@ -376,7 +376,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             Quadruple load = new Quadruple(LOAD);
             load.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
-            load.setArg2(new QuadrupleObjVar(tmp));
+            load.setResult(new QuadrupleObjVar(tmp));
             code.add(load);
 
             expressionNodeStack.push(new ExpressionNode(tmp));
@@ -398,7 +398,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
             if (!(FactorFunctionCall.getDesignator() instanceof DesignatorRoot))
                 pushImplicitThisForFunctionCall();
 
-            Quadruple instruction = new Quadruple(FactorFunctionCall.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL : INVOKE_VIRTUAL);
+            boolean invokeVirtual = false;
+            if (FactorFunctionCall.getDesignator().obj.getLocalSymbols().stream().filter(p -> p.getName().equals("this")).count() > 0);
+                invokeVirtual = true;
+
+            Quadruple instruction = new Quadruple(!invokeVirtual ? IRInstruction.CALL : INVOKE_VIRTUAL);
             instruction.setArg1(new QuadrupleObjVar(var));
 
             // generate temp variable for storing the result of a CALL
@@ -577,12 +581,12 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(AbstractMethodName AbstractMethodName) {
-        throw new RuntimeException("Not yet implemented.");
+        // do nothing here
     }
 
     @Override
     public void visit(AbstractMethodDecl AbstractMethodDecl) {
-        throw new RuntimeException("Not yet implemented.");
+        // do nothing here
     }
 
     @Override
@@ -612,8 +616,6 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         code.add(instruction);
     }
-
-    // TODO: see what to do with abstract methods
 
     //////////////////////////////////////////////////////////////////////////////////
     // IF STATEMENT
@@ -838,7 +840,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         // emit all postponed update var list statements if there is come quadruple
         if (!forUpdateVarListInstructionStack.empty()) {
-            List<Quadruple> list =forUpdateVarListInstructionStack.pop();
+            List<Quadruple> list = forUpdateVarListInstructionStack.pop();
 
             updateVarListLabel = list.get(0).getArg1().toString();
             code.addAll(list);
@@ -857,7 +859,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             fix.setResult(new QuadrupleLabel(labelName));
 
         // resolve CONTINUE statements
-        for (Quadruple fix: fixPoint.continueStatements)
+        for (Quadruple fix : fixPoint.continueStatements)
             fix.setResult(new QuadrupleLabel(updateVarListLabel));
 
         // resolve all FOR loop conditionals
@@ -903,7 +905,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Obj obj = DesignatorRoot.obj;
 
             // TODO: maybe put this.method() invocation -> for regular and abstract methods
-            if (obj.getKind() == Obj.Fld) {
+            if (obj.getKind() == Obj.Fld || obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject) {
                 Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
 
                 Obj thisPointer = null;
@@ -916,18 +918,27 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 if (thisPointer == null)
                     throw new RuntimeException("Invalid function declaration inside class. No 'this' implicit parameter found.");
 
-                Quadruple getPtr = new Quadruple(GET_PTR);
-                getPtr.setArg1(new QuadrupleObjVar(thisPointer));
-                getPtr.setArg2(new QuadrupleObjVar(obj));
-                getPtr.setResult(new QuadrupleObjVar(tmp));
+                if (!(obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject)) {
+                    Quadruple getPtr = new Quadruple(GET_PTR);
+                    getPtr.setArg1(new QuadrupleObjVar(thisPointer));
+                    getPtr.setArg2(new QuadrupleObjVar(obj));
+                    getPtr.setResult(new QuadrupleObjVar(tmp));
 
-                // passing the size of the field
-                tmp.getType().setElementType(obj.getType());
+                    // passing the size of the field
+                    tmp.getType().setElementType(obj.getType());
 
-                code.add(getPtr);
+                    code.add(getPtr);
+                }
+                else {
+                    Quadruple thisPtr = new Quadruple(PARAM);
+                    thisPtr.setArg1(new QuadrupleObjVar(thisPointer));
+                    code.add(thisPtr);
+                }
+
                 expressionNodeStack.push(new ExpressionNode(tmp));
 
-                cancelFactorFunctionCall = true;
+                if (!(obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject))
+                    cancelFactorFunctionCall = true;
             }
         }
 
