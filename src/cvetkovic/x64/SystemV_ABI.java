@@ -10,7 +10,7 @@ public class SystemV_ABI {
             return 1;
         else if (type.getKind() == Struct.Int)
             return 4;
-        else if (type.getKind() == Struct.Array || type.getKind() == Struct.Class)
+        else if (type.getKind() == Struct.Array || type.getKind() == Struct.Class || type.getKind() == Struct.Interface)
             return 8; // sizeof(pointer) in x86-64 is 8 bytes
         else
             throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");

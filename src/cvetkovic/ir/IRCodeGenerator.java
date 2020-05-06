@@ -399,9 +399,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
         }
         else {
-            endFunctionCall();
             if (!(FactorFunctionCall.getDesignator() instanceof DesignatorRoot))
                 pushImplicitThisForFunctionCall();
+            endFunctionCall();
 
             boolean invokeVirtual = false;
             if (FactorFunctionCall.getDesignator().obj.getLocalSymbols().stream().filter(p -> p.getName().equals("this")).count() > 0)
@@ -567,9 +567,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(DesignatorInvoke DesignatorInvoke) {
         Obj methodToInvoke = DesignatorInvoke.getDesignator().obj;
 
-        endFunctionCall();
         if (!(DesignatorInvoke.getDesignator() instanceof DesignatorRoot))
             pushImplicitThisForFunctionCall();
+        endFunctionCall();
 
         Quadruple instruction = new Quadruple(DesignatorInvoke.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL : INVOKE_VIRTUAL);
         instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
