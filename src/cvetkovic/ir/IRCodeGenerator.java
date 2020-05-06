@@ -104,6 +104,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
         ExpressionNode leftChild = expressionNodeStack.pop();
 
         expressionNodeStack.push(expressionDAG.getOrCreateNode(operation, leftChild, rightChild));
+
+        cancelFactorFunctionCall = false;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +266,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct(), true);
             instruction.setResult(new QuadrupleObjVar(tmp));
 
+            if (expressionNodeStack.size() > 1)
+                expressionNodeStack.pop();
+
             Quadruple astoreInstruction = new Quadruple(STORE);
             astoreInstruction.setArg1(new QuadrupleObjVar(tmp));
             astoreInstruction.setArg2(new QuadruplePTR());
@@ -399,8 +404,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 pushImplicitThisForFunctionCall();
 
             boolean invokeVirtual = false;
-            if (FactorFunctionCall.getDesignator().obj.getLocalSymbols().stream().filter(p -> p.getName().equals("this")).count() > 0);
-                invokeVirtual = true;
+            if (FactorFunctionCall.getDesignator().obj.getLocalSymbols().stream().filter(p -> p.getName().equals("this")).count() > 0)
+                ;
+            invokeVirtual = true;
 
             Quadruple instruction = new Quadruple(!invokeVirtual ? IRInstruction.CALL : INVOKE_VIRTUAL);
             instruction.setArg1(new QuadrupleObjVar(var));
@@ -592,6 +598,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(MethodName MethodName) {
         code = new ArrayList<>();
+        expressionNodeStack = new Stack<>();
+        expressionDAG = new ExpressionDAG();
 
         generateLabel(code, MethodName.obj.getName());
         currentMethod = MethodName.obj;
@@ -615,6 +623,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
         instruction.setArg1(new QuadrupleIntegerConst(max));
 
         code.add(instruction);
+    }
+
+    @Override
+    public void visit(TermSingle TermSingle) {
+        cancelFactorFunctionCall = false;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -933,6 +946,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
                     Quadruple thisPtr = new Quadruple(PARAM);
                     thisPtr.setArg1(new QuadrupleObjVar(thisPointer));
                     code.add(thisPtr);
+                    //cancelFactorFunctionCall = false;
                 }
 
                 expressionNodeStack.push(new ExpressionNode(tmp));
@@ -958,7 +972,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             return;
         else if (parent instanceof DesignatorArrayAccess)
             return;
-        else if (parent instanceof FactorFunctionCall)
+        else if (parent instanceof FactorFunctionCall)// && !DesignatorRoot.obj.getName().equals("this") && DesignatorRoot.obj.getType().getKind() != Obj.Fld)
             return;
 
         Obj destination = DesignatorRoot.obj;

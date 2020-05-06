@@ -6,8 +6,8 @@ const int cinilac = 4, delilac = 3;
 abstract class AbsPredmet
 {
 	{
-		int zapremina() { return 0; }
-		int Q() { return 0; }
+		abstract int zapremina();
+		abstract int Q();
 	}
 }
 class Predmet extends AbsPredmet
@@ -16,18 +16,117 @@ class Predmet extends AbsPredmet
 	 char vrsta;
 
 	{
-		 //void postaviTezinu(int tezina) {this.tezina = tezina;}
-
-		 void ucitajTezinu() {  }
-
+		 void postaviTezinu(int tezina) {this.tezina = tezina;}
+		 void ucitajTezinu() { read(tezina); }
+		 int zapremina() { return 0;}
 		 int Q() {return zapremina() * tezina;}
+		 void postaviVrstu(char vrsta) {this.vrsta = vrsta;}
+		 char dohvVrstu() { return vrsta; }
+		 int dohvTezinu() { return tezina; }
 	}
 }
 
+class Sfera extends Predmet
 {
-    void main()
-    {
+	 int r;
+	{
+		 void postaviTezinu(int tezina) {this.tezina = tezina; vrsta = 's';}
+		 void postaviPoluprecnik(int r) {this.r = r; postaviVrstu('s');}
+		 int zapremina()
+			int z;
+		{
+			z = cinilac;
+			return z *(r/delilac);
+		}
+	}
+}
 
-    }
+class Kvadar extends Predmet
+{
+	 int a, b, c;
+	{
+		 void postaviTezinu(int tezina) {this.tezina = tezina; vrsta = 'k';}
+		 void postaviStranice(int a, int b, int c) {this.a = a; this.b = b; this.c = c; vrsta = 'k';}
+		 int zapremina()
+			int z;
+		{
+			z = a * b * c;
+			return z;
+		}
+	}
+}
+
+int zapreminaK, zapreminaS;
+int tezinaK, tezinaS;
+{
+
+	void ispis( Predmet p)
+	{
+		if(p.dohvVrstu() == 's') print('S');
+		else if(p.dohvVrstu() == 'k') print('K');
+
+		print(eol);
+		print(p.dohvTezinu());
+	}
+
+	void main() Predmet predmeti[]; AbsPredmet absPredmeti[]; int i; Sfera s1, s2, s3; Kvadar k1, k2, k3; int t;
+	{
+		predmeti = new Predmet[6];
+		absPredmeti = new AbsPredmet[6];
+		s1 = new Sfera;
+		s2 = new Sfera;
+		s3 = new Sfera;
+
+		k1 = new Kvadar;
+		k2 = new Kvadar;
+		k3 = new Kvadar;
+
+		s1.postaviPoluprecnik(1);
+		s2.postaviPoluprecnik(2);
+		s3.postaviPoluprecnik(3);
+
+		k1.postaviStranice(1,2,3);
+		k2.postaviStranice(2,3,4);
+		k3.postaviStranice(3,4,5);
+
+		predmeti[0] = s1;
+		predmeti[2] = s2;
+		predmeti[4] = s3;
+		predmeti[1] = k1;
+		predmeti[3] = k2;
+		predmeti[5] = k3;
+
+		read(t);
+		for(i=0;i<6;i++)
+		{
+			predmeti[i].postaviTezinu(t);
+			absPredmeti[i] = predmeti[i];
+		}
+
+		zapreminaS = 0;
+		tezinaS = 0;
+		for(i=1;i<=6;i++)
+		{
+			if(i % 2 == 0) continue;
+			zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
+			tezinaS = tezinaS + absPredmeti[i - 1].Q();
+			ispis(predmeti[i - 1]);
+		}
+
+		zapreminaK = 0;
+		tezinaK = 0;
+		for(i=1;i<=6;i++)
+		{
+			if(i % 2 == 1) continue;
+			zapreminaK = zapreminaK + predmeti[i - 1].zapremina();
+			tezinaK = tezinaK + predmeti[i - 1].Q();
+			ispis(predmeti[i - 1]);
+		}
+
+		print(zapreminaS); print(eol);
+		print(zapreminaK); print(eol);
+		print(tezinaS); print(eol);
+		print(tezinaK); print(eol);
+	}
 }
 
