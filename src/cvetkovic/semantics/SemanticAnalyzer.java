@@ -856,9 +856,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
     @Override
     public void visit(CondFactBinary CondFactBinary) {
-        Struct left = CondFactBinary.getExpr().struct;
+        Struct left = CondFactBinary.getExpr().struct.getElemType() == null ? CondFactBinary.getExpr().struct : CondFactBinary.getExpr().struct.getElemType();
         Relop op = CondFactBinary.getRelop();
-        Struct right = CondFactBinary.getExpr2().struct;
+        Struct right = CondFactBinary.getExpr2().struct.getElemType() == null ? CondFactBinary.getExpr2().struct : CondFactBinary.getExpr2().struct.getElemType();
 
         if (left == null || right == null)
             return;
@@ -1214,7 +1214,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentParameterCheckIndex.push(currentFunctionCall.peek().getLevel() - 1);
         numberOfParametersWithValue.push(1);
 
-        if (!checkParameter(ActParsSingle.getExpr().struct))
+        Struct struct = (ActParsSingle.getExpr().struct.getElemType() == null ? ActParsSingle.getExpr().struct : ActParsSingle.getExpr().struct.getElemType());
+
+        if (!checkParameter(struct))
             throwError(null, "Method invocation data type doesn't match the formal parameter data type.");
     }
 
@@ -1222,7 +1224,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(ActParsMultiple ActParsMultiple) {
         incrementAtTopOfStack(numberOfParametersWithValue);
 
-        if (!checkParameter(ActParsMultiple.getExpr().struct))
+        Struct struct = (ActParsMultiple.getExpr().struct.getElemType() == null ? ActParsMultiple.getExpr().struct : ActParsMultiple.getExpr().struct.getElemType());
+
+        if (!checkParameter(struct))
             throwError(null, "Method invocation data type doesn't match the formal parameter data type.");
     }
 

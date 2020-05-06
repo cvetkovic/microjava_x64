@@ -260,7 +260,11 @@ public class BasicBlock {
                 String destinationLabel = quadruple.getResult().toString();
 
                 // adding destination of branch instruction to block leaders
-                leaders.add(labelIndices.get(destinationLabel));
+                Integer destination = labelIndices.get(destinationLabel);
+                if (destination != null)
+                    leaders.add(labelIndices.get(destinationLabel));
+                else
+                    throw new RuntimeException("Jump destination cannot be null. Error splitting code into basic blocks.");
 
                 // if it exists, add to leaders the first instruction after current branch
                 if (i != code.size() - 1)
