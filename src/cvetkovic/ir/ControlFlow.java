@@ -61,5 +61,6 @@ public class ControlFlow {
         public List<Quadruple> unconditionalJumpForOrCondition = new ArrayList<>();
 
         public List<Quadruple> breakStatements = new ArrayList<>();
+        public List<Quadruple> continueStatements = new ArrayList<>();
     }
 }

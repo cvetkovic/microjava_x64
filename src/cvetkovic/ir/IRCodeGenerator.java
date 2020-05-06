@@ -834,10 +834,15 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(EndOfForStatement EndOfForStatement) {
         ControlFlow.ForStatementFixPoint fixPoint = jumpForFixPoints.pop();
+        String updateVarListLabel = null;
 
         // emit all postponed update var list statements if there is come quadruple
-        if (!forUpdateVarListInstructionStack.empty())
-            code.addAll(forUpdateVarListInstructionStack.pop());
+        if (!forUpdateVarListInstructionStack.empty()) {
+            List<Quadruple> list =forUpdateVarListInstructionStack.pop();
+
+            updateVarListLabel = list.get(0).getArg1().toString();
+            code.addAll(list);
+        }
 
         // add JMP instruction on end of whole FOR statement
         Quadruple instruction = new Quadruple(IRInstruction.JMP);
@@ -847,9 +852,13 @@ public class IRCodeGenerator extends VisitorAdaptor {
         // generate first instruction after FOR statement -> label
         String labelName = generateLabel(code);
 
-        // resolve BREAK statement
+        // resolve BREAK statements
         for (Quadruple fix : fixPoint.breakStatements)
             fix.setResult(new QuadrupleLabel(labelName));
+
+        // resolve CONTINUE statements
+        for (Quadruple fix: fixPoint.continueStatements)
+            fix.setResult(new QuadrupleLabel(updateVarListLabel));
 
         // resolve all FOR loop conditionals
         for (Quadruple fix : fixPoint.forEndFixPoint)
@@ -875,7 +884,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(ContinueStatement ContinueStatement) {
         if (!jumpForFixPoints.empty()) {
             Quadruple instruction = new Quadruple(IRInstruction.JMP);
-            instruction.setResult(new QuadrupleLabel(jumpForFixPoints.peek().conditionLabel));
+            jumpForFixPoints.peek().continueStatements.add(instruction);
 
             code.add(instruction);
         }

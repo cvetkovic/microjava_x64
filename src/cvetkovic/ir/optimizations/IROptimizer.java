@@ -27,9 +27,12 @@ public class IROptimizer extends Optimizer {
             sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
             sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(sequence.function, quadrupleList, sequence.labelIndices);
 
-            for (BasicBlock b : sequence.basicBlocks)
-                if (b.isEntryBlock())
+            for (BasicBlock b : sequence.basicBlocks) {
+                if (b.isEntryBlock()) {
                     sequence.entryBlock = b;
+                    break;
+                }
+            }
             if (sequence.entryBlock == null)
                 throw new RuntimeException("Invalid code sequence for loop discovery as entry block has not been found.");
 
