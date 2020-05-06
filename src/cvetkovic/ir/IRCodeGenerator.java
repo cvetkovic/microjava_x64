@@ -868,7 +868,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(ContinueStatement ContinueStatement) {
         if (!jumpForFixPoints.empty()) {
             Quadruple instruction = new Quadruple(IRInstruction.JMP);
-            instruction.setResult(new QuadrupleLabel(jumpForFixPoints.peek().updateVarLabel));
+            instruction.setResult(new QuadrupleLabel(jumpForFixPoints.peek().conditionLabel));
 
             code.add(instruction);
         }
