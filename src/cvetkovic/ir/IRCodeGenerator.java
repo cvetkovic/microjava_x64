@@ -501,6 +501,10 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
         else {
             src = expressionNodeStack.pop();
+            if (expressionNodeStack.size() > 1) {
+                expressionNodeStack.pop();
+                storeToPtr = true;
+            }
             dest = expressionNodeStack.pop();
 
             expressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
@@ -939,6 +943,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
                     // passing the size of the field
                     tmp.getType().setElementType(obj.getType());
+
+                    storeToPtr = true;
 
                     code.add(getPtr);
                 }
