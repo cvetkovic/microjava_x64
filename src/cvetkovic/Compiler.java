@@ -9,6 +9,7 @@ import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
 import cvetkovic.semantics.SemanticAnalyzer;
 import cvetkovic.structures.SymbolTable;
+import cvetkovic.x64.AssemblyGenerator;
 import java_cup.runtime.Symbol;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -125,15 +126,15 @@ public class Compiler {
                     System.out.println(IRCodeToPrint != null ? IRCodeToPrint : irCodeGenerator);
 
                 System.out.println("================ MACHINE CODE GENERATION ================");
-                /*AssemblyGenerator assemblyGenerator = new AssemblyGenerator(Compiler.outputFile,
+                AssemblyGenerator assemblyGenerator = new AssemblyGenerator(Compiler.outputFile,
                         irCodeOptimizer.getOptimizationOutput(),
                         semanticCheck.getGlobalVariables(),
-                        semanticCheck.getClassMetadata());*/
+                        semanticCheck.getClassMetadata());
 
-                /*assemblyGenerator.generateCode();
+                assemblyGenerator.generateCode();
                 if (dump_asm) {
                     readOutputFile(Compiler.outputFile);
-                }*/
+                }
 
                 System.out.println("================ COMPILATION DONE ================");
             }

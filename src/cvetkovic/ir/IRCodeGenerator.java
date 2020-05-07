@@ -405,8 +405,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             boolean invokeVirtual = false;
             if (FactorFunctionCall.getDesignator().obj.getLocalSymbols().stream().filter(p -> p.getName().equals("this")).count() > 0)
-                ;
-            invokeVirtual = true;
+                invokeVirtual = true;
 
             Quadruple instruction = new Quadruple(!invokeVirtual ? IRInstruction.CALL : INVOKE_VIRTUAL);
             instruction.setArg1(new QuadrupleObjVar(var));

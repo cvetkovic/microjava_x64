@@ -23,7 +23,7 @@ public class SystemV_ABI {
             return "BYTE PTR";
         else if (type.getKind() == Struct.Int)
             return "DWORD PTR";
-        else if (type.getKind() == Struct.Array || type.getKind() == Struct.Class)
+        else if (type.getKind() == Struct.Array || type.getKind() == Struct.Class || type.getKind() == Struct.Interface)
             return "QWORD PTR"; // sizeof(pointer) in x86-64 is 8 bytes
         else
             throw new RuntimeException("Data type not supported for compilation into x86-64 machine code.");

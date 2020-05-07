@@ -3,10 +3,7 @@ package cvetkovic.x64;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
-import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
-import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
-import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
+import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.structures.SymbolTable;
@@ -771,7 +768,22 @@ public class AssemblyGenerator {
                                 writer.write(System.lineSeparator());
                             }
                             // print format -> equivalent with mov rdi, offset FORMAT
-                            writer.write("\tLEA rdi, [rip + " + (obj2.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
+                            String formatterLabel;
+                            switch (((QuadrupleIODataWidth)quadruple.getArg1()).getWidth())
+                            {
+                                case BIT:
+                                case WORD:
+                                    formatterLabel = integerTypeLabel;
+                                    break;
+
+                                case BYTE:
+                                    formatterLabel = nonIntegerTypeLabel;
+                                    break;
+
+                                default:
+                                    throw new RuntimeException("Not supported PRINTF formatter.");
+                            }
+                            writer.write("\tLEA rdi, [rip + " + formatterLabel + "]");
                             writer.write(System.lineSeparator());
                             // clear eax -> for variable number of vector registers
                             writer.write("\tXOR eax, eax");
