@@ -128,34 +128,38 @@ public class ResourceManager {
      * @param out
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
-        if (register.holdsValueOf == newObj)
-            return;
-        else {
-            // removing old variable
-            Obj oldObj = register.holdsValueOf;
-            AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
-            if (oldObj != null && oldObjDescriptor.getDescriptor() instanceof RegisterDescriptor) {
-                out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
-                dirtyVariables.remove(oldObj);
-
-                assert oldObjDescriptor.getDescriptor() == register;
-                register.setHoldsValueOf(null);
-                oldObjDescriptor.setRegisterLocation(null);
-            }
-
-            if (newObj.getKind() == Obj.Con) {
-                int size = SystemV_ABI.getX64VariableSize(newObj.getType());
-                out.add("\tMOV " + register.getNameBySize(size) + ", " + newObj.getAdr());
+        try {
+            if (register.holdsValueOf == newObj)
                 return;
+            else {
+                // removing old variable
+                Obj oldObj = register.holdsValueOf;
+                AddressDescriptor oldObjDescriptor = addressDescriptors.get(oldObj);
+                if (oldObj != null && oldObjDescriptor.getDescriptor() instanceof RegisterDescriptor) {
+                    out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
+                    dirtyVariables.remove(oldObj);
+
+                    assert oldObjDescriptor.getDescriptor() == register;
+                    register.setHoldsValueOf(null);
+                    oldObjDescriptor.setRegisterLocation(null);
+                }
+
+                if (newObj.getKind() == Obj.Con) {
+                    int size = SystemV_ABI.getX64VariableSize(newObj.getType());
+                    out.add("\tMOV " + register.getNameBySize(size) + ", " + newObj.getAdr());
+                    return;
+                }
+
+                // loading new variable
+                AddressDescriptor newObjDescriptor = addressDescriptors.get(newObj);
+                register.holdsValueOf = newObj;
+                out.add("\t" + (sxd ? "MOVSXD " + register.getNameBySize(8) : "MOV " + register.getNameBySize(SystemV_ABI.getX64VariableSize(newObj.getType()))) + ", " + addressDescriptors.get(newObj).getDescriptor());
+
+                newObjDescriptor.setRegisterLocation(register);
             }
-
-            // loading new variable
-            AddressDescriptor newObjDescriptor = addressDescriptors.get(newObj);
-            register.holdsValueOf = newObj;
-            out.add("\t" + (sxd ? "MOVSXD " + register.getNameBySize(8) : "MOV " + register.getNameBySize(SystemV_ABI.getX64VariableSize(newObj.getType()))) + ", " + addressDescriptors.get(newObj).getDescriptor());
-
+        }
+        finally {
             sxd = false;
-            newObjDescriptor.setRegisterLocation(register);
         }
     }
 
@@ -358,6 +362,7 @@ public class ResourceManager {
 
             if (addressDescriptor.getDescriptor() instanceof RegisterDescriptor) {
                 out.add("\tMOV " + addressDescriptor.getMemoryDescriptor() + ", " + addressDescriptor.getDescriptor().toString());
+                //((RegisterDescriptor)addressDescriptor.getDescriptor()).setHoldsValueOf(null);
                 addressDescriptor.setRegisterLocation(null);
             }
         }
@@ -453,5 +458,22 @@ public class ResourceManager {
         out.add("\tpopq r13");
         out.add("\tpopq r12");
         out.add("\tpopq rbx");
+    }
+
+    public void invalidateRegisters() {
+        for (RegisterDescriptor registerDescriptor : allRegisters) {
+            registerDescriptor.setHoldsValueOf(null);
+            invalidateAddressDescriptors(registerDescriptor.ISA_8_ByteName);
+            if (!freeRegisters.contains(registerDescriptor))
+                freeRegisters.add(registerDescriptor);
+        }
+    }
+
+    public void invalidateAddressDescriptors(String name) {
+        for (AddressDescriptor descriptor : addressDescriptors.values())
+        {
+            if (descriptor.getDescriptor() instanceof RegisterDescriptor && (((RegisterDescriptor) descriptor.getDescriptor()).ISA_8_ByteName.equals(name)))
+                descriptor.setRegisterLocation(null);
+        }
     }
 }

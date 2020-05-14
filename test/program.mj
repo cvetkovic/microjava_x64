@@ -46,7 +46,7 @@ program test301
 		print(nizch[1]);
 		print(nizch[jedan * 2]);
 
-        //bodovi = 6;   --> NE CUVAJU SE NEGDE SVI REGISTRI
+
 		bodovi = bodovi + (pet * jedan - 1) * bodovi - (3 % 2 + 3 * 2 - 3);
 		print(bodovi);
 

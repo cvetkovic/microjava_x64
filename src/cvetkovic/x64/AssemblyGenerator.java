@@ -398,8 +398,7 @@ public class AssemblyGenerator {
                                 elemType = objResult.getType();
 
                             List<String> tmp = new ArrayList<>();
-                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            resourceManager.preserveContext(toPreserve, aux);
+                            resourceManager.saveDirtyVariables(aux, true);
                             issueAuxiliaryInstructions(aux);
 
                             int numberOfElements;
@@ -424,6 +423,10 @@ public class AssemblyGenerator {
                             }
                             else
                                 numberOfElements = ((QuadrupleIntegerConst) quadruple.getArg1()).getValue();
+
+                            resourceManager.invalidateAddressDescriptors("rdi");
+                            resourceManager.invalidateAddressDescriptors("rsi");
+                            resourceManager.invalidateAddressDescriptors("rax");
 
                             // num of elements
                             writer.write("\tMOV rdi, " + String.valueOf(numberOfElements));
@@ -468,11 +471,9 @@ public class AssemblyGenerator {
                                 writer.write(System.lineSeparator());
                             }
 
-                            aux.clear();
-                            resourceManager.restoreContext(toPreserve, aux);
-                            issueAuxiliaryInstructions(aux);
-
                             writer.write(System.lineSeparator());
+
+                            resourceManager.invalidateRegisters();
 
                             break;
                         }
@@ -707,9 +708,12 @@ public class AssemblyGenerator {
                             Descriptor destination = resourceManager.getMemoryDescriptor(objResult);
 
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            makeRegisterPreservationList(toPreserve);
-                            resourceManager.preserveContext(toPreserve, aux);
+                            resourceManager.saveDirtyVariables(aux, true);
                             issueAuxiliaryInstructions(aux);
+
+                            resourceManager.invalidateAddressDescriptors("rdi");
+                            resourceManager.invalidateAddressDescriptors("rsi");
+                            resourceManager.invalidateAddressDescriptors("rax");
 
                             // print format -> equivalent with mov rdi, offset FORMAT
                             writer.write("\tLEA rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
@@ -724,9 +728,7 @@ public class AssemblyGenerator {
                             writer.write("\tCALL scanf");
                             writer.write(System.lineSeparator());
 
-                            aux.clear();
-                            resourceManager.restoreContext(toPreserve, aux);
-                            issueAuxiliaryInstructions(aux);
+                            resourceManager.invalidateRegisters();
 
                             break;
                         }
@@ -735,9 +737,7 @@ public class AssemblyGenerator {
                             RegisterDescriptor source = resourceManager.getRegister(obj2, quadruple);
 
                             List<String> tmp = new ArrayList<>();
-                            List<RegisterDescriptor> toPreserve = new ArrayList<>();
                             resourceManager.fetchOperand(source, obj2, tmp);
-                            makeRegisterPreservationList(toPreserve);
 
                             // obj
                             int sourceSize = SystemV_ABI.getX64VariableSize(obj2.getType());
@@ -758,8 +758,11 @@ public class AssemblyGenerator {
                             }
 
                             aux.addAll(tmp);
-                            resourceManager.preserveContext(toPreserve, aux);
+                            resourceManager.saveDirtyVariables(aux, true);
                             issueAuxiliaryInstructions(aux);
+
+                            resourceManager.invalidateAddressDescriptors("rdi");
+                            resourceManager.invalidateAddressDescriptors("rax");
 
                             // data to be printed
                             if (source.getHoldsValueOf() != null || obj2.getKind() == Obj.Con) { // otherwise operand will be fetched by fetchOperandInstruction
@@ -792,9 +795,11 @@ public class AssemblyGenerator {
                             writer.write("\tCALL printf");
                             writer.write(System.lineSeparator());
 
-                            aux.clear();
+                            resourceManager.invalidateRegisters();
+
+                            /*aux.clear();
                             resourceManager.restoreContext(toPreserve, aux);
-                            issueAuxiliaryInstructions(aux);
+                            issueAuxiliaryInstructions(aux);*/
 
                             break;
                         }
