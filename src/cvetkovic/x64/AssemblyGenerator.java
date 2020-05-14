@@ -120,7 +120,8 @@ public class AssemblyGenerator {
     }
 
     /**
-     * Generates Intel syntax directive and exports 'main' symbol
+     * Generates Intel syntax directive, imports 'calloc',
+     * 'printf', 'scanf', and exports 'main' symbol
      *
      * @throws IOException
      */
@@ -163,7 +164,7 @@ public class AssemblyGenerator {
     }
 
     private void generatePolymorphismTables() throws IOException {
-        writer.write(".section .data");
+        writer.write(".section .rodata");
         writer.write(System.lineSeparator());
 
         // scanf/print character format
@@ -458,7 +459,7 @@ public class AssemblyGenerator {
                             }
                             else {
                                 // MALLOC as PTR
-                                RegisterDescriptor a_reg = mapToRegister.get(registerNames[0][0]);
+                                RegisterDescriptor a_reg = mapToRegister.get(registerNames[0][0]); // rax
                                 RegisterDescriptor destination = resourceManager.getRegister(objResult, quadruple, Collections.singletonList(a_reg));
 
                                 resourceManager.fetchOperand(destination, objResult, aux);
@@ -807,6 +808,8 @@ public class AssemblyGenerator {
                         //////////////////////////////////////////////////////////////////////////////////
                         // BRANCHES AND LABEL GENERATING
                         //////////////////////////////////////////////////////////////////////////////////
+
+                        // TODO: what if temp is not SAVED ACROSS several basic blocks if local value numbering is propagated across basic blocks
 
                         case JMP: {
                             // save dirty variables
