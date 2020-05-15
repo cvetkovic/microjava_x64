@@ -679,7 +679,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         Quadruple instruction = new Quadruple(operationCode);
         instruction.setArg1(new QuadrupleObjVar(arg1Obj));
 
-        Obj alwaysTrue = new Obj(Obj.Con, "const", SymbolTable.intType);
+        Obj alwaysTrue = new Obj(Obj.Con, "const", arg1Obj.getType());
         alwaysTrue.setAdr(1);
         instruction.setArg2(new QuadrupleObjVar(alwaysTrue));
 

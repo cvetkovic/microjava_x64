@@ -74,17 +74,56 @@ public class AssemblyGenerator {
 
             writer = new BufferedWriter(new FileWriter(outputFileHandle));
 
-            // TODO: generate code for embedded functions (e.g. ord() and others)
-
             generateDirectives();
             generateBSS();
             generatePolymorphismTables();
+            // TODO: add builtin functions to DOC
+            generateBuiltinFunctions();
             generateFunctionsBody();
 
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void generateBuiltinFunctions() throws IOException {
+        writer.write(".section .text.builtin");
+        writer.write(System.lineSeparator());
+
+        ////////////////////
+        // ORD            //
+        ////////////////////
+        writer.write("ord_0:");
+        writer.write(System.lineSeparator());
+        writer.write("\tPUSH rbp");
+        writer.write(System.lineSeparator());
+        writer.write("\tMOV rbp, rsp");
+        writer.write(System.lineSeparator());
+        writer.write("\tMOVSX rax, dil");
+        writer.write(System.lineSeparator());
+        writer.write("\tLEAVE");
+        writer.write(System.lineSeparator());
+        writer.write("\tRET");
+        writer.write(System.lineSeparator());
+        writer.write(System.lineSeparator());
+
+        ////////////////////
+        // ORD            //
+        ////////////////////
+        writer.write("chr_0:");
+        writer.write(System.lineSeparator());
+        writer.write("\tPUSH rbp");
+        writer.write(System.lineSeparator());
+        writer.write("\tMOV rbp, rsp");
+        writer.write(System.lineSeparator());
+        writer.write("\tMOV al, dil");
+        writer.write(System.lineSeparator());
+        writer.write("\tLEAVE");
+        writer.write(System.lineSeparator());
+        writer.write("\tRET");
+        writer.write(System.lineSeparator());
+        writer.write(System.lineSeparator());
     }
 
     /**
@@ -773,8 +812,7 @@ public class AssemblyGenerator {
                             }
                             // print format -> equivalent with mov rdi, offset FORMAT
                             String formatterLabel;
-                            switch (((QuadrupleIODataWidth)quadruple.getArg1()).getWidth())
-                            {
+                            switch (((QuadrupleIODataWidth) quadruple.getArg1()).getWidth()) {
                                 case BIT:
                                 case WORD:
                                     formatterLabel = integerTypeLabel;

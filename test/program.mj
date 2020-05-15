@@ -30,7 +30,7 @@ int niz[];
 
 	void main()
 	{
-		if(1!=1) print(-6);
+	    if(1!=1) print(-6);
 		else print(0);
 
 		ibool = false;
@@ -44,14 +44,15 @@ int niz[];
 			if(i == 5) print(1);
 			else print(-1);
 
-		/*niz = new int[3];
+		niz = new int[3];
 		niz[0] = 1;
 		niz[1] = 2;
-		niz[2] = sum(niz[1], niz[0]) + 1;
+		//niz[2] = sum(niz[1], niz[0]) + 1;
+		/*
 		if(niz[2] == 4 || verify()) print(ord('A'));
-		else print(ord('a'));
+		else print(ord('a'));*/
 
-		print(eol);
+		/*print(eol);
 		i = 0;
 		for(;i<10;)
 		{
@@ -65,9 +66,9 @@ int niz[];
 		}
 
 		if(i == 3 && verify()) print(4);
-		else print(-4);
+		else print(-4);*/
 
-		read(niz[0]);
+		/*read(niz[0]);
 		read(niz[1]);
 		read(niz[2]);
 		print(eol);
