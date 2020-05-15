@@ -695,7 +695,7 @@ public class AssemblyGenerator {
                             // NOTE: no need to register as the next instruction shall be LEAVE
                             issueAuxiliaryInstructions(aux);
 
-                            writer.write("\tMOV " + reg_a.getNameBySize(SystemV_ABI.getX64VariableSize(obj1.getType())) + ", " + reg_source);
+                            writer.write("\tMOV " + reg_a.getNameBySize(SystemV_ABI.getX64VariableSize(obj1.getType())) + ", " + reg_source.getNameBySize(SystemV_ABI.getX64VariableSize(obj1.getType())));
                             writer.write(System.lineSeparator());
 
                             break;

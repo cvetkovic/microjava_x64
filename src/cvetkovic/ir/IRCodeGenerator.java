@@ -875,6 +875,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
             fix.setResult(new QuadrupleLabel(labelName));
 
         // resolve CONTINUE statements
+        // NOTE: update var list could be null so jump to conditionLabel right away
+        if (updateVarListLabel == null)
+            updateVarListLabel = fixPoint.conditionLabel;
         for (Quadruple fix : fixPoint.continueStatements)
             fix.setResult(new QuadrupleLabel(updateVarListLabel));
 
