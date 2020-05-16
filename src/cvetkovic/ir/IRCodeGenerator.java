@@ -313,7 +313,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
     private void resolveActualParameters() {
         ParameterContainer container = new ParameterContainer();
 
-        container.instructions.addAll(expressionDAG.emitQuadruples());
+        code.addAll(expressionDAG.emitQuadruples());
+        //container.instructions.addAll(expressionDAG.emitQuadruples());
 
         Quadruple instruction = new Quadruple(IRInstruction.PARAM);
         instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
@@ -350,6 +351,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple implicitThis = new Quadruple(PARAM);
             implicitThis.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
+            //reverseParameterStack.peek().get(0).instructions.add(implicitThis);
             code.add(implicitThis);
         }
     }
@@ -575,7 +577,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
         endFunctionCall();
 
         Quadruple instruction = new Quadruple(DesignatorInvoke.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL : INVOKE_VIRTUAL);
-        instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+        Obj var = (expressionNodeStack.empty() ? methodToInvoke : expressionNodeStack.pop().getObj());
+
+        instruction.setArg1(new QuadrupleObjVar(var));
 
         if (postponeUpdateVarList) {
             List<Quadruple> toAdd = new ArrayList<>();
