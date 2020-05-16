@@ -222,6 +222,9 @@ public class AssemblyGenerator {
             StringBuilder table = new StringBuilder();
 
             for (ClassMetadata metadata : classMetadata) {
+                if (metadata.classObj.getType().getKind() == Struct.Interface)
+                    continue;
+
                 table.append(System.lineSeparator());
 
                 table.append("_vft_" + metadata.classObj.getName()).append(":").append(System.lineSeparator());

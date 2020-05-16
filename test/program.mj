@@ -82,7 +82,7 @@ int tezinaK, tezinaS;
 		k3 = new Kvadar;
 
 		s1.postaviPoluprecnik(1);
-		s2.postaviPoluprecnik(2);
+		/*s2.postaviPoluprecnik(2);
 		s3.postaviPoluprecnik(3);
 
 		k1.postaviStranice(1,2,3);
@@ -126,7 +126,7 @@ int tezinaK, tezinaS;
 		print(zapreminaS); print(eol);
 		print(zapreminaK); print(eol);
 		print(tezinaS); print(eol);
-		print(tezinaK); print(eol);
+		print(tezinaK); print(eol);*/
 	}
 }
 
