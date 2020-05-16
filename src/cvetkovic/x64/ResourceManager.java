@@ -70,7 +70,7 @@ public class ResourceManager {
             AddressDescriptor descriptor = addressDescriptors.get(oldObj);
             descriptor.setRegisterLocation(null);
 
-            if (newObj != oldObj) {
+            if (newObj != oldObj && dirtyVariables.contains(oldObj)) {
                 aux.add("\tMOV " + addressDescriptors.get(oldObj).getMemoryDescriptor() + ", " + targetDescriptor);
                 dirtyVariables.remove(oldObj);
             }

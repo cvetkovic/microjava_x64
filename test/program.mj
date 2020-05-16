@@ -1,82 +1,132 @@
-//Test 302
+//Test 303
 
-program test302
+program test_303
 
-const int jedan = 1;
+const int cinilac = 4, delilac = 3;
+abstract class AbsPredmet
+{
+	{
+		abstract int zapremina();
+		abstract int Q();
+	}
+}
+class Predmet extends AbsPredmet
+{
+	 int tezina;
+	 char vrsta;
 
-int i;
-bool ibool;
+	{
+		 void postaviTezinu(int tezina) {this.tezina = tezina;}
+		 void ucitajTezinu() { read(tezina); }
+		 int zapremina() { return 0;}
+		 int Q() {return zapremina() * tezina;}
+		 void postaviVrstu(char vrsta) {this.vrsta = vrsta;}
+		 char dohvVrstu() { return vrsta; }
+		 int dohvTezinu() { return tezina; }
+	}
+}
 
-int niz[];
+class Sfera extends Predmet
+{
+	 int r;
+	{
+		 void postaviTezinu(int tezina) {this.tezina = tezina; vrsta = 's';}
+		 void postaviPoluprecnik(int r) {this.r = r; postaviVrstu('s');}
+		 int zapremina()
+			int z;
+		{
+			z = cinilac;
+			return z *(r/delilac);
+		}
+	}
+}
+
+class Kvadar extends Predmet
+{
+	 int a, b, c;
+	{
+		 void postaviTezinu(int tezina) {this.tezina = tezina; vrsta = 'k';}
+		 void postaviStranice(int a, int b, int c) {this.a = a; this.b = b; this.c = c; vrsta = 'k';}
+		 int zapremina()
+			int z;
+		{
+			z = a * b * c;
+			return z;
+		}
+	}
+}
+
+int zapreminaK, zapreminaS;
+int tezinaK, tezinaS;
 {
 
-	int sum(int z, int d)
+	void ispis( Predmet p)
 	{
-		return z + d;
-	}
-
-	int inkrement(int a, int inc) int pom;
-	{
-		if(inc == jedan) pom = 1;
-		else if(inc == 2) pom = a;
-
-		return sum(a,pom);
-	}
-
-	bool verify() {
-		print('v');
-		return false;
-	}
-
-	void main()
-	{
-	    if(1!=1) print(-6);
-		else print(0);
-
-		ibool = false;
-		i = 0;
-		for(i=0;i<5;i++)
-		{
-			if(i == 2) ibool = true;
-		}
-
-		if(ibool)
-			if(i == 5) print(1);
-			else print(-1);
-
-		niz = new int[3];
-		niz[0] = 1;
-		niz[1] = 2;
-		//niz[2] = sum(niz[1], niz[0]) + 1;
-		/*
-		if(niz[2] == 4 || verify()) print(ord('A'));
-		else print(ord('a'));*/
-
-		/*print(eol);
-		i = 0;
-		for(;i<10;)
-		{
-			if(i == 3)
-			{
-				i++;
-				continue;
-			}
-			if(i == 4) break;
-			i = inkrement(i, 1);
-		}
-
-		if(i == 3 && verify()) print(4);
-		else print(-4);*/
-
-		/*read(niz[0]);
-		read(niz[1]);
-		read(niz[2]);
-		print(eol);
-
-		print(sum (sum(niz[0], niz[1]), niz[2]));
+		if(p.dohvVrstu() == 's') print('S');
+		else if(p.dohvVrstu() == 'k') print('K');
 
 		print(eol);
-		print(inkrement(niz[2], 2));*/
+		print(p.dohvTezinu());
+	}
+
+	void main() Predmet predmeti[]; AbsPredmet absPredmeti[]; int i; Sfera s1, s2, s3; Kvadar k1, k2, k3; int t;
+	{
+		predmeti = new Predmet[6];
+		absPredmeti = new AbsPredmet[6];
+		s1 = new Sfera;
+		s2 = new Sfera;
+		s3 = new Sfera;
+
+		k1 = new Kvadar;
+		k2 = new Kvadar;
+		k3 = new Kvadar;
+
+		s1.postaviPoluprecnik(1);
+		s2.postaviPoluprecnik(2);
+		s3.postaviPoluprecnik(3);
+
+		k1.postaviStranice(1,2,3);
+		k2.postaviStranice(2,3,4);
+		k3.postaviStranice(3,4,5);
+
+		predmeti[0] = s1;
+		predmeti[2] = s2;
+		predmeti[4] = s3;
+		predmeti[1] = k1;
+		predmeti[3] = k2;
+		predmeti[5] = k3;
+
+		read(t);
+		for(i=0;i<6;i++)
+		{
+			predmeti[i].postaviTezinu(t);
+			absPredmeti[i] = predmeti[i];
+		}
+
+		zapreminaS = 0;
+		tezinaS = 0;
+		for(i=1;i<=6;i++)
+		{
+			if(i % 2 == 0) continue;
+			zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
+			tezinaS = tezinaS + absPredmeti[i - 1].Q();
+			ispis(predmeti[i - 1]);
+		}
+
+		zapreminaK = 0;
+		tezinaK = 0;
+		for(i=1;i<=6;i++)
+		{
+			if(i % 2 == 1) continue;
+			zapreminaK = zapreminaK + predmeti[i - 1].zapremina();
+			tezinaK = tezinaK + predmeti[i - 1].Q();
+			ispis(predmeti[i - 1]);
+		}
+
+		print(zapreminaS); print(eol);
+		print(zapreminaK); print(eol);
+		print(tezinaS); print(eol);
+		print(tezinaK); print(eol);
 	}
 }
 

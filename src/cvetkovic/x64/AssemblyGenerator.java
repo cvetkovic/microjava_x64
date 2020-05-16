@@ -413,7 +413,7 @@ public class AssemblyGenerator {
 
                                 issueAuxiliaryInstructions(aux);
 
-                                Struct targetStruct = objResult.getType().getElemType();
+                                Struct targetStruct = (objResult.getType().getElemType() != null ? objResult.getType().getElemType() : objResult.getType());
                                 String pointerTargetSize = SystemV_ABI.getPtrSpecifier(targetStruct);
                                 int dataSize = SystemV_ABI.getX64VariableSize(targetStruct);
 
