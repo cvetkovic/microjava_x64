@@ -575,7 +575,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         endFunctionCall();
 
         Quadruple instruction = new Quadruple(DesignatorInvoke.getDesignator() instanceof DesignatorRoot ? IRInstruction.CALL : INVOKE_VIRTUAL);
-        instruction.setArg1(new QuadrupleObjVar(methodToInvoke));
+        instruction.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
 
         if (postponeUpdateVarList) {
             List<Quadruple> toAdd = new ArrayList<>();
