@@ -8,6 +8,8 @@ import cvetkovic.x64.cpu.MemoryDescriptor;
 import cvetkovic.x64.cpu.RegisterDescriptor;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class ResourceManager {
@@ -424,15 +426,19 @@ public class ResourceManager {
         }
     }
 
-    public void putParametersToRegisters(Obj function) {
+    public void saveParametersToMemoryLocations(Obj function, BufferedWriter writer) throws IOException {
         if (function.getKind() == Obj.Meth) {
             for (Obj var : function.getLocalSymbols()) {
                 if (var.parameter && var.parameterDescriptor != null) {
-                    AddressDescriptor addressDescriptor = addressDescriptors.get(var);
+                    writer.write("\tMOV " + SystemV_ABI.getPtrSpecifier(var.getType()) + " [RBP - " + var.getAdr() + "], " + var.parameterDescriptor.getNameBySize(SystemV_ABI.getX64VariableSize(var.getType())));
+                    writer.write(System.lineSeparator());
+
+                    //AddressDescriptor addressDescriptor = addressDescriptors.get(var);
+                    /*
                     addressDescriptor.setRegisterLocation(var.parameterDescriptor);
 
                     var.parameterDescriptor.holdsValueOf = var;
-                    freeRegisters.remove(var.parameterDescriptor);
+                    freeRegisters.remove(var.parameterDescriptor);*/
                 }
             }
         }

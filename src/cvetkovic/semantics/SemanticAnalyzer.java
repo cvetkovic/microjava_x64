@@ -760,7 +760,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             SymbolTable.openScope(SymbolTable.ScopeType.OUTSIDE_CLASS);
 
             // adding formal parameter 'this'
-            SymbolTable.insert(Obj.Var, "this", currentClass.getType());
+            SymbolTable.insert(Obj.Var, "this", currentClass.getType()).parameter = true;
             currentMethod.setLevel(1);
             /////////////////////////////////
         }
@@ -975,7 +975,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         else if (currentClass != null) {
             //SymbolTable.chainLocalSymbols(currentClass.getType());
             // only functions inside class have implicit parameter 'this'
-            SymbolTable.insert(Obj.Var, "this", currentClass.getType());
+            SymbolTable.insert(Obj.Var, "this", currentClass.getType()).parameter = true;
             currentMethod.setLevel(1);
 
             currentMethodName = currentClassName + "." + currentMethodName;

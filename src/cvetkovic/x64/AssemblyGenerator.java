@@ -277,7 +277,6 @@ public class AssemblyGenerator {
 
                 functionCall.generateCallForParameters(currentFunction);
                 createAddressDescriptors(basicBlock);
-                resourceManager.putParametersToRegisters(currentFunction);
 
                 for (Quadruple quadruple : basicBlock.instructions) {
                     Obj obj1 = (quadruple.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) quadruple.getArg1()).getObj() : null);
@@ -706,6 +705,9 @@ public class AssemblyGenerator {
 
                             resourceManager.saveRegisterFile(aux);
                             issueAuxiliaryInstructions(aux);
+
+                            resourceManager.saveParametersToMemoryLocations(currentFunction, writer);
+                            writer.write(System.lineSeparator());
 
                             break;
                         }
