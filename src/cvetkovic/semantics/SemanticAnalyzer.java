@@ -759,10 +759,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
             SymbolTable.openScope(SymbolTable.ScopeType.OUTSIDE_CLASS);
 
+            /////////////////////////////////
             // adding formal parameter 'this'
             SymbolTable.insert(Obj.Var, "this", currentClass.getType()).parameter = true;
             currentMethod.setLevel(1);
             /////////////////////////////////
+
+            int vtpFunctionOffset = currentFunctionOffset.pop();
+            method.setAdr(vtpFunctionOffset);
+            currentFunctionOffset.push(vtpFunctionOffset + 1);
         }
         else
             throwError(AbstractMethodName.getLine(), "Abstract method with name '" + methodName + "' has already been declared in current scope.");
