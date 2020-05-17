@@ -56,6 +56,7 @@ public class SystemV_ABI {
      * @return
      */
     public static int alignTo16(int num) {
-        return ((num >> 4) + 1) << 4;
+        return num + (16 - num % 16);
+        //return ((num >> 4) + 1) << 4;
     }
 }

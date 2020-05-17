@@ -249,8 +249,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
             // determine address
             int lastTaken = currentAddressOffset.pop();
             int thisVarAddress;
+            // doing alignment if variable cannot be put between lastTaken and first higher location divisible by 16
             if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()))
-                lastTaken = SystemV_ABI.alignTo16(SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType()));
+                lastTaken = SystemV_ABI.alignTo16(lastTaken);
 
             if (SymbolTable.getCurrentScopeKind() == SymbolTable.ScopeType.OUTSIDE_CLASS.ordinal()) {
                 thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(newlyCreatedVar.getType());

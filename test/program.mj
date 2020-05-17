@@ -31,10 +31,7 @@ class Sfera extends Predmet
 	 int r;
 	{
 		 void postaviTezinu(int tezina) {this.tezina = tezina; vrsta = 's';}
-		 void postaviPoluprecnik(int r) {
-		    this.r = r;
-		    //postaviVrstu('s');
-		 }
+		 void postaviPoluprecnik(int r) {this.r = r; postaviVrstu('s');}
 		 int zapremina()
 			int z;
 		{
@@ -72,20 +69,31 @@ int tezinaK, tezinaS;
 		print(p.dohvTezinu());
 	}
 
-	void main() Predmet predmeti[]; AbsPredmet absPredmeti[]; int i; Sfera s1, s2, s3; Kvadar k1, k2, k3; int t;
+	void main()
+	    Predmet predmeti[];
+	    AbsPredmet absPredmeti[];
+	    int i;
+	    Sfera s1, s2, s3;
+	    Kvadar k1, k2, k3;
+	    int t;
 	{
+		predmeti = new Predmet[6];
+		absPredmeti = new AbsPredmet[6];
 		s1 = new Sfera;
-		s1.postaviPoluprecnik(10);
+		s2 = new Sfera;
+		s3 = new Sfera;
 
-        print(s1.r);
+		k1 = new Kvadar;
+		k2 = new Kvadar;
+		k3 = new Kvadar;
 
+		s1.postaviPoluprecnik(1);
+		s2.postaviPoluprecnik(2);
+		s3.postaviPoluprecnik(3);
 
-		/*s2.postaviPoluprecnik(2);
-		s3.postaviPoluprecnik(3);*/
-
-		//k1.postaviStranice(1,2,3);
-		//k2.postaviStranice(2,3,4);
-		//k3.postaviStranice(3,4,5);
+		k1.postaviStranice(1,2,3);
+		k2.postaviStranice(2,3,4);
+		k3.postaviStranice(3,4,5);
 
 		/*predmeti[0] = s1;
 		predmeti[2] = s2;
