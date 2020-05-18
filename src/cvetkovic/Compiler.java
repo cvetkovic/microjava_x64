@@ -114,17 +114,26 @@ public class Compiler {
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
                 List<Obj> functions = irCodeGenerator.getFunctionsObj();
                 IROptimizer irCodeOptimizer = new IROptimizer(irCode, functions);
-                String IRCodeToPrint = null;
+                String IRCodeToPrintPre = null;
+                String IRCodeToPrintPost = null;
+
+                IRCodeToPrintPre = irCodeOptimizer.toString();
 
                 if (optimize_ir) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
-
                     //irCodeOptimizer.executeOptimizations();
-                    IRCodeToPrint = irCodeOptimizer.toString();
                 }
 
-                if (dumpIR)
-                    System.out.println(IRCodeToPrint != null ? IRCodeToPrint : irCodeGenerator);
+                IRCodeToPrintPost = irCodeOptimizer.toString();
+
+                if (dumpIR) {
+                    System.out.println("================ INTERMEDIATE CODE BEFORE OPTIMIZER ================");
+                    System.out.print(IRCodeToPrintPre);
+                    /*if (optimize_ir) {
+                        System.out.println("================ INTERMEDIATE CODE AFTER OPTIMIZER ================");
+                        System.out.print(IRCodeToPrintPost);
+                    }*/
+                }
 
                 System.out.println("================ MACHINE CODE GENERATION ================");
                 AssemblyGenerator assemblyGenerator = new AssemblyGenerator(Compiler.outputFile,
