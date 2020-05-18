@@ -1,14 +1,27 @@
 program MJProgram
 	class Point
 	{
+	    Point p;
+
 		int x, y;
 		{
-			void toString(int param1, int param2)
+			/*void toString(int param1, int param2)
 			{
 			    param1 = param2;
 			    param1 = x;
 			    x = param1;
 			    x = y;
+			}*/
+
+			void test2()
+			{
+
+			}
+
+			void test()
+			{
+			    p = new Point;
+			    p.test2();
 			}
 		}
 	}

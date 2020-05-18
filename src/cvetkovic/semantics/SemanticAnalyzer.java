@@ -330,11 +330,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
                                 currentObject.getKind() == Obj.Fld) {
                             designatorAccessObject = DesignatorNonArrayAccess.obj = currentObject;
                             found = true;
+
+                            if (currentMethod == designatorAccessObject)
+                                throwError(DesignatorNonArrayAccess.getLine(), "Recursion in function calls is not allowed.");
+
                             break;
                         }
-                        else {
+                        else
                             throwError(DesignatorNonArrayAccess.getLine(), "Object '" + DesignatorNonArrayAccess.getDesignatorName() + "' is not method nor field in '" + parentName + "'.");
-                        }
                     }
                 }
 
