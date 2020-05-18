@@ -353,6 +353,9 @@ public class AssemblyGenerator {
                             writer.write("\tIDIV " + divisor.getNameBySize(4));
                             writer.write(System.lineSeparator());
 
+                            resourceManager.invalidateAddressDescriptors("rax");
+                            resourceManager.invalidateAddressDescriptors("rdx");
+
                             RegisterDescriptor resultRegSelection;
                             if (quadruple.getInstruction() == IRInstruction.DIV)
                                 resultRegSelection = rax;

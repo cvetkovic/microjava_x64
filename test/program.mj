@@ -117,8 +117,11 @@ int tezinaK, tezinaS;
 		for(i=1;i<=6;i++)
 		{
 			if(i % 2 == 0) continue;
-			//zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
+			zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
 			//tezinaS = tezinaS + absPredmeti[i - 1].Q();
+
+			absPredmeti[i - 1].Q();
+
 			//ispis(predmeti[i - 1]);
 		}
 
