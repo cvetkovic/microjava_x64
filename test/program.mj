@@ -95,7 +95,7 @@ int tezinaK, tezinaS;
 		k2.postaviStranice(2,3,4);
 		k3.postaviStranice(3,4,5);
 
-		/*predmeti[0] = s1;
+		predmeti[0] = s1;
 		predmeti[2] = s2;
 		predmeti[4] = s3;
 		predmeti[1] = k1;
@@ -107,6 +107,9 @@ int tezinaK, tezinaS;
 		{
 			predmeti[i].postaviTezinu(t);
 			absPredmeti[i] = predmeti[i];
+
+			//print(predmeti[i].tezina);
+
 		}
 
 		zapreminaS = 0;
@@ -114,12 +117,12 @@ int tezinaK, tezinaS;
 		for(i=1;i<=6;i++)
 		{
 			if(i % 2 == 0) continue;
-			zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
-			tezinaS = tezinaS + absPredmeti[i - 1].Q();
-			ispis(predmeti[i - 1]);
+			//zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
+			//tezinaS = tezinaS + absPredmeti[i - 1].Q();
+			//ispis(predmeti[i - 1]);
 		}
 
-		zapreminaK = 0;
+		/*zapreminaK = 0;
 		tezinaK = 0;
 		for(i=1;i<=6;i++)
 		{

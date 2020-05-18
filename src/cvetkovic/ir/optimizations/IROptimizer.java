@@ -43,6 +43,7 @@ public class IROptimizer extends Optimizer {
             allVariables.addAll(sequence.function.getLocalSymbols().stream().collect(Collectors.toSet()));
             int oldAllocationValue = ((QuadrupleIntegerConst) enterInstruction.getArg1()).getValue();
 
+            System.out.println("Variables for " + sequence.function.getName());
             int lastSize = giveAddressToTemps(allVariables, oldAllocationValue);
 
             enterInstruction.setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
@@ -80,14 +81,14 @@ public class IROptimizer extends Optimizer {
             if ((obj.tempVar || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
                 int lastTaken = startValue;
                 if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(obj.getType()))
-                    lastTaken = SystemV_ABI.alignTo16(SystemV_ABI.getX64VariableSize(obj.getType()));
+                    lastTaken = SystemV_ABI.alignTo16(lastTaken);
                 int thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(obj.getType());
                 obj.setAdr(thisVarAddress);
                 startValue = thisVarAddress;
             }
 
             if (obj.getKind() == Obj.Var || obj.getKind() == Obj.Fld)
-                System.out.println(obj.getName() + " -> " + obj.getAdr());
+                System.out.println(obj.getName() + (obj.parameter ? " (param)" : "") + " -> " + obj.getAdr());
         }
 
         System.out.println();
