@@ -507,6 +507,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 expressionNodeStack.pop();
                 storeToPtr = true;
             }
+            else if (expressionNodeStack.peek().getObj().getType() == SymbolTable.classType) {
+                storeToPtr = true;
+            }
             dest = expressionNodeStack.pop();
 
             expressionDAG.getOrCreateNode(ExpressionNodeOperation.ASSIGNMENT, dest, src);
@@ -948,6 +951,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
                     throw new RuntimeException("Invalid function declaration inside class. No 'this' implicit parameter found.");
 
                 boolean exitMethod = false;
+                boolean cancelPush = false;
 
                 if (!(obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject)) {
                     Quadruple getPtr = new Quadruple(GET_PTR);
@@ -968,9 +972,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
                     thisPtr.setArg1(new QuadrupleObjVar(thisPointer));
                     code.add(thisPtr);
                     //cancelFactorFunctionCall = false;
+                    cancelPush = true;
                 }
 
-                expressionNodeStack.push(new ExpressionNode(tmp));
+                if (!cancelPush)
+                    expressionNodeStack.push(new ExpressionNode(tmp));
 
                 if (!(obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject))
                     cancelFactorFunctionCall = true;
@@ -1005,9 +1011,23 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     @Override
     public void visit(DesignatorNonArrayAccess DesignatorNonArrayAccess) {
-        if (DesignatorNonArrayAccess.obj.getKind() == Obj.Meth ||
-                DesignatorNonArrayAccess.obj.getKind() == SymbolTable.AbstractMethodObject)
+        if ((DesignatorNonArrayAccess.obj.getKind() == Obj.Meth ||
+                DesignatorNonArrayAccess.obj.getKind() == SymbolTable.AbstractMethodObject) && !cancelFactorFunctionCall)
             return;
+        else if (cancelFactorFunctionCall) {
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
+
+            Quadruple load = new Quadruple(LOAD);
+            load.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+            load.setResult(new QuadrupleObjVar(tmp));
+            code.add(load);
+
+            expressionNodeStack.push(new ExpressionNode(tmp));
+
+            cancelFactorFunctionCall = false;
+            storeToPtr = false;
+            return;
+        }
 
         Quadruple getPtr = new Quadruple(GET_PTR);
         if (expressionDAG.getLast() != null && expressionDAG.getLast().getOperation() == ExpressionNodeOperation.ARRAY_LOAD) {
