@@ -5,23 +5,23 @@ program MJProgram
 
 		int x, y;
 		{
-			/*void toString(int param1, int param2)
+			void toString(int param1, int param2)
 			{
 			    param1 = param2;
 			    param1 = x;
 			    x = param1;
 			    x = y;
-			}*/
+			}
 
-			void test2()
+			void test2(int a, int b, int c)
 			{
 
 			}
 
-			void test()
+			void test(int param)
 			{
 			    p = new Point;
-			    p.test2();
+			    p.test2(param, 5, x);
 			}
 		}
 	}

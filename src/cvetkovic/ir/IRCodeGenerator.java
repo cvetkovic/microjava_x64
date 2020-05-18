@@ -947,6 +947,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 if (thisPointer == null)
                     throw new RuntimeException("Invalid function declaration inside class. No 'this' implicit parameter found.");
 
+                boolean exitMethod = false;
+
                 if (!(obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject)) {
                     Quadruple getPtr = new Quadruple(GET_PTR);
                     getPtr.setArg1(new QuadrupleObjVar(thisPointer));
@@ -959,6 +961,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
                     storeToPtr = true;
 
                     code.add(getPtr);
+                    exitMethod = true;
                 }
                 else {
                     Quadruple thisPtr = new Quadruple(PARAM);
@@ -971,6 +974,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
                 if (!(obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject))
                     cancelFactorFunctionCall = true;
+
+                if (exitMethod)
+                    return;
             }
         }
 
