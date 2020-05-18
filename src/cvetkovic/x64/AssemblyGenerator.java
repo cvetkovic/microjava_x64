@@ -443,7 +443,7 @@ public class AssemblyGenerator {
                                 elemType = objResult.getType();
 
                             List<String> tmp = new ArrayList<>();
-                            resourceManager.saveDirtyVariables(aux, true);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, true);
                             issueAuxiliaryInstructions(aux);
 
                             int numberOfElements;
@@ -640,7 +640,7 @@ public class AssemblyGenerator {
                             issueAuxiliaryInstructions(params);
                             params.clear();
 
-                            resourceManager.saveDirtyVariables(aux, true);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, true);
                             issueAuxiliaryInstructions(aux);
 
                             if (quadruple.getInstruction() == IRInstruction.CALL) {
@@ -717,7 +717,7 @@ public class AssemblyGenerator {
 
                         case LEAVE: {
                             // save dirty variables
-                            resourceManager.saveDirtyVariables(aux, false);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
                             issueAuxiliaryInstructions(aux);
                             aux.clear();
                             cancelSaveDirtyVals = true;
@@ -756,7 +756,7 @@ public class AssemblyGenerator {
                             Descriptor destination = resourceManager.getMemoryDescriptor(objResult);
 
                             List<RegisterDescriptor> toPreserve = new ArrayList<>();
-                            resourceManager.saveDirtyVariables(aux, true);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, true);
                             issueAuxiliaryInstructions(aux);
 
                             resourceManager.invalidateAddressDescriptors("rdi");
@@ -806,7 +806,7 @@ public class AssemblyGenerator {
                             }
 
                             aux.addAll(tmp);
-                            resourceManager.saveDirtyVariables(aux, true);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, true);
                             issueAuxiliaryInstructions(aux);
 
                             resourceManager.invalidateAddressDescriptors("rdi");
@@ -859,7 +859,7 @@ public class AssemblyGenerator {
 
                         case JMP: {
                             // save dirty variables
-                            resourceManager.saveDirtyVariables(aux, false);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
                             issueAuxiliaryInstructions(aux);
                             aux.clear();
                             cancelSaveDirtyVals = true;
@@ -920,7 +920,7 @@ public class AssemblyGenerator {
 
                             // save dirty variables
                             aux.clear();
-                            resourceManager.saveDirtyVariables(aux, false);
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
                             issueAuxiliaryInstructions(aux);
                             aux.clear();
                             cancelSaveDirtyVals = true;
@@ -959,7 +959,7 @@ public class AssemblyGenerator {
                 }
 
                 if (!cancelSaveDirtyVals) {
-                    resourceManager.saveDirtyVariables(aux, false);
+                    resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
                     issueAuxiliaryInstructions(aux);
                     aux.clear();
                 }

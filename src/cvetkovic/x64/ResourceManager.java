@@ -159,8 +159,7 @@ public class ResourceManager {
 
                 newObjDescriptor.setRegisterLocation(register);
             }
-        }
-        finally {
+        } finally {
             sxd = false;
         }
     }
@@ -355,7 +354,7 @@ public class ResourceManager {
      * in order to save all non-temporary variables to memory that
      * were made dirty during the execution
      */
-    public void saveDirtyVariables(List<String> out, boolean saveTemps) {
+    public void saveDirtyVariablesAndClearAddressDescriptors(List<String> out, boolean saveTemps) {
         for (Obj obj : dirtyVariables) {
             if (obj == null || !saveTemps && obj.tempVar)
                 continue;
@@ -368,8 +367,14 @@ public class ResourceManager {
                 addressDescriptor.setRegisterLocation(null);
             }
         }
-
         dirtyVariables.clear();
+
+        for (Obj obj : addressDescriptors.keySet()) {
+            AddressDescriptor addressDescriptor = addressDescriptors.get(obj);
+            if (addressDescriptor.getDescriptor() instanceof RegisterDescriptor)
+                addressDescriptor.setRegisterLocation(null);
+        }
+
     }
 
     public RegisterDescriptor getRegisterByName(String _64_bit_name) {
@@ -476,8 +481,7 @@ public class ResourceManager {
     }
 
     public void invalidateAddressDescriptors(String name) {
-        for (AddressDescriptor descriptor : addressDescriptors.values())
-        {
+        for (AddressDescriptor descriptor : addressDescriptors.values()) {
             if (descriptor.getDescriptor() instanceof RegisterDescriptor && (((RegisterDescriptor) descriptor.getDescriptor()).ISA_8_ByteName.equals(name)))
                 descriptor.setRegisterLocation(null);
         }
