@@ -5,10 +5,10 @@ program MJProgram
 		{
 			void toString(int param1, int param2)
 			{
-			    /*param1 = param2;
-			    param1 = x;*/
+			    param1 = param2;
+			    param1 = x;
 			    x = param1;
-			    //x = y;
+			    x = y;
 			}
 		}
 	}

@@ -927,6 +927,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(DesignatorRoot DesignatorRoot) {
         SyntaxNode parent = DesignatorRoot.getParent();
+        cancelFactorFunctionCall = false;
 
         // adding implicit this
         if (insideClass) {
