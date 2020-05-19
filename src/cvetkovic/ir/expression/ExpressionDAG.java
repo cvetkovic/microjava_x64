@@ -5,6 +5,7 @@ import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
+import rs.etf.pp1.symboltable.concepts.Struct;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,7 +100,14 @@ public class ExpressionDAG {
                 else {
                     int tmpId = tmpObjCounter++;
 
-                    Obj var = new Obj(Obj.Var, tmpVarPrefix + tmpId, SymbolTable.intType, true);
+                    Struct struct;
+                    if (irInstruction != IRInstruction.ALOAD)
+                        struct = SymbolTable.intType;
+                    else {
+                        struct = node.getLeftChild().getObj().getType().getElemType();
+                    }
+
+                    Obj var = new Obj(Obj.Var, tmpVarPrefix + tmpId, struct, true);
                     instruction.setResult(new QuadrupleObjVar(var));
                     node.setDestinationVariable(var);
 

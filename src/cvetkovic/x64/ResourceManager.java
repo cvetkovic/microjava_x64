@@ -148,6 +148,9 @@ public class ResourceManager {
 
                 if (newObj.getKind() == Obj.Con) {
                     int size = SystemV_ABI.getX64VariableSize(newObj.getType());
+                    if (sxd)
+                        size = 8;
+
                     out.add("\tMOV " + register.getNameBySize(size) + ", " + newObj.getAdr());
                     return;
                 }

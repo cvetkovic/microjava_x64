@@ -166,7 +166,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
     public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
         ExpressionNode rightChild = expressionNodeStack.pop();
         ExpressionNode leftChild;
-        if (expressionNodeStack.size() > 0 && expressionNodeStack.peek().getObj().getType() == SymbolTable.classType) {
+        if (expressionNodeStack.size() > 0 &&
+                expressionNodeStack.peek().getObj() != null &&
+                expressionNodeStack.peek().getObj().getType() == SymbolTable.classType) {
             Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
 
             Quadruple load = new Quadruple(LOAD);
@@ -491,8 +493,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple astore = null;
 
             if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
-                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
+                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
 
+                //instruction.setArg2(new QuadruplePTR());
                 instruction.setResult(new QuadrupleObjVar(tmp));
 
                 astore = new Quadruple(ASTORE);
