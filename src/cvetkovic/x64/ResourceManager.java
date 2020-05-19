@@ -344,8 +344,6 @@ public class ResourceManager {
             duplicates.put(num, descriptor);
         }
 
-        // TODO: remove register references in referenceToMemory map
-
         if (duplicates.size() > 0 && duplicates.firstKey() > 1)
             return duplicates.get(duplicates.firstKey());
         else

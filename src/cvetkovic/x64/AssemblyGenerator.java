@@ -28,8 +28,14 @@ public class AssemblyGenerator {
             new String[]{"rdi", "edi", "dil"},
             new String[]{"rsi", "esi", "sil"},
             new String[]{"r8", "r8d", "r8b"},
-            new String[]{"r9", "r9d", "r9b"}};
-    // TODO: add more registers (r10-r15)
+            new String[]{"r9", "r9d", "r9b"},
+            new String[]{"r10", "r10d", "r10b"},
+            new String[]{"r11", "r11d", "r11b"},
+            new String[]{"r12", "r12d", "r12b"},
+            new String[]{"r13", "r13d", "r13b"},
+            new String[]{"r14", "r14d", "r14b"},
+            new String[]{"r15", "r15d", "r15b"}
+    };
 
     private String outputFileUrl;
     private File outputFileHandle;
@@ -77,7 +83,6 @@ public class AssemblyGenerator {
             generateDirectives();
             generateBSS();
             generatePolymorphismTables();
-            // TODO: add builtin functions to DOC
             generateBuiltinFunctions();
             generateFunctionsBody();
 
@@ -445,6 +450,7 @@ public class AssemblyGenerator {
                             List<String> tmp = new ArrayList<>();
                             resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, true);
                             issueAuxiliaryInstructions(aux);
+                            aux.clear();
 
                             int numberOfElements;
                             if (quadruple.getArg1() instanceof QuadrupleObjVar) {
@@ -509,7 +515,6 @@ public class AssemblyGenerator {
                                 resourceManager.fetchOperand(destination, objResult, aux);
                                 resourceManager.validate(destination, objResult, aux, true);
 
-                                // TODO: test this type of allocation
                                 issueAuxiliaryInstructions(aux);
                                 // save PTR
                                 writer.write("\tMOV [" + destination + "], rax");
@@ -855,8 +860,6 @@ public class AssemblyGenerator {
                         // BRANCHES AND LABEL GENERATING
                         //////////////////////////////////////////////////////////////////////////////////
 
-                        // TODO: what if temp is not SAVED ACROSS several basic blocks if local value numbering is propagated across basic blocks
-
                         case JMP: {
                             // save dirty variables
                             resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
@@ -990,5 +993,7 @@ public class AssemblyGenerator {
             writer.write(line);
             writer.write(System.lineSeparator());
         }
+
+        aux.clear();
     }
 }

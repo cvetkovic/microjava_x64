@@ -16,7 +16,7 @@ class Predmet extends AbsPredmet
 	 char vrsta;
 
 	{
-		 void postaviTezinu(int tezina) {this.tezina = tezina;}
+		 void postaviTezinu(int tezina) {this.tezina = tezina;}  
 		 void ucitajTezinu() { read(tezina); }
 		 int zapremina() { return 0;}
 		 int Q() {return zapremina() * tezina;}
@@ -65,18 +65,18 @@ int tezinaK, tezinaS;
 		if(p.dohvVrstu() == 's') print('S');
 		else if(p.dohvVrstu() == 'k') print('K');
 
-		print(eol);
+		print(eol); 
 		print(p.dohvTezinu());
 	}
-
+		
 	void main() Predmet predmeti[]; AbsPredmet absPredmeti[]; int i; Sfera s1, s2, s3; Kvadar k1, k2, k3; int t;
-	{
+	{	
 		predmeti = new Predmet[6];
 		absPredmeti = new AbsPredmet[6];
 		s1 = new Sfera;
 		s2 = new Sfera;
 		s3 = new Sfera;
-
+		
 		k1 = new Kvadar;
 		k2 = new Kvadar;
 		k3 = new Kvadar;
@@ -88,7 +88,7 @@ int tezinaK, tezinaS;
 		k1.postaviStranice(1,2,3);
 		k2.postaviStranice(2,3,4);
 		k3.postaviStranice(3,4,5);
-
+		
 		predmeti[0] = s1;
 		predmeti[2] = s2;
 		predmeti[4] = s3;
@@ -99,7 +99,7 @@ int tezinaK, tezinaS;
 		read(t);
 		for(i=0;i<6;i++)
 		{
-			predmeti[i].postaviTezinu(t);
+			predmeti[i].postaviTezinu(t);	
 			absPredmeti[i] = predmeti[i];
 		}
 
@@ -107,22 +107,22 @@ int tezinaK, tezinaS;
 		tezinaS = 0;
 		for(i=1;i<=6;i++)
 		{
-			if(i % 2 == 0) continue;
+			if(i % 2 == 0) continue; 
 			zapreminaS = zapreminaS + absPredmeti[i - 1].zapremina();
 			tezinaS = tezinaS + absPredmeti[i - 1].Q();
 			ispis(predmeti[i - 1]);
 		}
-
-		zapreminaK = 0;
+		
+		zapreminaK = 0; 
 		tezinaK = 0;
 		for(i=1;i<=6;i++)
 		{
-			if(i % 2 == 1) continue;
+			if(i % 2 == 1) continue; 
 			zapreminaK = zapreminaK + predmeti[i - 1].zapremina();
 			tezinaK = tezinaK + predmeti[i - 1].Q();
 			ispis(predmeti[i - 1]);
 		}
-
+		
 		print(zapreminaS); print(eol);
 		print(zapreminaK); print(eol);
 		print(tezinaS); print(eol);

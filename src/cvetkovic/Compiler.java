@@ -121,7 +121,7 @@ public class Compiler {
 
                 if (optimize_ir) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
-                    //irCodeOptimizer.executeOptimizations();
+                    irCodeOptimizer.executeOptimizations();
                 }
 
                 IRCodeToPrintPost = irCodeOptimizer.toString();
@@ -129,10 +129,10 @@ public class Compiler {
                 if (dumpIR) {
                     System.out.println("================ INTERMEDIATE CODE BEFORE OPTIMIZER ================");
                     System.out.print(IRCodeToPrintPre);
-                    /*if (optimize_ir) {
+                    if (optimize_ir) {
                         System.out.println("================ INTERMEDIATE CODE AFTER OPTIMIZER ================");
                         System.out.print(IRCodeToPrintPost);
-                    }*/
+                    }
                 }
 
                 System.out.println("================ MACHINE CODE GENERATION ================");

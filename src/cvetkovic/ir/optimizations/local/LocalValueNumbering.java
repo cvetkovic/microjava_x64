@@ -38,6 +38,7 @@ public class LocalValueNumbering implements OptimizerPass {
     public void optimize() {
         List<Quadruple> toRemove = new ArrayList<>();
 
+        // DONE ON THE LEVEL OF BASIC BLOCK
         for (int i = 0; i < basicBlock.instructions.size(); i++) {
             Quadruple instruction = basicBlock.instructions.get(i);
 
@@ -53,12 +54,12 @@ public class LocalValueNumbering implements OptimizerPass {
 
             if (obj1 == null && obj2 == null && resultObj == null)
                 continue; // instruction doesn't involve any operands
-            else if (instruction.getInstruction() == IRInstruction.PRINTF)
+            /*else if (instruction.getInstruction() == IRInstruction.PRINTF)
                 continue;
             else if (instruction.getInstruction() == IRInstruction.SCANF)
                 continue;
             else if (instruction.getInstruction() == IRInstruction.ASTORE)
-                continue;
+                continue;*/
 
             if (obj1 != null)
                 leftChild = nodes.get(obj1);
@@ -120,8 +121,8 @@ public class LocalValueNumbering implements OptimizerPass {
                 boolean doConstantFolding = false;
                 int foldedValue = -1;
 
-                if ((obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
-                        (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG)) {
+                if (obj1 != null && ((obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) ||
+                        (obj1.getKind() == Obj.Con && obj2 == null && instruction.getInstruction() == IRInstruction.NEG))) {
                     // constant folding
                     foldedValue = instruction.getFoldedValue();
                     doConstantFolding = true;
