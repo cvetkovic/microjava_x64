@@ -165,7 +165,20 @@ public class IRCodeGenerator extends VisitorAdaptor {
     @Override
     public void visit(DesignatorArrayAccess DesignatorArrayAccess) {
         ExpressionNode rightChild = expressionNodeStack.pop();
-        ExpressionNode leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
+        ExpressionNode leftChild;
+        if (expressionNodeStack.size() > 0 && expressionNodeStack.peek().getObj().getType() == SymbolTable.classType) {
+            Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
+
+            Quadruple load = new Quadruple(LOAD);
+            load.setArg1(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
+            load.setResult(new QuadrupleObjVar(tmp));
+            code.add(load);
+
+            leftChild = new ExpressionNode(tmp);
+            //expressionNodeStack.push(leftChild);
+        }
+        else
+            leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
 
         if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign) &&
                 !(DesignatorArrayAccess.getParent() instanceof ReadStatement))
@@ -448,9 +461,23 @@ public class IRCodeGenerator extends VisitorAdaptor {
             Quadruple instruction = new Quadruple(IRInstruction.MALLOC);
             instruction.setArg1(new QuadrupleIntegerConst(src.getObj().getAdr()));
             instruction.setArg2(new QuadrupleARR());
-            instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
+            if (dest.getVariable().getType().getKind() == Struct.Class) {
+                // need to store via STORE PTR
+                Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
+                instruction.setResult(new QuadrupleObjVar(tmp));
 
-            code.add(instruction);
+                Quadruple storePtrInstruction = new Quadruple(STORE);
+                storePtrInstruction.setArg1(new QuadrupleObjVar(tmp));
+                storePtrInstruction.setArg2(new QuadruplePTR());
+                storePtrInstruction.setResult(new QuadrupleObjVar(dest.getVariable()));
+
+                code.add(instruction);
+                code.add(storePtrInstruction);
+            }
+            else {
+                instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
+                code.add(instruction);
+            }
         }
         else if (allocateClass) {
             allocateClass = false;
@@ -1056,7 +1083,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         // if not a left side of designator assign statement
         if (!(DesignatorNonArrayAccess.getParent() instanceof DesignatorAssign) &&
-                !(DesignatorNonArrayAccess.getParent() instanceof DesignatorInvoke)) {
+                !(DesignatorNonArrayAccess.getParent() instanceof DesignatorInvoke) &&
+                !(DesignatorNonArrayAccess.obj.getType().getKind() == Struct.Array)) {
 
             tmp2 = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.intType, true);
 

@@ -1,0 +1,28 @@
+program MJProgram
+	class Point
+	{
+	    Point arr[];
+
+		int x, y;
+		{
+		    void fun()
+		    {
+
+		    }
+
+			void toString(int param1, int param2)
+			{
+			    arr = new Point[5];
+			    arr[param1] = new Point;
+			    arr[param2].fun();
+			    this.arr[param2].arr[param1].fun();
+			}
+
+		}
+	}
+{
+	void main()
+	{
+
+	}
+}

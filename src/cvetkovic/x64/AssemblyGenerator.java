@@ -492,7 +492,7 @@ public class AssemblyGenerator {
                             writer.write(System.lineSeparator());
 
                             if (objResult.getType().getKind() == Struct.Class) {
-                                writer.write("\tMOV QWORD PTR [rax], OFFSET _vft_" + obj1.getName());
+                                writer.write("\tMOV QWORD PTR [rax], OFFSET _vft_" + (obj1 != null ? obj1.getName() : numberOfElements));
                                 writer.write(System.lineSeparator());
                             }
 
