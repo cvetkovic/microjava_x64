@@ -48,8 +48,11 @@ public class AssemblyGenerator {
     private List<ClassMetadata> classMetadata;
     private ResourceManager resourceManager;
 
-    private static final String integerTypeLabel = "number_format";
-    private static final String nonIntegerTypeLabel = "character_format";
+    private static final String writeintegerTypeLabel = "write_number_format";
+    private static final String writeNonIntegerTypeLabel = "write_character_format";
+    // needed to be separate because of SCANF problem with "%c" -> " %c"; leftovers in buffer '\n'
+    private static final String readIntegerTypeLabel = "read_number_format";
+    private static final String readNonIntegerTypeLabel = "read_character_format";
 
     private List<RegisterDescriptor> registers = new ArrayList<>();
     private Map<String, RegisterDescriptor> mapToRegister = new HashMap<>();
@@ -211,16 +214,28 @@ public class AssemblyGenerator {
         writer.write(".section .rodata");
         writer.write(System.lineSeparator());
 
-        // scanf/print character format
-        writer.write(nonIntegerTypeLabel + ":");
+        // printf character format
+        writer.write(writeNonIntegerTypeLabel + ":");
         writer.write(System.lineSeparator());
         writer.write("\t.asciz \"%c\"");
         writer.write(System.lineSeparator());
 
-        // scanf/print number format
-        writer.write(integerTypeLabel + ":");
+        // printf number format
+        writer.write(writeintegerTypeLabel + ":");
         writer.write(System.lineSeparator());
         writer.write("\t.asciz \"%d\"");
+        writer.write(System.lineSeparator());
+
+        // scanf character format
+        writer.write(readNonIntegerTypeLabel + ":");
+        writer.write(System.lineSeparator());
+        writer.write("\t.asciz \" %c\"");
+        writer.write(System.lineSeparator());
+
+        // scanf number format
+        writer.write(readIntegerTypeLabel + ":");
+        writer.write(System.lineSeparator());
+        writer.write("\t.asciz \" %d\"");
         writer.write(System.lineSeparator());
 
         if (classMetadata.size() > 0) {
@@ -769,7 +784,7 @@ public class AssemblyGenerator {
                             resourceManager.invalidateAddressDescriptors("rax");
 
                             // print format -> equivalent with mov rdi, offset FORMAT
-                            writer.write("\tLEA rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? integerTypeLabel : nonIntegerTypeLabel) + "]");
+                            writer.write("\tLEA rdi, [rip + " + (objResult.getType().getKind() == Struct.Int ? readIntegerTypeLabel : readNonIntegerTypeLabel) + "]");
                             writer.write(System.lineSeparator());
                             // obj
                             writer.write("\tLEA rsi, " + destination);
@@ -828,11 +843,11 @@ public class AssemblyGenerator {
                             switch (((QuadrupleIODataWidth) quadruple.getArg1()).getWidth()) {
                                 case BIT:
                                 case WORD:
-                                    formatterLabel = integerTypeLabel;
+                                    formatterLabel = writeintegerTypeLabel;
                                     break;
 
                                 case BYTE:
-                                    formatterLabel = nonIntegerTypeLabel;
+                                    formatterLabel = writeNonIntegerTypeLabel;
                                     break;
 
                                 default:
