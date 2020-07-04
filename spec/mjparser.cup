@@ -37,8 +37,10 @@ init with {:
 
 scan with {:
 	Symbol s = this.getScanner().next_token();
-	if (s != null && s.value != null) 
-		System.out.println(s.toString() + " " + s.value.toString());
+	if (s != null && s.value != null)
+	{
+		//System.out.println(s.toString() + " " + s.value.toString());
+    }
 	return s;
 :}
 

@@ -43,7 +43,7 @@ public class IROptimizer extends Optimizer {
             allVariables.addAll(sequence.function.getLocalSymbols().stream().collect(Collectors.toSet()));
             int oldAllocationValue = ((QuadrupleIntegerConst) enterInstruction.getArg1()).getValue();
 
-            System.out.println("Variables for " + sequence.function.getName());
+            //System.out.println("Variables for " + sequence.function.getName());
             int lastSize = giveAddressToTemps(allVariables, oldAllocationValue);
 
             enterInstruction.setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
@@ -87,11 +87,13 @@ public class IROptimizer extends Optimizer {
                 startValue = thisVarAddress;
             }
 
-            if (obj.getKind() == Obj.Var || obj.getKind() == Obj.Fld)
+            /*if (obj.getKind() == Obj.Var || obj.getKind() == Obj.Fld)
                 System.out.println(obj.getName() + (obj.parameter ? " (param)" : "") + " -> " + obj.getAdr());
+
+             */
         }
 
-        System.out.println();
+        //System.out.println();
 
         return startValue;
     }

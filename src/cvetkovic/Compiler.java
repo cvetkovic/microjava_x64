@@ -64,7 +64,7 @@ public class Compiler {
         if (showHelp) {
             System.out.println("MikroJava Compiler v1.0\n" +
                     "\n" +
-                    "\tAuthor: Lazar M. Cvetković (l.cvetkovic.997@gmail.com\n" +
+                    "\tAuthor: Lazar M. Cvetković (l.cvetkovic.997@gmail.com)\n" +
                     "--------------------------------------------------------\n" +
                     "Command line arguments:\n" +
                     "-help - show command line arguments help\n" +
@@ -73,7 +73,7 @@ public class Compiler {
                     "-dump_ast - dump abstract syntax tree\n" +
                     "-dump_symbols - dump symbol table\n" +
                     "-dump_ir - dump intermediate code\n" +
-                    "-optimize_ir - do optimizations on intermediate code\n" +
+                    //"-optimize_ir - do optimizations on intermediate code\n" +
                     "-dump_asm - dump generated x86-64 code\n");
 
             return;
