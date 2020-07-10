@@ -1,7 +1,6 @@
-# MicroJava x86-x64 Compiler
+# x86-x64 Code Generator for MicroJava
 
-This project is a part of final thesis at the School of Electrical Engineering, University of Belgrade
-
+This project is a bachelor thesis at the University of Belgrade, School of Electrical Engineering.
 
 Author:   Lazar M. Cvetković (l.cvetkovic.997@gmail.com)
 
