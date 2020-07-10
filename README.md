@@ -7,4 +7,4 @@ Author:   Lazar M. Cvetković (l.cvetkovic.997@gmail.com)
 
 Advisor:  Dr Dragan Bojić (bojic@etf.bg.ac.rs)
 
-Date:     March 2020 - ongoing
+Date:     March 2020 - June 2020
