@@ -902,10 +902,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
         currentMethodReturnType = MethodWithReturn.struct = MethodWithReturn.getType().struct;
         Struct struct = MethodWithReturn.getType().struct;
 
-        if (struct.getKind() != Struct.Int &&
+        if (struct != null && struct.getKind() != Struct.Int &&
                 struct.getKind() != Struct.Char &&
-                struct != SymbolTable.BooleanStruct) {
-            throw new RuntimeException("Method cannot return other type than boolean, character or integer type.");
+                struct != SymbolTable.BooleanStruct &&
+                struct.getKind() != SymbolTable.classType.getKind()) {
+            throw new RuntimeException("Method cannot return other type than boolean, character, integer or class type.");
         }
     }
 

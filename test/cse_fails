@@ -1,0 +1,30 @@
+program TestProgram
+    class Klasa
+    {
+        int polje1;
+        int polje2;
+
+        Klasa klasnoPolje;
+    }
+
+    {
+        void main()
+            int a;      // -8
+            int b;      // -12
+            int c;      // -16
+            int d;      // -20
+            int niz[];  // -24
+            Klasa k;    // -32
+            int i;      // -40
+        {
+            k = new Klasa;
+
+            k.polje1 = 4;
+
+            a = k.polje1;
+
+            print(k.polje1);
+            print(eol);
+            print(a);
+        }
+    }

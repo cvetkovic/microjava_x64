@@ -54,12 +54,23 @@ public class LocalValueNumbering implements OptimizerPass {
 
             if (obj1 == null && obj2 == null && resultObj == null)
                 continue; // instruction doesn't involve any operands
-            /*else if (instruction.getInstruction() == IRInstruction.PRINTF)
-                continue;
-            else if (instruction.getInstruction() == IRInstruction.SCANF)
-                continue;
-            else if (instruction.getInstruction() == IRInstruction.ASTORE)
-                continue;*/
+
+            switch (instruction.getInstruction())
+            {
+                case MALLOC:
+                case SCANF:
+                case PRINTF:
+                case ASTORE:
+
+                case JMP:
+                case JL:
+                case JLE:
+                case JG:
+                case JGE:
+                case JE:
+                case JNE:
+                    continue;
+            }
 
             if (obj1 != null)
                 leftChild = nodes.get(obj1);
@@ -201,7 +212,7 @@ public class LocalValueNumbering implements OptimizerPass {
             }
         }
 
-        // remove all necessary instructions
+        // remove all unnecessary instructions
         basicBlock.instructions.removeAll(toRemove);
     }
 

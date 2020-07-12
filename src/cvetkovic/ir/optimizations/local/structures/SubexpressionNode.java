@@ -8,6 +8,7 @@ import java.util.List;
 
 public class SubexpressionNode {
 
+    public int index;
     public IRInstruction instruction;
 
     public List<Obj> aliases = new ArrayList<>();
@@ -31,15 +32,13 @@ public class SubexpressionNode {
 
         SubexpressionNode node = (SubexpressionNode) obj;
 
-        if (instruction == node.instruction && (instruction == IRInstruction.ADD || instruction == IRInstruction.MUL)) {
+        if (instruction == node.instruction && (instruction == IRInstruction.ADD || instruction == IRInstruction.MUL))
             return (leftChild == node.leftChild && rightChild == node.rightChild) ||
                     (leftChild == node.rightChild && rightChild == node.leftChild);
-        }
-        else {
+        else
             return instruction == node.instruction &&
                     leftChild == node.leftChild &&
                     rightChild == node.rightChild;
-        }
     }
 
     @Override

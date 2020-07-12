@@ -154,6 +154,8 @@ public class Quadruple {
                 return obj1.getAdr() * obj2.getAdr();
             case DIV:
                 return obj1.getAdr() / obj2.getAdr();
+            case REM:
+                return obj1.getAdr() % obj2.getAdr();
             case NEG:
                 return -obj1.getAdr();
 
