@@ -21,7 +21,7 @@ public class SSAGenerator {
     }
 
     private DominatorTreeNode dominatorTreeRoot;
-    private List<BasicBlock> basicBlocks;
+    private final List<BasicBlock> basicBlocks;
 
     public SSAGenerator(List<BasicBlock> basicBlocks) {
         this.basicBlocks = basicBlocks;
@@ -31,7 +31,7 @@ public class SSAGenerator {
         Map<BasicBlock, Set<BasicBlock>> dominanceFrontier = generateDominanceFrontier(dominators, idoms);
 
         dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg.dot", basicBlocks);
-        dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree.dot", dominators, idoms);
+        dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree.dot", idoms);
     }
 
     private Map<BasicBlock, Set<BasicBlock>> generateDominatorTree(List<BasicBlock> basicBlocks) {
@@ -49,7 +49,7 @@ public class SSAGenerator {
             dominators.put(b, new HashSet<>(basicBlocks));
         }
 
-        boolean changed = true;
+        boolean changed;
         do {
             changed = false;
 
@@ -81,7 +81,7 @@ public class SSAGenerator {
             else
                 s.append("entry, ");
 
-            System.out.println("Dom(" + b.blockId + ") = { " + s.toString().substring(0, s.length() - 2) + " }");
+            System.out.println("Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
         }
 
         return dominators;
@@ -152,9 +152,8 @@ public class SSAGenerator {
         for (BasicBlock p : idoms.keySet()) {
             if (idoms.get(p) != null) {
                 BasicBlock parent = idoms.get(p);
-                BasicBlock child = p;
 
-                treeNodes.get(parent).children.add(treeNodes.get(child));
+                treeNodes.get(parent).children.add(treeNodes.get(p));
             }
         }
 
@@ -246,7 +245,7 @@ public class SSAGenerator {
         }
     }
 
-    public static void dumpDominatorTree(String path, Map<BasicBlock, Set<BasicBlock>> dominators, Map<BasicBlock, BasicBlock> idoms) {
+    public static void dumpDominatorTree(String path, Map<BasicBlock, BasicBlock> idoms) {
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))) {
             writer.println("digraph G {");
 
