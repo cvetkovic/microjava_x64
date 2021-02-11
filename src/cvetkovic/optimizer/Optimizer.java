@@ -2,6 +2,7 @@ package cvetkovic.optimizer;
 
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.ssa.SSAGenerator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,12 +22,17 @@ public abstract class Optimizer {
     }
 
     public void executeOptimizations() {
-        for (OptimizerPass pass : optimizationList) {
-            pass.optimize();
-            pass.finalizePass();
+        for (CodeSequence sequence : codeSequenceList) {
+            SSAGenerator ssaGenerator = new SSAGenerator(sequence.basicBlocks);
+
         }
 
-        reassembleBasicBlocks();
+        /*for (OptimizerPass pass : optimizationList) {
+            pass.optimize();
+            pass.finalizePass();
+        }*/
+
+        //reassembleBasicBlocks();
     }
 
     public List<CodeSequence> getOptimizationOutput() {

@@ -137,6 +137,22 @@ public class Quadruple {
         return formattedOutput.toString();
     }
 
+    public String getNonformattedOutput() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(instruction).append(" ");
+        if (arg1 != null)
+            sb.append(arg1.toString()).append(", ");
+        if (arg2 != null)
+            sb.append(arg2.toString()).append(" ,");
+        else
+            sb.append(", ");
+        if (result != null)
+            sb.append(result.toString()).append(" ");
+
+        return sb.toString();
+    }
+
     public int getFoldedValue() {
         Obj obj1 = ((QuadrupleObjVar) arg1).getObj();
         Obj obj2 = (arg2 != null ? ((QuadrupleObjVar) arg2).getObj() : null);

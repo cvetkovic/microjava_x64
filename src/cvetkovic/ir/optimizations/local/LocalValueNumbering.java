@@ -29,10 +29,11 @@ public class LocalValueNumbering implements OptimizerPass {
     protected Map<Obj, SubexpressionNode> arrayAccesses = new HashMap<>();
     protected boolean removeDAG = false;
 
-    public LocalValueNumbering(BasicBlock basicBlock) {
-        this.basicBlock = basicBlock;
+    public LocalValueNumbering() {
+        throw new RuntimeException("Not yet implemented.");
+        //this.basicBlock = null;
 
-        makeLeafNodes();
+        //makeLeafNodes();
     }
 
     public void optimize() {

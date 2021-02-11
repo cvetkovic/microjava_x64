@@ -1,2 +1,4 @@
-/test/program
-/test/program.s
+/test/debug
+/out
+microjava_x64.iml
+.idea

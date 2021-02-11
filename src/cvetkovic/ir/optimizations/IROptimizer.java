@@ -99,15 +99,7 @@ public class IROptimizer extends Optimizer {
     }
 
     private void createOptimizationList() {
-        for (CodeSequence sequence : codeSequenceList) {
-            // LOCAL OPTIMIZATIONS
-            for (BasicBlock block : sequence.basicBlocks) {
-                addOptimizationPass(new LocalValueNumbering(block));
-                //addOptimizationPass(new IdentityElimination(block));
-                //addOptimizationPass(new DeadCodeElimination(block));
-            }
-        }
-
+        //addOptimizationPass(new LocalValueNumbering());
     }
 
     @Override
