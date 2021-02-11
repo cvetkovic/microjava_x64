@@ -1,0 +1,14 @@
+program MJProgram
+{
+	void main()
+	    int t;
+	{
+	    read(t);
+
+        for (t = 0; t < 10; t++) {
+            t = 1;
+        }
+
+        print('K');
+	}
+}

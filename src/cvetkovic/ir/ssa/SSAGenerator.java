@@ -11,9 +11,24 @@ import java.util.stream.Collectors;
 
 public class SSAGenerator {
 
+    private static class DominatorTreeNode {
+        final BasicBlock basicBlock;
+        final List<DominatorTreeNode> children = new ArrayList<>();
+
+        public DominatorTreeNode(BasicBlock basicBlock) {
+            this.basicBlock = basicBlock;
+        }
+    }
+
+    private DominatorTreeNode dominatorTreeRoot;
+    private List<BasicBlock> basicBlocks;
+
     public SSAGenerator(List<BasicBlock> basicBlocks) {
+        this.basicBlocks = basicBlocks;
+
         Map<BasicBlock, Set<BasicBlock>> dominators = generateDominatorTree(basicBlocks);
         Map<BasicBlock, BasicBlock> idoms = generateImmediateDominators(dominators);
+        Map<BasicBlock, Set<BasicBlock>> dominanceFrontier = generateDominanceFrontier(dominators, idoms);
 
         dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg.dot", basicBlocks);
         dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree.dot", dominators, idoms);
@@ -120,10 +135,93 @@ public class SSAGenerator {
     private Map<BasicBlock, BasicBlock> generateImmediateDominators(Map<BasicBlock, Set<BasicBlock>> dominators) {
         Map<BasicBlock, BasicBlock> idoms = new HashMap<>();
 
+        // calculating immediate dominators for each basic block
         for (BasicBlock b : dominators.keySet())
             idoms.put(b, immediatelyDominates(b, dominators));
 
+        // generating dominator tree structure
+        Map<BasicBlock, DominatorTreeNode> treeNodes = new HashMap<>();
+        for (BasicBlock b : basicBlocks) {
+            DominatorTreeNode newNode = new DominatorTreeNode(b);
+            treeNodes.put(b, newNode);
+
+            if (b.isEntryBlock())
+                dominatorTreeRoot = newNode;
+        }
+
+        for (BasicBlock p : idoms.keySet()) {
+            if (idoms.get(p) != null) {
+                BasicBlock parent = idoms.get(p);
+                BasicBlock child = p;
+
+                treeNodes.get(parent).children.add(treeNodes.get(child));
+            }
+        }
+
         return idoms;
+    }
+
+    /**
+     * df(n) contains the first nodes reachable from n that n does not
+     * dominate, on each cfg path leaving n.
+     */
+    private Map<BasicBlock, Set<BasicBlock>> generateDominanceFrontier(Map<BasicBlock, Set<BasicBlock>> dominators, Map<BasicBlock, BasicBlock> idoms) {
+        Map<BasicBlock, Set<BasicBlock>> result = new HashMap<>();
+        dominators.forEach((p, v) -> result.put(p, new HashSet<>()));
+
+        // call singleDominanceFrontier in postorder on dominance tree
+        Stack<DominatorTreeNode> stack = new Stack<>();
+        Set<DominatorTreeNode> visited = new HashSet<>();
+
+        DominatorTreeNode next = dominatorTreeRoot;
+        stack.push(next);
+
+        while (!stack.isEmpty()) {
+            next = stack.peek();
+
+            if (next.children.size() == 0 || visited.contains(next)) {
+                DominatorTreeNode X = stack.pop();
+                Set<BasicBlock> DF = singleDominanceFrontier(X, result, idoms);
+
+                result.put(X.basicBlock, DF);
+            } else {
+                next.children.forEach(stack::push);
+                visited.add(next);
+            }
+        }
+
+        for (BasicBlock b : result.keySet()) {
+            StringBuilder s = new StringBuilder();
+
+            if (result.get(b).size() != 0)
+                result.get(b).forEach(p -> s.append(p.blockId).append(", "));
+            else
+                s.append("null, ");
+
+            System.out.println("DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+        }
+
+        return result;
+    }
+
+    private Set<BasicBlock> singleDominanceFrontier(DominatorTreeNode node, Map<BasicBlock, Set<BasicBlock>> DF, Map<BasicBlock, BasicBlock> idoms) {
+        Set<BasicBlock> frontier = new HashSet<>();
+
+        // local (done on CFG)
+        for (BasicBlock Y : node.basicBlock.successor)
+            if (idoms.get(Y) != node.basicBlock)
+                frontier.add(Y);
+
+        // determining children of the dominator tree
+        List<BasicBlock> dominatorTreeChildren = new ArrayList<>();
+        node.children.forEach(p -> dominatorTreeChildren.add(p.basicBlock));
+        // up (done on dominator tree)
+        for (BasicBlock Z : dominatorTreeChildren)
+            for (BasicBlock Y : DF.get(Z))
+                if (idoms.get(Y) != node.basicBlock)
+                    frontier.add(Y);
+
+        return frontier;
     }
 
     public static void dumpCFG(String path, List<BasicBlock> basicBlocks) {
