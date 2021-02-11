@@ -144,7 +144,7 @@ public class Quadruple {
         if (arg1 != null)
             sb.append(arg1.toString()).append(", ");
         if (arg2 != null)
-            sb.append(arg2.toString()).append(" ,");
+            sb.append(arg2.toString()).append(", ");
         else
             sb.append(", ");
         if (result != null)

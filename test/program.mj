@@ -5,8 +5,16 @@ program MJProgram
 	{
 	    read(t);
 
+        if (t < 5)
+            t = 1;
+        else
+            t = 0;
+
         for (t = 0; t < 10; t++) {
-            print('T');
+            if (t == 1)
+                print('T');
+            else
+                print('F');
         }
 
         print('K');

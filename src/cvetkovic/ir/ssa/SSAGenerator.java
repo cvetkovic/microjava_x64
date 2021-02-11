@@ -59,27 +59,59 @@ public class SSAGenerator {
             }
         } while (changed);
 
+        for (BasicBlock b : dominators.keySet()) {
+            StringBuilder s = new StringBuilder();
+            if (!b.isEntryBlock())
+                dominators.get(b).forEach(p -> s.append(p.blockId).append(", "));
+            else
+                s.append("entry, ");
+
+            System.out.println("Dom(" + b.blockId + ") = { " + s.toString().substring(0, s.length() - 2) + " }");
+        }
+
         return dominators;
     }
 
     /**
      * M strictly dominates N if and only if (M dom N) and M != N
+     * <p>
+     * NOTE: removes itself from its own dominator set
      */
     private boolean strictlyDominates(BasicBlock M, BasicBlock N, Map<BasicBlock, Set<BasicBlock>> dominators) {
         return dominators.get(N).contains(M) && (M != N);
     }
 
+    private boolean implication(boolean a, boolean b) {
+        if (a)
+            return b;
+        else
+            return true;
+    }
+
     /**
-     * M immediately dominates N if and only if (M sdom N) and (P sdom N) => (P dom M)
+     * M immediately dominates N if and only if (M sdom N) and for each P (P sdom N) => (P dom M)
+     * <p>
+     * NOTE: calculates nearest dominator
+     * https://www.cs.purdue.edu/homes/hosking/502/notes/14-dep.pdf
      */
     private BasicBlock immediatelyDominates(BasicBlock N, Map<BasicBlock, Set<BasicBlock>> dominators) {
-        for (BasicBlock M : dominators.keySet()) {
-            if (!strictlyDominates(M, N, dominators))
+        for (BasicBlock M : dominators.get(N)) {
+            boolean leftHandSide = strictlyDominates(M, N, dominators);
+
+            if (!leftHandSide)
                 continue;
 
-            for (BasicBlock P : dominators.get(M))
-                if (strictlyDominates(P, N, dominators))
-                    return M;
+            boolean dominatesOverAll = true;
+            for (BasicBlock P : dominators.get(N)) {
+                boolean term1 = strictlyDominates(P, N, dominators);
+                boolean term2 = dominators.get(M).contains(P);
+
+                if (!implication(term1, term2))
+                    dominatesOverAll = false;
+            }
+
+            if (dominatesOverAll)
+                return M;
         }
 
         return null;
