@@ -65,6 +65,19 @@ public class BasicBlock {
 
     }
 
+    /**
+     * Inserts the instruction after the label
+     */
+    public void insertInstruction(Quadruple toInsert) {
+        int indexAt = 0;
+
+        for (Quadruple q : instructions)
+            if (q.getInstruction() == IRInstruction.GEN_LABEL)
+                indexAt++;
+
+        instructions.add(indexAt, toInsert);
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
     // STATIC METHODS
     //////////////////////////////////////////////////////////////////////////////////

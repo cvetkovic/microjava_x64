@@ -58,7 +58,8 @@ public class SSAConverter {
 
                         Quadruple phi = new Quadruple(IRInstruction.STORE_PHI, phiArgs, null);
                         phi.setResult(new QuadrupleObjVar(a));
-                        y.instructions.add(0, phi);
+                        // insert after label
+                        y.insertInstruction(phi);
 
                         A_phi.add(y);
 
