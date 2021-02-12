@@ -1,14 +1,17 @@
 program MJProgram
 {
 	void main()
-	    int t;
+	    int i, t;
 	{
 	    read(t);
 
         for (t = 0; t < 10; t++) {
-            t = 1;
+            if (t % 2 == 0)
+                i++;
+            else
+                i = i + 2;
         }
 
-        print('K');
+        print(i);
 	}
 }

@@ -1,6 +1,7 @@
 package cvetkovic.ir.ssa;
 
 import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.optimizer.CodeSequence;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class DominanceAnalyzer {
 
-    private static class DominatorTreeNode {
+    static class DominatorTreeNode {
         final BasicBlock basicBlock;
         final List<DominatorTreeNode> children = new ArrayList<>();
 
@@ -20,19 +21,25 @@ public class DominanceAnalyzer {
         }
     }
 
-    private DominatorTreeNode dominatorTreeRoot;
+    DominatorTreeNode dominatorTreeRoot;
+    private final CodeSequence sequence;
     private final List<BasicBlock> basicBlocks;
 
     private Map<BasicBlock, Set<BasicBlock>> dominators;
     private Map<BasicBlock, BasicBlock> idoms;
     private Map<BasicBlock, Set<BasicBlock>> dominanceFrontier;
 
-    public DominanceAnalyzer(List<BasicBlock> basicBlocks) {
-        this.basicBlocks = basicBlocks;
+    public DominanceAnalyzer(CodeSequence sequence) {
+        this.sequence = sequence;
+        this.basicBlocks = sequence.basicBlocks;
 
         dominators = generateDominatorTree();
         idoms = generateImmediateDominators();
         dominanceFrontier = generateDominanceFrontier();
+    }
+
+    public CodeSequence getSequence() {
+        return sequence;
     }
 
     public List<BasicBlock> getBasicBlocks() {

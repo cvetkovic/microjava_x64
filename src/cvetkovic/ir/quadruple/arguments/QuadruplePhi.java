@@ -3,31 +3,30 @@ package cvetkovic.ir.quadruple.arguments;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 public class QuadruplePhi extends QuadrupleVariable {
-    private Obj[] varList;
+    private Obj obj;
+    private int[] varList;
 
-    public QuadruplePhi(int argc) {
-        this.varList = new Obj[argc];
+    private int indexCnt = 0;
+
+    public QuadruplePhi(Obj obj, int argc) {
+        this.obj = obj;
+        this.varList = new int[argc];
+        for (int i = 0; i < argc; i++)
+            this.varList[i] = -1;
     }
 
-    public Obj getPhiArgument(int index) {
-        if (index >= varList.length || index < 0)
-            throw new IllegalArgumentException("Invalid index for setting phi function argument.");
+    public void setPhiArg(int cnt) {
+        if (indexCnt >= varList.length)
+            throw new RuntimeException("Operand of current PHI function cannot be replaced more than " + varList.length + " times.");
 
-        return varList[index];
-    }
-
-    public void setPhiArg(int index, Obj var) {
-        if (index >= varList.length || index < 0)
-            throw new IllegalArgumentException("Invalid index for setting phi function argument.");
-
-        varList[index] = var;
+        varList[indexCnt++] = cnt;
     }
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("φ(");
-        for (Obj obj : varList)
-            builder.append(obj).append(", ");
+        for (int cnt : varList)
+            builder.append(obj).append("_").append(cnt).append(", ");
 
         return builder.substring(0, builder.length() - 2) + ")";
     }

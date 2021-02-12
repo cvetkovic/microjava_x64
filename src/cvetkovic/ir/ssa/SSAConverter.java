@@ -9,6 +9,9 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
 
+/**
+ * Contains methods needed to convert the code sequence into static-single assignment (SSA) form
+ */
 public class SSAConverter {
 
     private DominanceAnalyzer dominanceAnalyzer;
@@ -17,6 +20,9 @@ public class SSAConverter {
         this.dominanceAnalyzer = dominanceAnalyzer;
     }
 
+    /**
+     * Function that does the PHI function placement
+     */
     public void doPhiPlacement() {
         List<BasicBlock> basicBlocks = dominanceAnalyzer.getBasicBlocks();
 
@@ -24,6 +30,10 @@ public class SSAConverter {
 
         for (BasicBlock n : basicBlocks) {
             for (Obj a : n.getSetOfDefinedVariables()) {
+                // temp vars are already in the SSA form
+                if (a.tempVar)
+                    continue;
+
                 if (defSites.containsKey(a)) {
                     defSites.get(a).add(n);
                 } else {
@@ -44,9 +54,7 @@ public class SSAConverter {
 
                 for (BasicBlock y : DF_n) {
                     if (!A_phi.contains(y)) {
-                        QuadruplePhi phiArgs = new QuadruplePhi(y.predecessor.size());
-                        for (int i = 0; i < y.predecessor.size(); i++)
-                            phiArgs.setPhiArg(i, a);
+                        QuadruplePhi phiArgs = new QuadruplePhi(a, y.predecessor.size());
 
                         Quadruple phi = new Quadruple(IRInstruction.STORE_PHI, phiArgs, null);
                         phi.setResult(new QuadrupleObjVar(a));
@@ -66,7 +74,83 @@ public class SSAConverter {
         System.out.println("Phi functions inserted where necessary.");
     }
 
+    /**
+     * Renames the variables in the whole function. Call after PHI function insertion only.
+     */
     public void renameVariables() {
+        Map<Obj, Integer> count = new HashMap<>();
+        Map<Obj, Stack<Integer>> stack = new HashMap<>();
 
+        // initialization
+        for (BasicBlock b : dominanceAnalyzer.getBasicBlocks()) {
+            for (Obj var : b.allVariables) {
+                if (!count.containsKey(var)) {
+                    count.put(var, 0);
+                    stack.put(var, new Stack<>());
+                    stack.get(var).push(0);
+                }
+            }
+        }
+
+        // renaming starts from the entry block
+        internalRenaming(dominanceAnalyzer.dominatorTreeRoot, count, stack);
+
+        System.out.println("Renaming has been done.");
+    }
+
+    private void internalRenaming(DominanceAnalyzer.DominatorTreeNode dominatorTreeNode, Map<Obj, Integer> count, Map<Obj, Stack<Integer>> stack) {
+        BasicBlock n = dominatorTreeNode.basicBlock;
+
+        // usages and definitions in each statement of the basic block
+        for (Quadruple statement : n.instructions) {
+            // dealing with usage
+            if (statement.getInstruction() != IRInstruction.STORE_PHI) {
+                if (statement.getArg1() != null && statement.getArg1() instanceof QuadrupleObjVar) {
+                    Obj arg1 = ((QuadrupleObjVar) statement.getArg1()).getObj();
+                    if (arg1.getKind() != Obj.Con) {
+                        int i = stack.get(arg1).peek();
+                        statement.setSSACountArg1(i);
+                    }
+                }
+                if (statement.getArg2() != null && statement.getArg2() instanceof QuadrupleObjVar) {
+                    Obj arg2 = ((QuadrupleObjVar) statement.getArg2()).getObj();
+                    if (arg2.getKind() != Obj.Con) {
+                        int i = stack.get(arg2).peek();
+                        statement.setSSACountArg2(i);
+                    }
+                }
+            }
+
+            // dealing with definitions
+            if (statement.getResult() != null && statement.getResult() instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) statement.getResult()).getObj();
+
+                int i = count.get(obj) + 1;
+                count.put(obj, i);
+                stack.get(obj).push(i);
+                statement.setSSACountResult(i);
+            }
+        }
+
+        // patching the successors of CFG
+        for (BasicBlock Y : n.successor) {
+            for (Quadruple statement : Y.instructions) {
+                if (statement.getInstruction() != IRInstruction.STORE_PHI)
+                    continue;
+
+                Obj obj = ((QuadrupleObjVar) statement.getResult()).getObj();
+                int i = stack.get(obj).peek();
+                QuadruplePhi phiFunction = ((QuadruplePhi) statement.getArg1());
+                phiFunction.setPhiArg(i);
+            }
+        }
+
+        // renaming by traversing the dominator tree
+        for (DominanceAnalyzer.DominatorTreeNode node : dominatorTreeNode.children)
+            internalRenaming(node, count, stack);
+
+        // popping off stack
+        for (Obj o : n.getSetOfDefinedVariables())
+            stack.get(o).pop();
     }
 }

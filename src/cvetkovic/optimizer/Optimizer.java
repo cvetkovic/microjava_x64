@@ -24,7 +24,7 @@ public abstract class Optimizer {
 
     public void executeOptimizations() {
         for (CodeSequence sequence : codeSequenceList) {
-            DominanceAnalyzer dominanceAnalyzer = new DominanceAnalyzer(sequence.basicBlocks);
+            DominanceAnalyzer dominanceAnalyzer = new DominanceAnalyzer(sequence);
             SSAConverter ssaConverter = new SSAConverter(dominanceAnalyzer);
 
             // before SSA conversion
