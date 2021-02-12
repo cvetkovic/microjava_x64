@@ -19,6 +19,8 @@ public class BasicBlock {
     private static int blockCounter = 0;
     public int blockId = blockCounter++;
 
+    // TODO: need to be removed
+    // TODO: SSA form generators invalidates the following two variables
     public int firstQuadruple;
     public int lastQuadruple;
 
@@ -177,8 +179,7 @@ public class BasicBlock {
             if (currentVisited.contains(current)) {
                 result.add(traverseLoopToEliminateUnnecessaryVertices(current, currentVisited));
                 continue;
-            }
-            else
+            } else
                 currentVisited.add(current);
 
             for (BasicBlock b : current.successor) {
@@ -233,8 +234,7 @@ public class BasicBlock {
             if (currentAdd != lastAdd) {
                 lastAdd = currentAdd;
                 currentAdd = -1;
-            }
-            else
+            } else
                 break;
         }
 
@@ -308,8 +308,7 @@ public class BasicBlock {
                 // two successors
                 followers.add(labelIndices.get(lastInstruction.getResult().toString()));
                 followers.add(block.lastQuadruple + 1);
-            }
-            else
+            } else
                 // no jump instruction -> ELSE branch of IF statement -> falling through like in C switch statement
                 followers.add(block.lastQuadruple + 1);
 
@@ -457,5 +456,39 @@ public class BasicBlock {
                 ", end = " + isExitBlock() +
                 ", predecessors = " + p.toString().replace(", )", ")") +
                 ", successors = " + s.toString().replace(", )", ")") + "]";
+    }
+
+    public Set<Obj> getSetOfDefinedVariables() {
+        Set<Obj> result = new HashSet<>();
+
+        for (Quadruple q : instructions) {
+            switch (q.getInstruction()) {
+                // arithmetic
+                case ADD:
+                case SUB:
+                case MUL:
+                case DIV:
+                case REM:
+                case NEG:
+                    // memory
+                case LOAD:
+                case STORE:
+                case MALLOC:
+                case ALOAD:
+                case ASTORE:
+                case GET_PTR:
+                    // functions
+                case CALL:
+                case INVOKE_VIRTUAL:
+                    // I/O
+                case SCANF:
+                    result.add(((QuadrupleObjVar) q.getResult()).getObj());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return result;
     }
 }

@@ -40,6 +40,8 @@ public enum IRInstruction {
     JE,     // jump if equal
     JNE,    // jump if not equal
 
+    STORE_PHI,    // phi function (SSA)
+
     GEN_LABEL;      // generate label
 
     public static boolean isBasicBlockSplitInstruction(IRInstruction instruction)

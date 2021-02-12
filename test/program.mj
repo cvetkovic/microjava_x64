@@ -1,37 +1,14 @@
 program MJProgram
 {
-    // 0 -> 3 -> [2 4]
-    // 4 -> [5 1 6]
-
-    /*
-    DF(4) = { 3 }
-    DF(5) = { 1 }
-    DF(3) = { 3 }
-    DF(1) = { 3 }
-    DF(0) = { null }
-    DF(2) = { null }
-    DF(6) = { 1 }
-    */
-
 	void main()
-	    int i, j, k, t;
+	    int t;
 	{
 	    read(t);
 
-        i = 1;
-        j = 1;
-
-        for (k = 0; k < 100; k++) {
-            if (j < 20) {
-                j = i;
-                k++;
-            }
-            else {
-                j = k;
-                k = k + 2;
-            }
+        for (t = 0; t < 10; t++) {
+            t = 1;
         }
 
-        j = 10;
+        print('K');
 	}
 }

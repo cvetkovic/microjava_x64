@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SSAGenerator {
+public class DominanceAnalyzer {
 
     private static class DominatorTreeNode {
         final BasicBlock basicBlock;
@@ -23,18 +23,35 @@ public class SSAGenerator {
     private DominatorTreeNode dominatorTreeRoot;
     private final List<BasicBlock> basicBlocks;
 
-    public SSAGenerator(List<BasicBlock> basicBlocks) {
+    private Map<BasicBlock, Set<BasicBlock>> dominators;
+    private Map<BasicBlock, BasicBlock> idoms;
+    private Map<BasicBlock, Set<BasicBlock>> dominanceFrontier;
+
+    public DominanceAnalyzer(List<BasicBlock> basicBlocks) {
         this.basicBlocks = basicBlocks;
 
-        Map<BasicBlock, Set<BasicBlock>> dominators = generateDominatorTree(basicBlocks);
-        Map<BasicBlock, BasicBlock> idoms = generateImmediateDominators(dominators);
-        Map<BasicBlock, Set<BasicBlock>> dominanceFrontier = generateDominanceFrontier(dominators, idoms);
-
-        dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg.dot", basicBlocks);
-        dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree.dot", idoms);
+        dominators = generateDominatorTree();
+        idoms = generateImmediateDominators();
+        dominanceFrontier = generateDominanceFrontier();
     }
 
-    private Map<BasicBlock, Set<BasicBlock>> generateDominatorTree(List<BasicBlock> basicBlocks) {
+    public List<BasicBlock> getBasicBlocks() {
+        return basicBlocks;
+    }
+
+    public Map<BasicBlock, Set<BasicBlock>> getDominators() {
+        return dominators;
+    }
+
+    public Map<BasicBlock, BasicBlock> getImmediateDominators() {
+        return idoms;
+    }
+
+    public Map<BasicBlock, Set<BasicBlock>> getDominanceFrontier() {
+        return dominanceFrontier;
+    }
+
+    private Map<BasicBlock, Set<BasicBlock>> generateDominatorTree() {
         Map<BasicBlock, Set<BasicBlock>> dominators = new HashMap<>();
         BasicBlock entryBlock = basicBlocks.stream().filter(BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);
 
@@ -132,7 +149,7 @@ public class SSAGenerator {
         return null;
     }
 
-    private Map<BasicBlock, BasicBlock> generateImmediateDominators(Map<BasicBlock, Set<BasicBlock>> dominators) {
+    private Map<BasicBlock, BasicBlock> generateImmediateDominators() {
         Map<BasicBlock, BasicBlock> idoms = new HashMap<>();
 
         // calculating immediate dominators for each basic block
@@ -164,7 +181,7 @@ public class SSAGenerator {
      * df(n) contains the first nodes reachable from n that n does not
      * dominate, on each cfg path leaving n.
      */
-    private Map<BasicBlock, Set<BasicBlock>> generateDominanceFrontier(Map<BasicBlock, Set<BasicBlock>> dominators, Map<BasicBlock, BasicBlock> idoms) {
+    private Map<BasicBlock, Set<BasicBlock>> generateDominanceFrontier() {
         Map<BasicBlock, Set<BasicBlock>> result = new HashMap<>();
         dominators.forEach((p, v) -> result.put(p, new HashSet<>()));
 

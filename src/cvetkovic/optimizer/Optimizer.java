@@ -2,7 +2,8 @@ package cvetkovic.optimizer;
 
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.ssa.SSAGenerator;
+import cvetkovic.ir.ssa.DominanceAnalyzer;
+import cvetkovic.ir.ssa.SSAConverter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,8 +24,17 @@ public abstract class Optimizer {
 
     public void executeOptimizations() {
         for (CodeSequence sequence : codeSequenceList) {
-            SSAGenerator ssaGenerator = new SSAGenerator(sequence.basicBlocks);
+            DominanceAnalyzer dominanceAnalyzer = new DominanceAnalyzer(sequence.basicBlocks);
+            SSAConverter ssaConverter = new SSAConverter(dominanceAnalyzer);
 
+            // before SSA conversion
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_before_ssa.dot", dominanceAnalyzer.getBasicBlocks());
+            DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree.dot", dominanceAnalyzer.getImmediateDominators());
+
+            ssaConverter.doPhiPlacement();
+            ssaConverter.renameVariables();
+
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_after_ssa_generation.dot", dominanceAnalyzer.getBasicBlocks());
         }
 
         /*for (OptimizerPass pass : optimizationList) {
@@ -39,17 +49,8 @@ public abstract class Optimizer {
         return codeSequenceList;
     }
 
-    private Map<Integer, BasicBlock> indexBasicBlockBeginnings(List<BasicBlock> blocks) {
-        Map<Integer, BasicBlock> result = new HashMap<>();
-
-        for (BasicBlock b : blocks)
-            result.put(b.firstQuadruple, b);
-
-        return result;
-    }
-
     public List<List<Quadruple>> reassembleBasicBlocks() {
-        List<List<Quadruple>> outputCode = new ArrayList<>();
+        /*List<List<Quadruple>> outputCode = new ArrayList<>();
 
         for (CodeSequence sequence : codeSequenceList) {
             List<Quadruple> methodCode = new ArrayList<>();
@@ -71,9 +72,11 @@ public abstract class Optimizer {
 
             outputCode.add(methodCode);
             sequence.code = methodCode;
-        }
+        }*/
 
-        return outputCode;
+        throw new RuntimeException("Not yet implemented.");
+
+        //return outputCode;
     }
 
 }
