@@ -49,6 +49,8 @@ public class Quadruple {
     protected int ssaArg2Count = -1;
     protected int ssaResultCount = -1;
 
+    protected int phiID = -1;
+
     public Quadruple(IRInstruction instruction) {
         this.instruction = instruction;
     }
@@ -69,6 +71,14 @@ public class Quadruple {
 
     public void setSSACountResult(int i) {
         ssaResultCount = i;
+    }
+
+    public int getPhiID() {
+        return phiID;
+    }
+
+    public void setPhiID(int phiID) {
+        this.phiID = phiID;
     }
 
     public int getSsaArg1Count() {

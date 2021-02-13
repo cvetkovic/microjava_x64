@@ -1,6 +1,7 @@
 package cvetkovic.ir.ssa;
 
 import cvetkovic.ir.IRInstruction;
+import cvetkovic.ir.LiveVariableAnalyzer;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
@@ -25,6 +26,7 @@ public class SSAConverter {
      */
     public void doPhiPlacement() {
         List<BasicBlock> basicBlocks = dominanceAnalyzer.getBasicBlocks();
+        //LiveVariableAnalyzer.LiveVariables liveVariables = LiveVariableAnalyzer.doLivenessAnalysis(basicBlocks);
 
         Map<Obj, Set<BasicBlock>> defSites = new HashMap<>();
 
@@ -44,6 +46,8 @@ public class SSAConverter {
             }
         }
 
+        int phiID = 0;
+
         for (Obj a : defSites.keySet()) {
             Set<BasicBlock> W = defSites.get(a);
             Set<BasicBlock> A_phi = new HashSet<>();
@@ -53,12 +57,13 @@ public class SSAConverter {
                 Set<BasicBlock> DF_n = dominanceAnalyzer.getDominanceFrontier().get(n);
 
                 for (BasicBlock y : DF_n) {
-                    if (!A_phi.contains(y)) {
+                    if (!A_phi.contains(y)) { // PRUNED SSA -> && liveVariables.liveIn.get(y).contains(a)) {
                         QuadruplePhi phiArgs = new QuadruplePhi(a, y.predecessor.size());
 
                         Quadruple phi = new Quadruple(IRInstruction.STORE_PHI, phiArgs, null);
                         phi.setResult(new QuadrupleObjVar(a));
-                        // insert after label
+                        phi.setPhiID(phiID++);
+                        // insert after the label
                         y.insertInstruction(phi);
 
                         A_phi.add(y);
@@ -153,5 +158,48 @@ public class SSAConverter {
         // popping off stack
         for (Obj o : n.getSetOfDefinedVariables())
             stack.get(o).pop();
+    }
+
+    /**
+     * Puts code back to normal form. Phi functions are replaced with STORE dest, src with
+     * an instruction inserted at each of the predecessors.
+     */
+    public void toNormalForm() {
+        for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
+            List<Quadruple> toReplace = new ArrayList<>();
+
+            // creating worklist
+            for (int i = 0; i < block.instructions.size(); i++) {
+                Quadruple instruction = block.instructions.get(i);
+                if (instruction.getInstruction() == IRInstruction.GEN_LABEL)
+                    continue;
+                else if (instruction.getInstruction() == IRInstruction.STORE_PHI)
+                    toReplace.add(instruction);
+                else
+                    instruction.SSAToNormalForm();
+            }
+
+            for (Quadruple instruction : toReplace) {
+                // maybe add reverse sort
+                Obj destinationNode = ((QuadrupleObjVar) instruction.getResult()).getObj();
+                Obj sourceNode = new Obj(destinationNode.getKind(), "_phi" + instruction.getPhiID(), destinationNode.getType());
+
+                // adding STORE to predecessors
+                for (BasicBlock p : block.predecessor) {
+                    Quadruple mov = new Quadruple(IRInstruction.STORE);
+                    mov.setArg1(new QuadrupleObjVar(destinationNode));
+                    mov.setResult(new QuadrupleObjVar(sourceNode));
+
+                    p.instructions.add(mov);
+                }
+
+                // replacing PHI with STORE from phi_X
+                Quadruple mov = new Quadruple(IRInstruction.STORE);
+                mov.setArg1(new QuadrupleObjVar(sourceNode));
+                mov.setResult(new QuadrupleObjVar(destinationNode));
+
+                block.instructions.set(block.instructions.indexOf(instruction), mov);
+            }
+        }
     }
 }

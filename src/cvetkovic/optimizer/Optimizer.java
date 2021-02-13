@@ -34,15 +34,18 @@ public abstract class Optimizer {
             ssaConverter.doPhiPlacement();
             ssaConverter.renameVariables();
 
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_after_ssa_generation.dot", dominanceAnalyzer.getBasicBlocks());
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_ssa_before_optimizer.dot", dominanceAnalyzer.getBasicBlocks());
+
+            /*for (OptimizerPass pass : optimizationList) {
+                pass.optimize();
+                pass.finalizePass();
+            }*/
+
+            // eliminating SSA from code
+            ssaConverter.toNormalForm();
+
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_post_ssa.dot", dominanceAnalyzer.getBasicBlocks());
         }
-
-        /*for (OptimizerPass pass : optimizationList) {
-            pass.optimize();
-            pass.finalizePass();
-        }*/
-
-        //reassembleBasicBlocks();
     }
 
     public List<CodeSequence> getOptimizationOutput() {
