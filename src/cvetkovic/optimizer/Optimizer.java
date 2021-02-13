@@ -28,13 +28,13 @@ public abstract class Optimizer {
             SSAConverter ssaConverter = new SSAConverter(dominanceAnalyzer);
 
             // before SSA conversion
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_before_ssa.dot", dominanceAnalyzer.getBasicBlocks());
-            DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree.dot", dominanceAnalyzer.getImmediateDominators());
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_before_ssa_" + sequence.function + ".dot", dominanceAnalyzer.getBasicBlocks());
+            DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree_" + sequence.function + ".dot", dominanceAnalyzer.getImmediateDominators());
 
             ssaConverter.doPhiPlacement();
             ssaConverter.renameVariables();
 
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_ssa_before_optimizer.dot", dominanceAnalyzer.getBasicBlocks());
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_ssa_before_optimizer_" + sequence.function + ".dot", dominanceAnalyzer.getBasicBlocks());
 
             /*for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
@@ -44,7 +44,7 @@ public abstract class Optimizer {
             // eliminating SSA from code
             ssaConverter.toNormalForm();
 
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_post_ssa.dot", dominanceAnalyzer.getBasicBlocks());
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_post_ssa_" + sequence.function + ".dot", dominanceAnalyzer.getBasicBlocks());
         }
     }
 
@@ -61,18 +61,17 @@ public abstract class Optimizer {
 
         int index = 0;
         while (index < cfg.size()) {
-            if (cfg.size() == 1)
+            if (cfg.size() == 1 || currentBlock.successor.size() == 0)
                 result.add(currentBlock);
             else if (currentBlock.successor.size() == 1) {
                 Quadruple lastInstruction = currentBlock.instructions.get(currentBlock.instructions.size() - 1);
 
                 result.add(currentBlock);
                 if (lastInstruction.getInstruction() == IRInstruction.JMP) {
-                    result.add(stack.pop());
-                    index++;
-                }
-
-                currentBlock = currentBlock.successor.get(0);
+                    currentBlock = stack.pop();
+                    //index++;
+                } else
+                    currentBlock = currentBlock.successor.get(0);
             } else if (currentBlock.successor.size() == 2) {
                 Quadruple lastInstruction = currentBlock.instructions.get(currentBlock.instructions.size() - 1);
 
@@ -95,7 +94,7 @@ public abstract class Optimizer {
                 stack.push(addToStack);
                 result.add(currentBlock);
                 currentBlock = (addToStack == successor1 ? successor2 : successor1);
-            } else if (currentBlock.successor.size() != 0)
+            } else
                 throw new RuntimeException("Basic block cannot have more than two successors.");
 
             index++;
@@ -103,5 +102,4 @@ public abstract class Optimizer {
 
         return result;
     }
-
 }

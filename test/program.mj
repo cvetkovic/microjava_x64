@@ -9,15 +9,9 @@ bool ibool;
 
 int niz[];
 {
-
 	int sum(int z, int d)
 	{
-		//return z + d;
-		if (z == 1)
-		    return 1;
-
-		d++;
-		return d;
+		return z + d;
 	}
 
 	int inkrement(int a, int inc) int pom;

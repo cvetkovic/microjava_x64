@@ -95,14 +95,14 @@ public class IROptimizer extends Optimizer {
         StringBuilder stringBuilder = new StringBuilder();
 
         for (int i = 0; i < codeSequenceList.size(); i++) {
-            stringBuilder.append("---------------------------------------------------------------------\n");
+            stringBuilder.append("-----------------------------------------------------------------------------------------\n");
 
             CodeSequence sequence = codeSequenceList.get(i);
             for (BasicBlock basicBlock : IROptimizer.reassembleBasicBlocks(sequence.basicBlocks))
                 for (Quadruple q : basicBlock.instructions)
                     stringBuilder.append(q + "\n");
 
-            stringBuilder.append("---------------------------------------------------------------------\n");
+            stringBuilder.append("-----------------------------------------------------------------------------------------\n");
         }
 
         return stringBuilder.toString();

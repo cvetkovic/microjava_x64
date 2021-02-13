@@ -195,15 +195,21 @@ public class Quadruple {
             sb.append(arg1.toString());
             if (ssaArg1Count != -1)
                 sb.append("_").append(ssaArg1Count);
-            sb.append(", ");
+            if (arg2 != null && result != null)
+                sb.append(", ");
         }
+
         if (arg2 != null) {
+            if (result == null)
+                sb.append(", ");
             sb.append(arg2.toString());
             if (ssaArg2Count != -1)
                 sb.append("_").append(ssaArg2Count);
+            if (result != null)
+                sb.append(", ");
+        } else if (result != null)
             sb.append(", ");
-        } else
-            sb.append(", ");
+
         if (result != null) {
             sb.append(result.toString());
             if (ssaResultCount != -1)

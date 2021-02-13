@@ -1,7 +1,6 @@
 package cvetkovic.ir.ssa;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.LiveVariableAnalyzer;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
@@ -113,14 +112,14 @@ public class SSAConverter {
             if (statement.getInstruction() != IRInstruction.STORE_PHI) {
                 if (statement.getArg1() != null && statement.getArg1() instanceof QuadrupleObjVar) {
                     Obj arg1 = ((QuadrupleObjVar) statement.getArg1()).getObj();
-                    if (arg1.getKind() != Obj.Con) {
+                    if (arg1.getKind() != Obj.Con && arg1.getKind() != Obj.Meth) {
                         int i = stack.get(arg1).peek();
                         statement.setSSACountArg1(i);
                     }
                 }
                 if (statement.getArg2() != null && statement.getArg2() instanceof QuadrupleObjVar) {
                     Obj arg2 = ((QuadrupleObjVar) statement.getArg2()).getObj();
-                    if (arg2.getKind() != Obj.Con) {
+                    if (arg2.getKind() != Obj.Con && arg2.getKind() != Obj.Meth) {
                         int i = stack.get(arg2).peek();
                         statement.setSSACountArg2(i);
                     }
@@ -191,6 +190,7 @@ public class SSAConverter {
                     mov.setResult(new QuadrupleObjVar(sourceNode));
 
                     p.allVariables.add(sourceNode);
+                    p.allVariables.add(destinationNode);
                     if (IRInstruction.isJumpInstruction(p.instructions.get(p.instructions.size() - 1).getInstruction()))
                         p.instructions.add(p.instructions.size() - 1, mov);
                     else

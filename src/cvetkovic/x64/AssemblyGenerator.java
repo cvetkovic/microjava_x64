@@ -80,6 +80,7 @@ public class AssemblyGenerator {
     public void generateCode() {
         try {
             outputFileHandle = new File(outputFileUrl);
+            outputFileHandle.getParentFile().mkdir();
             outputFileHandle.createNewFile();
 
             writer = new BufferedWriter(new FileWriter(outputFileHandle));

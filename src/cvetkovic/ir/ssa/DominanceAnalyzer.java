@@ -3,10 +3,7 @@ package cvetkovic.ir.ssa;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.optimizer.CodeSequence;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -248,6 +245,7 @@ public class DominanceAnalyzer {
     }
 
     public static void dumpCFG(String path, List<BasicBlock> basicBlocks) {
+        (new File(path)).getParentFile().mkdir();
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))) {
             writer.println("digraph G {");
             writer.println("node [ shape = rect ]");
@@ -270,6 +268,7 @@ public class DominanceAnalyzer {
     }
 
     public static void dumpDominatorTree(String path, Map<BasicBlock, BasicBlock> idoms) {
+        (new File(path)).getParentFile().mkdir();
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))) {
             writer.println("digraph G {");
 
