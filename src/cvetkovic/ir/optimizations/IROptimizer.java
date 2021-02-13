@@ -3,6 +3,7 @@ package cvetkovic.ir.optimizations;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.misc.Config;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.Optimizer;
 import cvetkovic.x64.SystemV_ABI;
@@ -75,9 +76,9 @@ public class IROptimizer extends Optimizer {
         return objs;
     }
 
-    private int giveAddressToTemps(Collection<Obj> variables, int startValue) {
+    public static int giveAddressToTemps(Collection<Obj> variables, int startValue) {
         for (Obj obj : variables) {
-            if ((obj.tempVar || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
+            if (((obj.tempVar || obj.getName().startsWith(Config.prefix_phi)) || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
                 int lastTaken = startValue;
                 if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(obj.getType()))
                     lastTaken = SystemV_ABI.alignTo16(lastTaken);

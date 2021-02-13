@@ -2,12 +2,17 @@ package cvetkovic.ir.ssa;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.optimizations.IROptimizer;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
+import cvetkovic.misc.Config;
+import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Contains methods needed to convert the code sequence into static-single assignment (SSA) form
@@ -164,8 +169,11 @@ public class SSAConverter {
      * an instruction inserted at each of the predecessors.
      */
     public void toNormalForm() {
+        BasicBlock entryBlock = dominanceAnalyzer.getBasicBlocks().stream().filter(BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);
+
         for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
             List<Quadruple> toReplace = new ArrayList<>();
+            Set<Obj> phis = new HashSet<>();
 
             // creating worklist
             for (int i = 0; i < block.instructions.size(); i++) {
@@ -181,7 +189,7 @@ public class SSAConverter {
             for (Quadruple instruction : toReplace) {
                 // maybe add reverse sort
                 Obj destinationNode = ((QuadrupleObjVar) instruction.getResult()).getObj();
-                Obj sourceNode = new Obj(destinationNode.getKind(), "_phi" + instruction.getPhiID(), destinationNode.getType());
+                Obj sourceNode = new Obj(destinationNode.getKind(), Config.prefix_phi + instruction.getPhiID(), destinationNode.getType());
 
                 // adding STORE to predecessors
                 for (BasicBlock p : block.predecessor) {
@@ -205,7 +213,15 @@ public class SSAConverter {
                 block.allVariables.add(destinationNode);
 
                 block.instructions.set(block.instructions.indexOf(instruction), mov);
+
+                phis.add(sourceNode);
             }
+
+            // allocate stack for _phi variables
+            int oldAllocationValue = ((QuadrupleIntegerConst) entryBlock.instructions.get(1).getArg1()).getValue();
+            int lastSize = IROptimizer.giveAddressToTemps(phis, oldAllocationValue);
+
+            entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
         }
 
         System.out.println("Function has been put from SSA back into the normal form.");

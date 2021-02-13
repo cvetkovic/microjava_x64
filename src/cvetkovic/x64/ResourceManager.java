@@ -126,6 +126,9 @@ public class ResourceManager {
      * remove from free register list if is present there.
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
+        if (newObj.getAdr() ==-1)
+            throw new RuntimeException("Address of obj cannot be negative. Operand fetching has failed.");
+
         try {
             if (register.holdsValueOf == newObj)
                 return;
