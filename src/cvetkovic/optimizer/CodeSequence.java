@@ -9,11 +9,9 @@ import java.util.Map;
 
 public class CodeSequence {
     public Obj function;
-    // TODO: member 'code' has to be deprecated -> duplication of data -> leave only basic blocks
-    public List<Quadruple> code;
+
     public List<BasicBlock> basicBlocks;
     public Map<String, Integer> labelIndices;
-    //public List<Set<BasicBlock>> loops;
 
     public BasicBlock entryBlock;
 }

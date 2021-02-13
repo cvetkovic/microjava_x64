@@ -5,10 +5,7 @@ import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class Optimizer {
 
@@ -52,34 +49,13 @@ public abstract class Optimizer {
         return codeSequenceList;
     }
 
-    public List<List<Quadruple>> reassembleBasicBlocks() {
-        /*List<List<Quadruple>> outputCode = new ArrayList<>();
+    public List<BasicBlock> reassembleBasicBlocks() {
+        List<BasicBlock> result = new ArrayList<>();
 
-        for (CodeSequence sequence : codeSequenceList) {
-            List<Quadruple> methodCode = new ArrayList<>();
-            Map<Integer, BasicBlock> leaders = indexBasicBlockBeginnings(sequence.basicBlocks);
+        Stack<BasicBlock> stack = new Stack<>();
+        
 
-            BasicBlock currentBlock = null;
-            for (int index = 0; index < sequence.code.size(); ) {
-                if (currentBlock == null)
-                    currentBlock = leaders.get(index);
-
-                methodCode.addAll(currentBlock.instructions);
-
-                currentBlock.firstQuadruple = index;
-                index = currentBlock.lastQuadruple + 1;
-                currentBlock.lastQuadruple = currentBlock.firstQuadruple + currentBlock.instructions.size();
-
-                currentBlock = null;
-            }
-
-            outputCode.add(methodCode);
-            sequence.code = methodCode;
-        }*/
-
-        throw new RuntimeException("Not yet implemented.");
-
-        //return outputCode;
+        return result;
     }
 
 }

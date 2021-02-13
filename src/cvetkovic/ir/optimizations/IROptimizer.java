@@ -1,6 +1,5 @@
 package cvetkovic.ir.optimizations;
 
-import cvetkovic.ir.optimizations.local.LocalValueNumbering;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
@@ -13,7 +12,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class IROptimizer extends Optimizer {
     public IROptimizer(List<List<Quadruple>> code, List<Obj> functions) {
@@ -23,7 +21,6 @@ public class IROptimizer extends Optimizer {
             CodeSequence sequence = new CodeSequence();
 
             sequence.function = functions.get(i);
-            sequence.code = quadrupleList;
             sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
             sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(sequence.function, quadrupleList, sequence.labelIndices);
 
@@ -39,8 +36,12 @@ public class IROptimizer extends Optimizer {
             // update ENTER instruction and assign address to all variables
             Quadruple enterInstruction = sequence.entryBlock.instructions.get(1);
 
-            Collection<Obj> allVariables = extractAllVariables(sequence.code);
-            allVariables.addAll(sequence.function.getLocalSymbols().stream().collect(Collectors.toSet()));
+            Collection<Obj> allVariables = new HashSet<>();
+            for (BasicBlock b : sequence.basicBlocks) {
+                allVariables.addAll(extractAllVariables(b.instructions));
+                allVariables.addAll(new HashSet<>(sequence.function.getLocalSymbols()));
+            }
+
             int oldAllocationValue = ((QuadrupleIntegerConst) enterInstruction.getArg1()).getValue();
 
             //System.out.println("Variables for " + sequence.function.getName());
@@ -51,8 +52,6 @@ public class IROptimizer extends Optimizer {
             codeSequenceList.add(sequence);
             i++;
         }
-
-        createOptimizationList();
     }
 
     private Collection<Obj> extractAllVariables(List<Quadruple> allInstructions) {
@@ -86,20 +85,9 @@ public class IROptimizer extends Optimizer {
                 obj.setAdr(thisVarAddress);
                 startValue = thisVarAddress;
             }
-
-            /*if (obj.getKind() == Obj.Var || obj.getKind() == Obj.Fld)
-                System.out.println(obj.getName() + (obj.parameter ? " (param)" : "") + " -> " + obj.getAdr());
-
-             */
         }
 
-        //System.out.println();
-
         return startValue;
-    }
-
-    private void createOptimizationList() {
-        //addOptimizationPass(new LocalValueNumbering());
     }
 
     @Override
@@ -110,8 +98,8 @@ public class IROptimizer extends Optimizer {
             stringBuilder.append("---------------------------------------------------------------------\n");
 
             CodeSequence sequence = codeSequenceList.get(i);
-            for (Quadruple q : sequence.code)
-                stringBuilder.append(q + "\n");
+            /*for (Quadruple q : sequence.code)
+                stringBuilder.append(q + "\n");*/
 
             stringBuilder.append("---------------------------------------------------------------------\n");
         }

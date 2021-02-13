@@ -201,5 +201,7 @@ public class SSAConverter {
                 block.instructions.set(block.instructions.indexOf(instruction), mov);
             }
         }
+
+        System.out.println("Function has been put from SSA back into the normal form.");
     }
 }

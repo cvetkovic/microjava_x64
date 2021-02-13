@@ -281,7 +281,8 @@ public class AssemblyGenerator {
                     if (instructionCounter == 0)
                         basicBlock = codeSequence.entryBlock;
                     else
-                        basicBlock = codeSequence.basicBlocks.stream().filter(p -> checkEquality(p.firstQuadruple, instructionCounter)).collect(Collectors.toList()).get(0);
+                        // TODO: need to reassemble CFG into linear sequence (0 -> p.firstQuadruple)
+                        basicBlock = codeSequence.basicBlocks.stream().filter(p -> checkEquality(0, instructionCounter)).collect(Collectors.toList()).get(0);
                 }
 
                 List<String> aux = new ArrayList<>();
@@ -444,8 +445,7 @@ public class AssemblyGenerator {
 
                                 writer.write("\tMOV " + pointerTargetSize + " [" + pointerToDestination.getNameBySize(8) + "], " + arg1_result_register.getNameBySize(dataSize));
                                 writer.write(System.lineSeparator());
-                            }
-                            else {
+                            } else {
                                 // NON PTR -> load value that will be written
                                 resourceManager.fetchOperand(arg1_result_register, obj1, aux);
                                 resourceManager.validate(arg1_result_register, objResult, aux, true);
@@ -486,8 +486,7 @@ public class AssemblyGenerator {
                                 }
 
                                 numberOfElements = classSize;
-                            }
-                            else
+                            } else
                                 numberOfElements = ((QuadrupleIntegerConst) quadruple.getArg1()).getValue();
 
                             resourceManager.invalidateAddressDescriptors("rdi");
@@ -521,8 +520,7 @@ public class AssemblyGenerator {
                                 // allocates array -> save pointer to objResult's address
                                 writer.write("\tMOV " + resourceManager.getMemoryDescriptor(objResult) + ", rax");
                                 writer.write(System.lineSeparator());
-                            }
-                            else {
+                            } else {
                                 // MALLOC as PTR
                                 RegisterDescriptor a_reg = mapToRegister.get(registerNames[0][0]); // rax
                                 RegisterDescriptor destination = resourceManager.getRegister(objResult, quadruple, Collections.singletonList(a_reg));
@@ -627,8 +625,7 @@ public class AssemblyGenerator {
                             if (paramRegister != null) {
                                 resourceManager.fetchOperand(paramRegister, obj1, aux);
                                 issueAuxiliaryInstructions(aux);
-                            }
-                            else {
+                            } else {
                                 stackObjParameters.push(obj1);
                             }
 
@@ -668,8 +665,7 @@ public class AssemblyGenerator {
                                 writer.write(System.lineSeparator());
 
                                 resourceManager.clearRegisterFromAddressDescriptors(methodToInvoke);
-                            }
-                            else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
+                            } else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
                                 List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
 
                                 RegisterDescriptor edi = resourceManager.getRegisterByName("rdi");
@@ -689,8 +685,7 @@ public class AssemblyGenerator {
                                 ptrToClass.setHoldsValueOf(null);
                                 edi.setHoldsValueOf(null);
                                 resourceManager.clearRegisterFromAddressDescriptors(method);
-                            }
-                            else
+                            } else
                                 throw new RuntimeException("Not supported type of method call.");
 
                             long numberOfStackParameters = methodToInvoke.getLocalSymbols().stream().filter(p -> p.stackParameter).count();

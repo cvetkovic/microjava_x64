@@ -966,7 +966,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (insideClass) {
             Obj obj = DesignatorRoot.obj;
 
-            // TODO: maybe put this.method() invocation -> for regular and abstract methods
+            // maybe put this.method() invocation -> for regular and abstract methods
             if (obj.getKind() == Obj.Fld || obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject) {
                 Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
 
