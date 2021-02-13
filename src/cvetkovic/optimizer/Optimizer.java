@@ -97,6 +97,10 @@ public abstract class Optimizer {
             } else
                 throw new RuntimeException("Basic block cannot have more than two successors.");
 
+            // solution for IF without ELSE
+            if (!stack.isEmpty() && stack.peek() == currentBlock)
+                stack.pop();
+
             index++;
         }
 
