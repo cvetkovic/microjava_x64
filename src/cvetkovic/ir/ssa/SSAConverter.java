@@ -190,13 +190,19 @@ public class SSAConverter {
                     mov.setArg1(new QuadrupleObjVar(destinationNode));
                     mov.setResult(new QuadrupleObjVar(sourceNode));
 
-                    p.instructions.add(mov);
+                    p.allVariables.add(sourceNode);
+                    if (IRInstruction.isJumpInstruction(p.instructions.get(p.instructions.size() - 1).getInstruction()))
+                        p.instructions.add(p.instructions.size() - 1, mov);
+                    else
+                        p.instructions.add(mov);
                 }
 
                 // replacing PHI with STORE from phi_X
                 Quadruple mov = new Quadruple(IRInstruction.STORE);
                 mov.setArg1(new QuadrupleObjVar(sourceNode));
                 mov.setResult(new QuadrupleObjVar(destinationNode));
+                block.allVariables.add(sourceNode);
+                block.allVariables.add(destinationNode);
 
                 block.instructions.set(block.instructions.indexOf(instruction), mov);
             }

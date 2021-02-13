@@ -44,7 +44,7 @@ public enum IRInstruction {
 
     GEN_LABEL;      // generate label
 
-    public static boolean isBasicBlockSplitInstruction(IRInstruction instruction)
+    public static boolean isJumpInstruction(IRInstruction instruction)
     {
         switch (instruction){
             case JMP:

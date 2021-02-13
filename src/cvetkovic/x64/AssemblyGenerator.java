@@ -5,6 +5,7 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.optimizer.CodeSequence;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.cpu.Descriptor;
@@ -155,7 +156,7 @@ public class AssemblyGenerator {
     private void createAddressDescriptors(BasicBlock basicBlock) {
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.allVariables)
-            if (var.parameter == false)
+            if (!var.parameter)
                 memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
         for (Obj var : basicBlock.enclosingFunction.getLocalSymbols()) {
             if (var.parameter) {
@@ -273,18 +274,7 @@ public class AssemblyGenerator {
         writer.write(System.lineSeparator());
 
         for (CodeSequence codeSequence : codeSequences) {
-            BasicBlock basicBlock = null;
-
-            for (int i = 0; i < codeSequence.basicBlocks.size(); i++) {
-                if (basicBlock == null) {
-                    // assign new basic block to compile
-                    if (instructionCounter == 0)
-                        basicBlock = codeSequence.entryBlock;
-                    else
-                        // TODO: need to reassemble CFG into linear sequence (0 -> p.firstQuadruple)
-                        basicBlock = codeSequence.basicBlocks.stream().filter(p -> checkEquality(0, instructionCounter)).collect(Collectors.toList()).get(0);
-                }
-
+            for (BasicBlock basicBlock : Optimizer.reassembleBasicBlocks(codeSequence.basicBlocks)) {
                 List<String> aux = new ArrayList<>();
                 boolean cancelSaveDirtyVals = false;
 

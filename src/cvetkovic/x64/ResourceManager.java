@@ -124,10 +124,6 @@ public class ResourceManager {
     /**
      * Saves old value in register if dirty and load new value from memory. Issue those instruction and
      * remove from free register list if is present there.
-     *
-     * @param register
-     * @param operand
-     * @param out
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
         try {

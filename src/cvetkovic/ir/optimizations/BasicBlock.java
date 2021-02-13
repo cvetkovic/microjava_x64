@@ -24,9 +24,7 @@ public class BasicBlock {
 
     public List<Quadruple> instructions = new ArrayList<>();
 
-    public Collection<Obj> temporaryVariables;
     public Collection<Obj> allVariables;
-    public Collection<Obj> nonTemporaryVariables;
 
     public Obj enclosingFunction;
 
@@ -47,9 +45,14 @@ public class BasicBlock {
 
         // extract object nodes of all operands and destination variables in the basic block
         allVariables = extractAllVariables();
-        // split non-temporary and temporary variables into separate sets
-        nonTemporaryVariables = allVariables.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
-        temporaryVariables = allVariables.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
+    }
+
+    public Set<Obj> getNonTemporaryVariables() {
+        return allVariables.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
+    }
+
+    public Set<Obj> getTemporaryVariables() {
+        return allVariables.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
     }
 
     /**
@@ -112,7 +115,7 @@ public class BasicBlock {
         for (int i = 0; i < code.size(); i++) {
             Quadruple quadruple = code.get(i);
 
-            if (IRInstruction.isBasicBlockSplitInstruction(quadruple.getInstruction())) {
+            if (IRInstruction.isJumpInstruction(quadruple.getInstruction())) {
                 String destinationLabel = quadruple.getResult().toString();
 
                 // adding destination of branch instruction to block leaders
@@ -159,7 +162,7 @@ public class BasicBlock {
             else if (lastInstruction.getInstruction() == IRInstruction.LEAVE)
                 // no successor
                 continue;
-            else if (IRInstruction.isBasicBlockSplitInstruction(lastInstruction.getInstruction()) &&
+            else if (IRInstruction.isJumpInstruction(lastInstruction.getInstruction()) &&
                     lastInstruction.getInstruction() != IRInstruction.JMP) {
                 // two successors
                 followers.add(labelIndices.get(lastInstruction.getResult().toString()));
@@ -267,12 +270,15 @@ public class BasicBlock {
                 case ALOAD:
                 case ASTORE:
                 case GET_PTR:
-                    // functions
-                case CALL:
-                case INVOKE_VIRTUAL:
                     // I/O
                 case SCANF:
                     result.add(((QuadrupleObjVar) q.getResult()).getObj());
+                    break;
+                // functions
+                case CALL:
+                case INVOKE_VIRTUAL:
+                    if (q.getResult() != null)
+                        result.add(((QuadrupleObjVar) q.getResult()).getObj());
                     break;
                 default:
                     break;
