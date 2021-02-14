@@ -32,6 +32,7 @@ public enum IRInstruction {
 
     GET_PTR,// get pointer
 
+    CMP,    // compare instruction
     JMP,    // jump unconditionally
     JL,     // jump if less
     JLE,    // jump if less or equal
@@ -40,11 +41,12 @@ public enum IRInstruction {
     JE,     // jump if equal
     JNE,    // jump if not equal
 
+    STORE_PHI,    // phi function (SSA)
+
     GEN_LABEL;      // generate label
 
-    public static boolean isBasicBlockSplitInstruction(IRInstruction instruction)
-    {
-        switch (instruction){
+    public static boolean isJumpInstruction(IRInstruction instruction) {
+        switch (instruction) {
             case JMP:
             case JL:
             case JLE:
@@ -122,5 +124,20 @@ public enum IRInstruction {
             return IRInstruction.JLE;
 
         throw new RuntimeException("Not allowed relation operator.");
+    }
+
+    public static boolean isConditionalJumpInstruction(IRInstruction instruction) {
+        switch (instruction) {
+            case JL:
+            case JLE:
+            case JG:
+            case JGE:
+            case JE:
+            case JNE:
+                return true;
+
+            default:
+                return false;
+        }
     }
 }

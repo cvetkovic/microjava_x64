@@ -1,0 +1,15 @@
+program MJProgram
+{
+	void main()
+	    int t;
+	{
+	    read(t);
+
+        if (t < 5)
+            t = 1;
+        else
+            t = 0;
+
+        print('K');
+	}
+}

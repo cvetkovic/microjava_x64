@@ -178,8 +178,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             leftChild = new ExpressionNode(tmp);
             //expressionNodeStack.push(leftChild);
-        }
-        else
+        } else
             leftChild = expressionDAG.getOrCreateLeaf(DesignatorArrayAccess.obj);
 
         if (!(DesignatorArrayAccess.getParent() instanceof DesignatorAssign) &&
@@ -208,8 +207,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
             returnStatementJMPFixPoint.clear();
         }
 
-        Quadruple instruction = new Quadruple(IRInstruction.LEAVE);
-        code.add(instruction);
+        // no more new basic block creation
+        if (code.get(code.size() - 1).getInstruction() != LEAVE) {
+            Quadruple instruction = new Quadruple(IRInstruction.LEAVE);
+            code.add(instruction);
+        }
 
         if (code != null) {
             outputCode.add(code);
@@ -235,8 +237,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             if (code.size() > 0 && code.get(code.size() - 1).getInstruction() == GET_PTR)
                 storeToPtr = true;
-        }
-        else {
+        } else {
             allocateArray = true;
 
             Obj result = new Obj(Obj.Con, "size", SymbolTable.intType);
@@ -276,8 +277,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
             code.add(astoreInstruction);
-        }
-        else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess || expressionNodeStack.size() > 1) {
+        } else if (ReadStatement.getDesignator() instanceof DesignatorNonArrayAccess || expressionNodeStack.size() > 1) {
             Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), ((QuadrupleIODataWidth) instruction.getArg2()).ioVarToStruct(), true);
             instruction.setResult(new QuadrupleObjVar(tmp));
 
@@ -291,8 +291,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             code.add(instruction);
             code.add(astoreInstruction);
-        }
-        else {
+        } else {
             instruction.setResult(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
             code.add(instruction);
         }
@@ -415,8 +414,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 return;
 
             expressionNodeStack.push(expressionDAG.getOrCreateLeaf(var));
-        }
-        else {
+        } else {
             if (!(FactorFunctionCall.getDesignator() instanceof DesignatorRoot))
                 pushImplicitThisForFunctionCall();
             endFunctionCall();
@@ -475,13 +473,11 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
                 code.add(instruction);
                 code.add(storePtrInstruction);
-            }
-            else {
+            } else {
                 instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
                 code.add(instruction);
             }
-        }
-        else if (allocateClass) {
+        } else if (allocateClass) {
             allocateClass = false;
 
             src = expressionNodeStack.pop();
@@ -502,8 +498,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
                 astore.setArg1(new QuadrupleObjVar(tmp));
                 astore.setArg2(new QuadrupleObjVar(dest.getObj()));
                 astore.setResult(new QuadrupleObjVar(expressionNodeStack.pop().getObj()));
-            }
-            else
+            } else
                 instruction.setResult(new QuadrupleObjVar(dest.getVariable()));
 
             // store to ptr
@@ -515,8 +510,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             code.add(instruction);
             if (astore != null)
                 code.add(astore);
-        }
-        else if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
+        } else if (DesignatorAssign.getDesignator() instanceof DesignatorArrayAccess) {
             Quadruple instruction = new Quadruple(IRInstruction.ASTORE);
 
             code.addAll(expressionDAG.emitQuadruples());
@@ -530,14 +524,12 @@ public class IRCodeGenerator extends VisitorAdaptor {
             instruction.setResult(new QuadrupleObjVar(array.getObj()));
 
             code.add(instruction);
-        }
-        else {
+        } else {
             src = expressionNodeStack.pop();
             if (expressionNodeStack.size() > 1) {
                 expressionNodeStack.pop();
                 storeToPtr = true;
-            }
-            else if (expressionNodeStack.peek().getObj().getType() == SymbolTable.classType) {
+            } else if (expressionNodeStack.peek().getObj().getType() == SymbolTable.classType) {
                 storeToPtr = true;
             }
             dest = expressionNodeStack.pop();
@@ -556,8 +548,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
                 toAdd.addAll(toAdd);
                 forUpdateVarListInstructionStack.push(toAdd);
-            }
-            else
+            } else
                 code.addAll(toAdd);
         }
 
@@ -582,8 +573,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             storeInstruction.setArg1(new QuadrupleObjVar(tmp));
 
             storeToPtr = false;
-        }
-        else
+        } else
             instruction.setResult(new QuadrupleObjVar(var));
 
         if (postponeUpdateVarList) {
@@ -594,8 +584,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             if (storeInstruction != null)
                 toAdd.add(storeInstruction);
             forUpdateVarListInstructionStack.push(toAdd);
-        }
-        else {
+        } else {
             code.add(instruction);
             if (storeInstruction != null)
                 code.add(storeInstruction);
@@ -625,8 +614,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
             generateLabelForContinueStatement(toAdd);
             toAdd.add(instruction);
             forUpdateVarListInstructionStack.push(toAdd);
-        }
-        else
+        } else
             code.add(instruction);
     }
 
@@ -966,7 +954,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
         if (insideClass) {
             Obj obj = DesignatorRoot.obj;
 
-            // TODO: maybe put this.method() invocation -> for regular and abstract methods
+            // maybe put this.method() invocation -> for regular and abstract methods
             if (obj.getKind() == Obj.Fld || obj.getKind() == Obj.Meth || obj.getKind() == SymbolTable.AbstractMethodObject) {
                 Obj tmp = new Obj(Obj.Var, ExpressionDAG.generateTempVarOutside(), SymbolTable.classType, true);
 
@@ -996,8 +984,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
                     code.add(getPtr);
                     exitMethod = true;
-                }
-                else {
+                } else {
                     Quadruple thisPtr = new Quadruple(PARAM);
                     thisPtr.setArg1(new QuadrupleObjVar(thisPointer));
                     code.add(thisPtr);
@@ -1137,10 +1124,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         expressionDAG = new ExpressionDAG();
 
-        Quadruple jmp = new Quadruple(IRInstruction.JMP);
+        Quadruple jmp = new Quadruple(LEAVE);
         code.add(jmp);
-
-        returnStatementJMPFixPoint.add(jmp);
     }
 
     //////////////////////////////////////////////////////////////////////////////////

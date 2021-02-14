@@ -124,12 +124,11 @@ public class ResourceManager {
     /**
      * Saves old value in register if dirty and load new value from memory. Issue those instruction and
      * remove from free register list if is present there.
-     *
-     * @param register
-     * @param operand
-     * @param out
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
+        if (newObj.getAdr() ==-1)
+            throw new RuntimeException("Address of obj cannot be negative. Operand fetching has failed.");
+
         try {
             if (register.holdsValueOf == newObj)
                 return;
@@ -141,7 +140,7 @@ public class ResourceManager {
                     out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
                     dirtyVariables.remove(oldObj);
 
-                    assert oldObjDescriptor.getDescriptor() == register;
+                    //assert oldObjDescriptor.getDescriptor() == register;
                     register.setHoldsValueOf(null);
                     oldObjDescriptor.setRegisterLocation(null);
                 }

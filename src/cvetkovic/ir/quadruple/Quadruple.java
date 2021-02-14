@@ -45,6 +45,12 @@ public class Quadruple {
     protected NextUseState arg2NextUse = NextUseState.UNKNOWN;
     protected NextUseState resultNextUse = NextUseState.UNKNOWN;
 
+    protected int ssaArg1Count = -1;
+    protected int ssaArg2Count = -1;
+    protected int ssaResultCount = -1;
+
+    protected int phiID = -1;
+
     public Quadruple(IRInstruction instruction) {
         this.instruction = instruction;
     }
@@ -53,6 +59,44 @@ public class Quadruple {
         this.instruction = instruction;
         this.arg1 = arg1;
         this.arg2 = arg2;
+    }
+
+    public void setSSACountArg1(int i) {
+        ssaArg1Count = i;
+    }
+
+    public void setSSACountArg2(int i) {
+        ssaArg2Count = i;
+    }
+
+    public void setSSACountResult(int i) {
+        ssaResultCount = i;
+    }
+
+    public int getPhiID() {
+        return phiID;
+    }
+
+    public void setPhiID(int phiID) {
+        this.phiID = phiID;
+    }
+
+    public int getSsaArg1Count() {
+        return ssaArg1Count;
+    }
+
+    public int getSsaArg2Count() {
+        return ssaArg2Count;
+    }
+
+    public int getSsaResultCount() {
+        return ssaResultCount;
+    }
+
+    public void SSAToNormalForm() {
+        ssaArg1Count = -1;
+        ssaArg2Count = -1;
+        ssaResultCount = -1;
     }
 
     public void setInstruction(IRInstruction add) {
@@ -117,16 +161,22 @@ public class Quadruple {
 
         if (arg1 != null) {
             arg1s = arg1.toString();
+            if (ssaArg1Count != -1)
+                arg1s += "_" + ssaArg1Count;
             if (arg1 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
                 arg1uses = arg1NextUse.toString();
         }
         if (arg2 != null) {
             arg2s = arg2.toString();
+            if (ssaArg2Count != -1)
+                arg2s += "_" + ssaArg2Count;
             if (arg2 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
                 arg2uses = arg2NextUse.toString();
         }
         if (result != null) {
             results = result.toString();
+            if (ssaResultCount != -1)
+                results += "_" + ssaResultCount;
             if (result instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
                 resultuses = resultNextUse.toString();
         }
@@ -135,6 +185,38 @@ public class Quadruple {
                 instruction, arg1s, arg1uses, arg2s, arg2uses, results, resultuses);
 
         return formattedOutput.toString();
+    }
+
+    public String getNonformattedOutput() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(instruction).append(" ");
+        if (arg1 != null) {
+            sb.append(arg1.toString());
+            if (ssaArg1Count != -1)
+                sb.append("_").append(ssaArg1Count);
+            if (arg2 != null && result != null)
+                sb.append(", ");
+        }
+
+        if (arg2 != null) {
+            if (result == null)
+                sb.append(", ");
+            sb.append(arg2.toString());
+            if (ssaArg2Count != -1)
+                sb.append("_").append(ssaArg2Count);
+            if (result != null)
+                sb.append(", ");
+        } else if (result != null)
+            sb.append(", ");
+
+        if (result != null) {
+            sb.append(result.toString());
+            if (ssaResultCount != -1)
+                sb.append("_").append(ssaResultCount);
+        }
+
+        return sb.toString();
     }
 
     public int getFoldedValue() {

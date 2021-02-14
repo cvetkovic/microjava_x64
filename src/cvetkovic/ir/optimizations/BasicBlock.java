@@ -2,9 +2,11 @@ package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
+import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -19,17 +21,12 @@ public class BasicBlock {
     private static int blockCounter = 0;
     public int blockId = blockCounter++;
 
-    public int firstQuadruple;
-    public int lastQuadruple;
-
     public List<BasicBlock> predecessor = new ArrayList<>();
     public List<BasicBlock> successor = new ArrayList<>(2);
 
     public List<Quadruple> instructions = new ArrayList<>();
 
-    public Collection<Obj> temporaryVariables;
     public Collection<Obj> allVariables;
-    public Collection<Obj> nonTemporaryVariables;
 
     public Obj enclosingFunction;
 
@@ -48,19 +45,29 @@ public class BasicBlock {
             System.out.println(printBasicBlock());
         }
 
-        doLivenessAnalysis();
+        // extract object nodes of all operands and destination variables in the basic block
+        allVariables = extractAllVariables();
+    }
 
-        /*sequence.loops = BasicBlock.discoverCycles(enterBlock);
+    public Set<Obj> getNonTemporaryVariables() {
+        return allVariables.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
+    }
 
-        System.out.println("");
-        System.out.println("Cycles detected in function '" + quadrupleList.get(0).getArg1() + "':");
-        System.out.println(Utility.printCycle(sequence.loops));
+    public Set<Obj> getTemporaryVariables() {
+        return allVariables.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
+    }
 
-        sequence.loops = BasicBlock.discoverLoops(sequence.loops);
+    /**
+     * Inserts the instruction after the label
+     */
+    public void insertInstruction(Quadruple toInsert) {
+        int indexAt = 0;
 
-        System.out.println("Loops detected in function '" + quadrupleList.get(0).getArg1() + "':");
-        System.out.println(Utility.printCycle(sequence.loops));*/
+        for (Quadruple q : instructions)
+            if (q.getInstruction() == IRInstruction.GEN_LABEL)
+                indexAt++;
 
+        instructions.add(indexAt, toInsert);
     }
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -95,152 +102,6 @@ public class BasicBlock {
         }
     }
 
-    /**
-     * Applies loop detection criteria as in [ALSU06], pg. 531
-     */
-    public static List<Set<BasicBlock>> discoverLoops(List<Set<BasicBlock>> loops) {
-        List<Set<BasicBlock>> result = new ArrayList<>();
-
-        for (Set<BasicBlock> set : loops) {
-            BasicBlock entryNode = null;
-
-            if (set.size() <= 1)    // third criteria
-                continue;
-
-            int countWithoutPredecessorsOutsideL = 0;
-            for (BasicBlock b : set) {
-                int cnt = 0;
-
-                for (int i = 0; i < b.predecessor.size(); i++)
-                    if (set.contains(b.predecessor.get(i)))
-                        cnt++;
-                    else
-                        entryNode = b;
-
-                if (cnt == b.predecessor.size())
-                    countWithoutPredecessorsOutsideL++;
-            }
-
-            if (set.size() - 1 != countWithoutPredecessorsOutsideL) // second criteria
-                continue;
-
-            if (!entryNode.isEntryBlock())  // first criteria
-                result.add(set);
-        }
-
-        return result;
-    }
-
-    /**
-     * Eliminates edges vertices that are not in cycle
-     */
-    private static Set<BasicBlock> traverseLoopToEliminateUnnecessaryVertices(BasicBlock beginFrom, Set<BasicBlock> blocks) {
-        Set<BasicBlock> minimumSet = new HashSet<>();
-        BasicBlock current = beginFrom;
-
-        while (true) {
-            for (int i = 0; i < current.successor.size(); i++) {
-                if (blocks.contains(current.successor.get(i))) {
-                    minimumSet.add(current);
-                    current = current.successor.get(i);
-
-                    // TODO: here a bug lies -> only last successor will be traversed -> introduce stack/queue
-
-                    break;
-                }
-            }
-
-            if (current == beginFrom)
-                break;
-        }
-
-        return minimumSet;
-    }
-
-    /**
-     * Detection of cycles in control flow graph
-     */
-    public static List<Set<BasicBlock>> discoverCycles(BasicBlock enterBlock) {
-        List<Set<BasicBlock>> result = new ArrayList<>();
-
-        Stack<BasicBlock> blocksToVisit = new Stack<>();
-        Stack<Set<BasicBlock>> visited = new Stack<>();
-
-        Set<BasicBlock> initial = new HashSet<>();
-        visited.push(initial);
-
-        blocksToVisit.push(enterBlock);
-        while (!blocksToVisit.empty()) {
-            BasicBlock current = blocksToVisit.pop();
-            Set<BasicBlock> currentVisited = visited.pop();
-
-            if (currentVisited.contains(current)) {
-                result.add(traverseLoopToEliminateUnnecessaryVertices(current, currentVisited));
-                continue;
-            }
-            else
-                currentVisited.add(current);
-
-            for (BasicBlock b : current.successor) {
-                blocksToVisit.push(b);
-                Set<BasicBlock> copyOfVisited = new HashSet<>();
-                copyOfVisited.addAll(currentVisited);
-                visited.push(copyOfVisited);
-            }
-        }
-
-        // so far all elementary cycles had been found
-        // we need to find non-elementary cycles as well
-
-        // TODO: find more efficient algorithm for finding (non)elementary cycles in a graph
-
-        int lastAdd = 0;
-        int currentAdd = -1;
-        List<Set<BasicBlock>> toAdd = new ArrayList<>();
-
-        while (lastAdd != currentAdd) {
-            currentAdd = 0;
-            for (Set<BasicBlock> set1 : result) {
-                for (int i = 0; i < result.size(); i++) {
-                    Set<BasicBlock> set2 = result.get(i);
-
-                    if (set1 != set2) {
-                        for (BasicBlock b : set2) {
-                            if (set1.contains(b)) {
-                                // try merging if result doesn't contain this
-                                Set<BasicBlock> newSet = new HashSet<>();
-                                newSet.addAll(set1);
-                                newSet.addAll(set2);
-
-                                boolean add = true;
-                                for (int x = 0; x < result.size(); x++) {
-                                    if (result.get(x).equals(newSet) || toAdd.contains(newSet))
-                                        add = false;
-                                }
-
-                                if (add) {
-                                    toAdd.add(newSet);
-                                    currentAdd++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            result.addAll(toAdd);
-            toAdd = new ArrayList<>();
-            if (currentAdd != lastAdd) {
-                lastAdd = currentAdd;
-                currentAdd = -1;
-            }
-            else
-                break;
-        }
-
-        return result;
-    }
-
     public static List<BasicBlock> extractBasicBlocksFromSequence(Obj function, List<Quadruple> code, Map<String, Integer> labelIndices) {
         if (code.size() == 0)
             return null;
@@ -256,7 +117,7 @@ public class BasicBlock {
         for (int i = 0; i < code.size(); i++) {
             Quadruple quadruple = code.get(i);
 
-            if (IRInstruction.isBasicBlockSplitInstruction(quadruple.getInstruction())) {
+            if (IRInstruction.isJumpInstruction(quadruple.getInstruction())) {
                 String destinationLabel = quadruple.getResult().toString();
 
                 // adding destination of branch instruction to block leaders
@@ -279,39 +140,38 @@ public class BasicBlock {
         for (Integer l : leaders) {
             // set first instruction
             BasicBlock block = new BasicBlock(function);
-            block.firstQuadruple = l;
+            //block.firstQuadruple = l;
             block.instructions.add(code.get(l));
 
             // set last instruction
             int end;
             for (end = l + 1; end < code.size() && !leaders.contains(end); end++)
                 block.instructions.add(code.get(end));
-            block.lastQuadruple = end - 1;
+            int lastQuadruple = end - 1;
 
             block.prepareBasicBlockClass(code);
 
             // find predecessors and successors
             basicBlocks.add(block);
-            firstInstruction.put(block.firstQuadruple, block);
+            firstInstruction.put(l, block);
 
             List<Integer> followers = new LinkedList<>();
 
-            Quadruple lastInstruction = code.get(block.lastQuadruple);
+            Quadruple lastInstruction = code.get(lastQuadruple);
             if (lastInstruction.getInstruction() == IRInstruction.JMP)
                 // one successor only
                 followers.add(labelIndices.get(lastInstruction.getResult().toString()));
             else if (lastInstruction.getInstruction() == IRInstruction.LEAVE)
                 // no successor
                 continue;
-            else if (IRInstruction.isBasicBlockSplitInstruction(lastInstruction.getInstruction()) &&
+            else if (IRInstruction.isJumpInstruction(lastInstruction.getInstruction()) &&
                     lastInstruction.getInstruction() != IRInstruction.JMP) {
                 // two successors
                 followers.add(labelIndices.get(lastInstruction.getResult().toString()));
-                followers.add(block.lastQuadruple + 1);
-            }
-            else
+                followers.add(lastQuadruple + 1);
+            } else
                 // no jump instruction -> ELSE branch of IF statement -> falling through like in C switch statement
-                followers.add(block.lastQuadruple + 1);
+                followers.add(lastQuadruple + 1);
 
             followerList.add(new Tuple(block, followers));
 
@@ -329,12 +189,120 @@ public class BasicBlock {
             }
         }
 
+        return makeCanonicalForm(basicBlocks);
+    }
+
+    private static int canonicalFormLabelGenerator = 0;
+    private static int canonicalFormVarGenerator = 0;
+
+    /**
+     * This method inserts CMP, JMP instructions where necessary in order to make code generation
+     * be easier. After this method code for basic blocks can be generated and written into a file
+     * in arbitrary order.
+     * <p>
+     * This method also removes duplicated labels
+     */
+    private static List<BasicBlock> makeCanonicalForm(List<BasicBlock> basicBlocks) {
+        // removing duplicated GEN_LABEL
+        for (BasicBlock block : basicBlocks) {
+            String redirectTo;
+            if (block.instructions.get(0).getInstruction() == IRInstruction.GEN_LABEL)
+                redirectTo = ((QuadrupleLabel) block.instructions.get(0).getArg1()).getLabelName();
+            else
+                continue;
+
+            Set<Quadruple> toRemove = new HashSet<>();
+            for (int i = 1; i < block.instructions.size(); i++) {
+                if (block.instructions.get(i).getInstruction() != IRInstruction.GEN_LABEL)
+                    break;
+
+                String redirectFrom = ((QuadrupleLabel) block.instructions.get(i).getArg1()).getLabelName();
+                for (BasicBlock user : basicBlocks) {
+                    for (Quadruple q : user.instructions) {
+                        if (q.getArg1() != null && q.getArg1() instanceof QuadrupleLabel && ((QuadrupleLabel) q.getArg1()).getLabelName().equals(redirectFrom))
+                            q.setArg1(new QuadrupleLabel(redirectTo));
+                        if (q.getArg2() != null && q.getArg2() instanceof QuadrupleLabel && ((QuadrupleLabel) q.getArg2()).getLabelName().equals(redirectFrom))
+                            q.setArg2(new QuadrupleLabel(redirectTo));
+                        if (q.getResult() != null && q.getResult() instanceof QuadrupleLabel && ((QuadrupleLabel) q.getResult()).getLabelName().equals(redirectFrom))
+                            q.setResult(new QuadrupleLabel(redirectTo));
+                    }
+                }
+
+                toRemove.add(block.instructions.get(i));
+            }
+
+            block.instructions.removeAll(toRemove);
+        }
+
+        // fixing jumps
+        for (BasicBlock block : basicBlocks) {
+            Quadruple lastInstruction = block.instructions.get(block.instructions.size() - 1);
+
+            // if basic block just falls through then add explicit JMP
+            if (!IRInstruction.isJumpInstruction(lastInstruction.getInstruction()) && block.hasSuccessors()) {
+                BasicBlock followingBlock = block.successor.get(0);
+
+                Quadruple firstTargetInstruction = followingBlock.instructions.get(0);
+                QuadrupleLabel targetJump;
+                if (firstTargetInstruction.getInstruction() == IRInstruction.GEN_LABEL)
+                    targetJump = new QuadrupleLabel(((QuadrupleLabel) firstTargetInstruction.getArg1()).getLabelName());
+                else {
+                    String label = "CFLG_" + canonicalFormLabelGenerator++;
+                    followingBlock.instructions.add(0, new Quadruple(IRInstruction.GEN_LABEL, new QuadrupleLabel(label), null));
+                    targetJump = new QuadrupleLabel(label);
+                }
+                Quadruple newJMP = new Quadruple(IRInstruction.JMP);
+                newJMP.setResult(targetJump);
+                block.instructions.add(newJMP);
+            }
+            // conditional branches require additional instruction insertion
+            else if (IRInstruction.isConditionalJumpInstruction(lastInstruction.getInstruction())) {
+                Quadruple cmp = new Quadruple(IRInstruction.CMP);
+                cmp.setArg1(lastInstruction.getArg1());
+                cmp.setArg2(lastInstruction.getArg2());
+
+                Obj cmpResult = new Obj(Obj.Var, Config.compare_tmp + canonicalFormVarGenerator++, SymbolTable.intType);
+                cmpResult.tempVar = true;
+                cmp.setResult(new QuadrupleObjVar(cmpResult));
+                block.instructions.add(block.instructions.size() - 1, cmp);
+                block.allVariables.add(cmpResult);
+
+                BasicBlock successor1 = block.successor.get(0);
+                BasicBlock successor2 = block.successor.get(1);
+                BasicBlock addInstructionIn = successor1;
+
+                String trueDestination = ((QuadrupleLabel) lastInstruction.getResult()).getLabelName();
+                if (successor1.instructions.get(0).getInstruction() == IRInstruction.GEN_LABEL &&
+                        ((QuadrupleLabel) successor1.instructions.get(0).getArg1()).getLabelName().equals(trueDestination))
+                    addInstructionIn = successor2;
+
+                Quadruple firstTargetInstruction = addInstructionIn.instructions.get(0);
+                QuadrupleLabel targetJump;
+                if (firstTargetInstruction.getInstruction() == IRInstruction.GEN_LABEL)
+                    targetJump = new QuadrupleLabel(((QuadrupleLabel) firstTargetInstruction.getArg1()).getLabelName());
+                else {
+                    String label = "CFLG_" + canonicalFormLabelGenerator++;
+                    addInstructionIn.instructions.add(0, new Quadruple(IRInstruction.GEN_LABEL, new QuadrupleLabel(label), null));
+                    targetJump = new QuadrupleLabel(label);
+                }
+
+                lastInstruction.setArg1(new QuadrupleObjVar(cmpResult));
+                lastInstruction.setArg2(lastInstruction.getResult());
+                lastInstruction.setResult(targetJump);
+            }
+
+        }
+
         return basicBlocks;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
     // FUNCTION MEMBERS
     //////////////////////////////////////////////////////////////////////////////////
+
+    private boolean hasSuccessors() {
+        return successor.size() > 0;
+    }
 
     private Collection<Obj> extractAllVariables() {
         Set<Obj> variables = new HashSet<>();
@@ -355,71 +323,6 @@ public class BasicBlock {
         }
 
         return variables;
-    }
-
-    public void doLivenessAnalysis() {
-        // extract object nodes of all operands and destination variables in the basic block
-        allVariables = extractAllVariables();
-        // split non-temporary and temporary variables into separate sets
-        nonTemporaryVariables = allVariables.stream().filter(p -> !p.tempVar).collect(Collectors.toSet());
-        temporaryVariables = allVariables.stream().filter(p -> p.tempVar).collect(Collectors.toSet());
-
-        // insert all the variables into this map and mark all those non-temporary as alive, other as dead
-        Map<Obj, Quadruple.NextUseState> liveness = new HashMap<>();
-        nonTemporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.ALIVE));
-        temporaryVariables.forEach(p -> liveness.put(p, Quadruple.NextUseState.DEAD));
-
-        Stack<String> output = new Stack<>();
-
-        for (int instructionIndex = instructions.size() - 1; instructionIndex > 0; instructionIndex--) {
-            Quadruple instruction = instructions.get(instructionIndex);
-
-            ////////////////////////////
-            ////////////////////////////
-            StringBuilder sb = new StringBuilder();
-            if (Config.printBasicBlockGlobalLivenessAnalysisTable) {
-                sb.append(instruction + " ");
-
-                List<String> tmp = new ArrayList<>();
-                liveness.forEach((p, x) -> tmp.add(p.getName() + "" + x.toString() + ", "));
-                tmp.sort(String::compareTo);
-                if (tmp.size() > 0)
-                    tmp.set(tmp.size() - 1, tmp.get(tmp.size() - 1).replace(",", ""));
-
-                tmp.forEach(p -> sb.append(p));
-                output.push(sb.toString());
-            }
-            ////////////////////////////
-            ////////////////////////////
-
-            Obj obj1 = null, obj2 = null, objResult = null;
-
-            if (instruction.getArg1() instanceof QuadrupleObjVar) {
-                obj1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
-                instruction.setArg1NextUse(liveness.get(obj1));
-            }
-            if (instruction.getArg2() instanceof QuadrupleObjVar) {
-                obj2 = ((QuadrupleObjVar) instruction.getArg2()).getObj();
-                instruction.setArg2NextUse(liveness.get(obj2));
-            }
-            if (instruction.getResult() instanceof QuadrupleObjVar) {
-                objResult = ((QuadrupleObjVar) instruction.getResult()).getObj();
-                instruction.setResultNextUse(liveness.get(objResult));
-            }
-
-            // update map for the following (i.e. logically preceding) instruction
-            // NOTE: liveness has to be done first for result variable, and then for arguments
-            //       because result may be first or second argument
-            if (objResult != null)
-                liveness.put(objResult, Quadruple.NextUseState.DEAD);
-            if (obj1 != null)
-                liveness.put(obj1, Quadruple.NextUseState.ALIVE);
-            if (obj2 != null)
-                liveness.put(obj2, Quadruple.NextUseState.ALIVE);
-        }
-
-        while (!output.empty())
-            System.out.println(output.pop());
     }
 
     public String printBasicBlock() {
@@ -452,10 +355,46 @@ public class BasicBlock {
         s.append(")");
 
         return "[id = " + blockId +
-                ", instructions = (" + firstQuadruple + ", " + lastQuadruple + ")" +
                 ", start = " + isEntryBlock() +
                 ", end = " + isExitBlock() +
                 ", predecessors = " + p.toString().replace(", )", ")") +
                 ", successors = " + s.toString().replace(", )", ")") + "]";
+    }
+
+    public Set<Obj> getSetOfDefinedVariables() {
+        Set<Obj> result = new HashSet<>();
+
+        for (Quadruple q : instructions) {
+            switch (q.getInstruction()) {
+                // arithmetic
+                case ADD:
+                case SUB:
+                case MUL:
+                case DIV:
+                case REM:
+                case NEG:
+                    // memory
+                case LOAD:
+                case STORE:
+                case MALLOC:
+                case ALOAD:
+                case ASTORE:
+                case GET_PTR:
+                    // I/O
+                case SCANF:
+                    result.add(((QuadrupleObjVar) q.getResult()).getObj());
+                    break;
+                // functions
+                case CALL:
+                case INVOKE_VIRTUAL:
+                    if (q.getResult() != null)
+                        result.add(((QuadrupleObjVar) q.getResult()).getObj());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return result;
     }
 }

@@ -5,6 +5,7 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.optimizer.CodeSequence;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.structures.SymbolTable;
 import cvetkovic.x64.cpu.Descriptor;
@@ -79,6 +80,7 @@ public class AssemblyGenerator {
     public void generateCode() {
         try {
             outputFileHandle = new File(outputFileUrl);
+            outputFileHandle.getParentFile().mkdir();
             outputFileHandle.createNewFile();
 
             writer = new BufferedWriter(new FileWriter(outputFileHandle));
@@ -155,7 +157,7 @@ public class AssemblyGenerator {
     private void createAddressDescriptors(BasicBlock basicBlock) {
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.allVariables)
-            if (var.parameter == false)
+            if (!var.parameter)
                 memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
         for (Obj var : basicBlock.enclosingFunction.getLocalSymbols()) {
             if (var.parameter) {
@@ -273,17 +275,7 @@ public class AssemblyGenerator {
         writer.write(System.lineSeparator());
 
         for (CodeSequence codeSequence : codeSequences) {
-            BasicBlock basicBlock = null;
-
-            for (int i = 0; i < codeSequence.basicBlocks.size(); i++) {
-                if (basicBlock == null) {
-                    // assign new basic block to compile
-                    if (instructionCounter == 0)
-                        basicBlock = codeSequence.entryBlock;
-                    else
-                        basicBlock = codeSequence.basicBlocks.stream().filter(p -> checkEquality(p.firstQuadruple, instructionCounter)).collect(Collectors.toList()).get(0);
-                }
-
+            for (BasicBlock basicBlock : Optimizer.reassembleBasicBlocks(codeSequence.basicBlocks)) {
                 List<String> aux = new ArrayList<>();
                 boolean cancelSaveDirtyVals = false;
 
@@ -444,8 +436,7 @@ public class AssemblyGenerator {
 
                                 writer.write("\tMOV " + pointerTargetSize + " [" + pointerToDestination.getNameBySize(8) + "], " + arg1_result_register.getNameBySize(dataSize));
                                 writer.write(System.lineSeparator());
-                            }
-                            else {
+                            } else {
                                 // NON PTR -> load value that will be written
                                 resourceManager.fetchOperand(arg1_result_register, obj1, aux);
                                 resourceManager.validate(arg1_result_register, objResult, aux, true);
@@ -486,8 +477,7 @@ public class AssemblyGenerator {
                                 }
 
                                 numberOfElements = classSize;
-                            }
-                            else
+                            } else
                                 numberOfElements = ((QuadrupleIntegerConst) quadruple.getArg1()).getValue();
 
                             resourceManager.invalidateAddressDescriptors("rdi");
@@ -521,8 +511,7 @@ public class AssemblyGenerator {
                                 // allocates array -> save pointer to objResult's address
                                 writer.write("\tMOV " + resourceManager.getMemoryDescriptor(objResult) + ", rax");
                                 writer.write(System.lineSeparator());
-                            }
-                            else {
+                            } else {
                                 // MALLOC as PTR
                                 RegisterDescriptor a_reg = mapToRegister.get(registerNames[0][0]); // rax
                                 RegisterDescriptor destination = resourceManager.getRegister(objResult, quadruple, Collections.singletonList(a_reg));
@@ -627,8 +616,7 @@ public class AssemblyGenerator {
                             if (paramRegister != null) {
                                 resourceManager.fetchOperand(paramRegister, obj1, aux);
                                 issueAuxiliaryInstructions(aux);
-                            }
-                            else {
+                            } else {
                                 stackObjParameters.push(obj1);
                             }
 
@@ -668,8 +656,7 @@ public class AssemblyGenerator {
                                 writer.write(System.lineSeparator());
 
                                 resourceManager.clearRegisterFromAddressDescriptors(methodToInvoke);
-                            }
-                            else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
+                            } else if (quadruple.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
                                 List<RegisterDescriptor> forbiddenList = getParamStackCallForbiddenList(functionCall);
 
                                 RegisterDescriptor edi = resourceManager.getRegisterByName("rdi");
@@ -689,8 +676,7 @@ public class AssemblyGenerator {
                                 ptrToClass.setHoldsValueOf(null);
                                 edi.setHoldsValueOf(null);
                                 resourceManager.clearRegisterFromAddressDescriptors(method);
-                            }
-                            else
+                            } else
                                 throw new RuntimeException("Not supported type of method call.");
 
                             long numberOfStackParameters = methodToInvoke.getLocalSymbols().stream().filter(p -> p.stackParameter).count();
@@ -888,12 +874,7 @@ public class AssemblyGenerator {
                             break;
                         }
 
-                        case JL:
-                        case JLE:
-                        case JG:
-                        case JGE:
-                        case JE:
-                        case JNE: {
+                        case CMP: {
                             RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
                             RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple, Collections.singletonList(dest_arg1_register));
 
@@ -906,6 +887,23 @@ public class AssemblyGenerator {
                             dest_arg1_register.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
                             writer.write("\tCMP " + dest_arg1_register + ", " + secondOperand);
                             writer.write(System.lineSeparator());
+
+                            // save dirty variables
+                            aux.clear();
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
+                            issueAuxiliaryInstructions(aux);
+                            aux.clear();
+                            cancelSaveDirtyVals = true;
+
+                            break;
+                        }
+
+                        case JL:
+                        case JLE:
+                        case JG:
+                        case JGE:
+                        case JE:
+                        case JNE: {
                             String x64Instruction;
                             switch (quadruple.getInstruction()) {
                                 case JL: {
@@ -936,14 +934,10 @@ public class AssemblyGenerator {
                                     throw new RuntimeException("Not supported jump instruction.");
                             }
 
-                            // save dirty variables
-                            aux.clear();
-                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
-                            issueAuxiliaryInstructions(aux);
-                            aux.clear();
-                            cancelSaveDirtyVals = true;
+                            writer.write("\t" + x64Instruction + " " + quadruple.getArg2());
+                            writer.write(System.lineSeparator());
 
-                            writer.write("\t" + x64Instruction + " " + quadruple.getResult());
+                            writer.write("\tJMP " + quadruple.getResult());
                             writer.write(System.lineSeparator());
 
                             break;
