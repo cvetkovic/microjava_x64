@@ -2,9 +2,11 @@ package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
+import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -187,12 +189,120 @@ public class BasicBlock {
             }
         }
 
+        return makeCanonicalForm(basicBlocks);
+    }
+
+    private static int canonicalFormLabelGenerator = 0;
+    private static int canonicalFormVarGenerator = 0;
+
+    /**
+     * This method inserts CMP, JMP instructions where necessary in order to make code generation
+     * be easier. After this method code for basic blocks can be generated and written into a file
+     * in arbitrary order.
+     * <p>
+     * This method also removes duplicated labels
+     */
+    private static List<BasicBlock> makeCanonicalForm(List<BasicBlock> basicBlocks) {
+        // removing duplicated GEN_LABEL
+        for (BasicBlock block : basicBlocks) {
+            String redirectTo;
+            if (block.instructions.get(0).getInstruction() == IRInstruction.GEN_LABEL)
+                redirectTo = ((QuadrupleLabel) block.instructions.get(0).getArg1()).getLabelName();
+            else
+                continue;
+
+            Set<Quadruple> toRemove = new HashSet<>();
+            for (int i = 1; i < block.instructions.size(); i++) {
+                if (block.instructions.get(i).getInstruction() != IRInstruction.GEN_LABEL)
+                    break;
+
+                String redirectFrom = ((QuadrupleLabel) block.instructions.get(i).getArg1()).getLabelName();
+                for (BasicBlock user : basicBlocks) {
+                    for (Quadruple q : user.instructions) {
+                        if (q.getArg1() != null && q.getArg1() instanceof QuadrupleLabel && ((QuadrupleLabel) q.getArg1()).getLabelName().equals(redirectFrom))
+                            q.setArg1(new QuadrupleLabel(redirectTo));
+                        if (q.getArg2() != null && q.getArg2() instanceof QuadrupleLabel && ((QuadrupleLabel) q.getArg2()).getLabelName().equals(redirectFrom))
+                            q.setArg2(new QuadrupleLabel(redirectTo));
+                        if (q.getResult() != null && q.getResult() instanceof QuadrupleLabel && ((QuadrupleLabel) q.getResult()).getLabelName().equals(redirectFrom))
+                            q.setResult(new QuadrupleLabel(redirectTo));
+                    }
+                }
+
+                toRemove.add(block.instructions.get(i));
+            }
+
+            block.instructions.removeAll(toRemove);
+        }
+
+        // fixing jumps
+        for (BasicBlock block : basicBlocks) {
+            Quadruple lastInstruction = block.instructions.get(block.instructions.size() - 1);
+
+            // if basic block just falls through then add explicit JMP
+            if (!IRInstruction.isJumpInstruction(lastInstruction.getInstruction()) && block.hasSuccessors()) {
+                BasicBlock followingBlock = block.successor.get(0);
+
+                Quadruple firstTargetInstruction = followingBlock.instructions.get(0);
+                QuadrupleLabel targetJump;
+                if (firstTargetInstruction.getInstruction() == IRInstruction.GEN_LABEL)
+                    targetJump = new QuadrupleLabel(((QuadrupleLabel) firstTargetInstruction.getArg1()).getLabelName());
+                else {
+                    String label = "CFLG_" + canonicalFormLabelGenerator++;
+                    followingBlock.instructions.add(0, new Quadruple(IRInstruction.GEN_LABEL, new QuadrupleLabel(label), null));
+                    targetJump = new QuadrupleLabel(label);
+                }
+                Quadruple newJMP = new Quadruple(IRInstruction.JMP);
+                newJMP.setResult(targetJump);
+                block.instructions.add(newJMP);
+            }
+            // conditional branches require additional instruction insertion
+            else if (IRInstruction.isConditionalJumpInstruction(lastInstruction.getInstruction())) {
+                Quadruple cmp = new Quadruple(IRInstruction.CMP);
+                cmp.setArg1(lastInstruction.getArg1());
+                cmp.setArg2(lastInstruction.getArg2());
+
+                Obj cmpResult = new Obj(Obj.Var, Config.compare_tmp + canonicalFormVarGenerator++, SymbolTable.intType);
+                cmpResult.tempVar = true;
+                cmp.setResult(new QuadrupleObjVar(cmpResult));
+                block.instructions.add(block.instructions.size() - 1, cmp);
+                block.allVariables.add(cmpResult);
+
+                BasicBlock successor1 = block.successor.get(0);
+                BasicBlock successor2 = block.successor.get(1);
+                BasicBlock addInstructionIn = successor1;
+
+                String trueDestination = ((QuadrupleLabel) lastInstruction.getResult()).getLabelName();
+                if (successor1.instructions.get(0).getInstruction() == IRInstruction.GEN_LABEL &&
+                        ((QuadrupleLabel) successor1.instructions.get(0).getArg1()).getLabelName().equals(trueDestination))
+                    addInstructionIn = successor2;
+
+                Quadruple firstTargetInstruction = addInstructionIn.instructions.get(0);
+                QuadrupleLabel targetJump;
+                if (firstTargetInstruction.getInstruction() == IRInstruction.GEN_LABEL)
+                    targetJump = new QuadrupleLabel(((QuadrupleLabel) firstTargetInstruction.getArg1()).getLabelName());
+                else {
+                    String label = "CFLG_" + canonicalFormLabelGenerator++;
+                    addInstructionIn.instructions.add(0, new Quadruple(IRInstruction.GEN_LABEL, new QuadrupleLabel(label), null));
+                    targetJump = new QuadrupleLabel(label);
+                }
+
+                lastInstruction.setArg1(new QuadrupleObjVar(cmpResult));
+                lastInstruction.setArg2(lastInstruction.getResult());
+                lastInstruction.setResult(targetJump);
+            }
+
+        }
+
         return basicBlocks;
     }
 
     //////////////////////////////////////////////////////////////////////////////////
     // FUNCTION MEMBERS
     //////////////////////////////////////////////////////////////////////////////////
+
+    private boolean hasSuccessors() {
+        return successor.size() > 0;
+    }
 
     private Collection<Obj> extractAllVariables() {
         Set<Obj> variables = new HashSet<>();

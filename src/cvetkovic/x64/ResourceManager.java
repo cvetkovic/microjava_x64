@@ -140,7 +140,7 @@ public class ResourceManager {
                     out.add("\tMOV " + oldObjDescriptor.getMemoryDescriptor() + ", " + oldObjDescriptor.getDescriptor());
                     dirtyVariables.remove(oldObj);
 
-                    assert oldObjDescriptor.getDescriptor() == register;
+                    //assert oldObjDescriptor.getDescriptor() == register;
                     register.setHoldsValueOf(null);
                     oldObjDescriptor.setRegisterLocation(null);
                 }

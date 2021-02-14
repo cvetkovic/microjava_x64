@@ -53,7 +53,8 @@ public abstract class Optimizer {
     }
 
     public static List<BasicBlock> reassembleBasicBlocks(List<BasicBlock> cfg) {
-        List<BasicBlock> result = new ArrayList<>();
+        /*List<BasicBlock> result = new ArrayList<>();
+
 
         Stack<BasicBlock> stack = new Stack<>();
         BasicBlock currentBlock = cfg.stream().filter(BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);
@@ -67,10 +68,9 @@ public abstract class Optimizer {
                 Quadruple lastInstruction = currentBlock.instructions.get(currentBlock.instructions.size() - 1);
 
                 result.add(currentBlock);
-                if (lastInstruction.getInstruction() == IRInstruction.JMP) {
+                if (lastInstruction.getInstruction() == IRInstruction.JMP)
                     currentBlock = stack.pop();
-                    //index++;
-                } else
+                else
                     currentBlock = currentBlock.successor.get(0);
             } else if (currentBlock.successor.size() == 2) {
                 Quadruple lastInstruction = currentBlock.instructions.get(currentBlock.instructions.size() - 1);
@@ -91,7 +91,8 @@ public abstract class Optimizer {
                     }
                 }
 
-                stack.push(addToStack);
+                if (stack.isEmpty() || stack.peek() != addToStack)
+                    stack.push(addToStack);
                 result.add(currentBlock);
                 currentBlock = (addToStack == successor1 ? successor2 : successor1);
             } else
@@ -104,6 +105,8 @@ public abstract class Optimizer {
             index++;
         }
 
-        return result;
+        assert result.size() == result.stream().distinct().count();*/
+
+        return cfg;
     }
 }

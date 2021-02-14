@@ -874,12 +874,7 @@ public class AssemblyGenerator {
                             break;
                         }
 
-                        case JL:
-                        case JLE:
-                        case JG:
-                        case JGE:
-                        case JE:
-                        case JNE: {
+                        case CMP: {
                             RegisterDescriptor dest_arg1_register = resourceManager.getRegister(obj1, quadruple);
                             RegisterDescriptor arg2_register = resourceManager.getRegister(obj2, quadruple, Collections.singletonList(dest_arg1_register));
 
@@ -892,6 +887,23 @@ public class AssemblyGenerator {
                             dest_arg1_register.setPrintWidth(SystemV_ABI.getX64VariableSize(obj1.getType()));
                             writer.write("\tCMP " + dest_arg1_register + ", " + secondOperand);
                             writer.write(System.lineSeparator());
+
+                            // save dirty variables
+                            aux.clear();
+                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
+                            issueAuxiliaryInstructions(aux);
+                            aux.clear();
+                            cancelSaveDirtyVals = true;
+
+                            break;
+                        }
+
+                        case JL:
+                        case JLE:
+                        case JG:
+                        case JGE:
+                        case JE:
+                        case JNE: {
                             String x64Instruction;
                             switch (quadruple.getInstruction()) {
                                 case JL: {
@@ -922,14 +934,10 @@ public class AssemblyGenerator {
                                     throw new RuntimeException("Not supported jump instruction.");
                             }
 
-                            // save dirty variables
-                            aux.clear();
-                            resourceManager.saveDirtyVariablesAndClearAddressDescriptors(aux, false);
-                            issueAuxiliaryInstructions(aux);
-                            aux.clear();
-                            cancelSaveDirtyVals = true;
+                            writer.write("\t" + x64Instruction + " " + quadruple.getArg2());
+                            writer.write(System.lineSeparator());
 
-                            writer.write("\t" + x64Instruction + " " + quadruple.getResult());
+                            writer.write("\tJMP " + quadruple.getResult());
                             writer.write(System.lineSeparator());
 
                             break;
