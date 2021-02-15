@@ -30,7 +30,7 @@ public class DominanceAnalyzer {
     private final Map<BasicBlock, BasicBlock> idoms;
     private final Map<BasicBlock, Set<BasicBlock>> dominanceFrontier;
 
-    private final List<BasicBlock> RCFG;
+    //private final List<BasicBlock> RCFG;
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominators;
     private final Map<BasicBlock, BasicBlock> reverseIdoms;
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominanceFrontier;
@@ -49,12 +49,12 @@ public class DominanceAnalyzer {
         idoms = generateImmediateDominators(CFG, dominators, false);
         dominanceFrontier = generateDominanceFrontier(dominators, idoms, false);
 
-        RCFG = generateReverseCFG(getBasicBlocks());
-        reverseDominators = generateDominatorTree(RCFG, true);
-        reverseIdoms = generateImmediateDominators(RCFG, reverseDominators, true);
+        //RCFG = generateReverseCFG(getBasicBlocks());
+        reverseDominators = generateDominatorTree(CFG, true);
+        reverseIdoms = generateImmediateDominators(CFG, reverseDominators, true);
         reverseDominanceFrontier = generateDominanceFrontier(reverseDominators, reverseIdoms, true);
 
-        controlDependence = determineControlDependence(RCFG, reverseDominanceFrontier);
+        controlDependence = determineControlDependence(CFG, reverseDominanceFrontier);
     }
 
     ///////////////////////////////
@@ -69,9 +69,9 @@ public class DominanceAnalyzer {
         return sequence.basicBlocks;
     }
 
-    public List<BasicBlock> getRCFG() {
+    /*public List<BasicBlock> getRCFG() {
         return RCFG;
-    }
+    }*/
 
     public Map<BasicBlock, Set<BasicBlock>> getDominators() {
         return dominators;
@@ -85,21 +85,72 @@ public class DominanceAnalyzer {
         return dominanceFrontier;
     }
 
+    /**
+     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
+     */
     public Map<BasicBlock, Set<BasicBlock>> getReverseDominators() {
-        return reverseDominators;
+        return reverseDominators; //convertToCFGReferences(reverseDominators, getBasicBlocks());
     }
 
+    /**
+     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
+     */
     public Map<BasicBlock, BasicBlock> getReverseImmediateDominators() {
-        return reverseIdoms;
+        return reverseIdoms; //convertToCFGReferences(reverseIdoms, getBasicBlocks());
     }
 
+    /**
+     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
+     */
     public Map<BasicBlock, Set<BasicBlock>> getReverseDominanceFrontier() {
-        return reverseDominanceFrontier;
+        return reverseDominanceFrontier; //convertToCFGReferences(reverseDominanceFrontier, getBasicBlocks());
     }
 
+    /**
+     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
+     */
     public Map<BasicBlock, Set<BasicBlock>> getControlDependenies() {
-        return controlDependence;
+        return controlDependence; //convertToCFGReferences(controlDependence, getBasicBlocks());
     }
+
+    ///////////////////////////////
+    ///////////////////////////////
+    ///////////////////////////////
+
+    //private static Map<BasicBlock, BasicBlock> obj_bb = new HashMap<>();
+    //private static Map<BasicBlock, Set<BasicBlock>> obj_bsb = new HashMap<>();
+
+    /*private static <T> Map<BasicBlock, T> convertToCFGReferences(Map<BasicBlock, T> map, List<BasicBlock> cfg) {
+        Map result = null;
+
+        for (BasicBlock block : map.keySet()) {
+            if (map.get(block) instanceof Set) {
+                if (result == null)
+                    result = new HashMap<BasicBlock, Set<BasicBlock>>();
+
+                Set<BasicBlock> set = new HashSet<>();
+
+                for (BasicBlock setMember : ((Map<BasicBlock, Set<BasicBlock>>) map.get(block)).keySet())
+                    set.add(cfg.stream().filter(p -> p.blockId == setMember.blockId).findFirst().orElseThrow());
+
+                result.put(cfg.stream().filter(p -> p.blockId == block.blockId).findFirst().orElseThrow(), set);
+            } else if (map.get(block) instanceof BasicBlock) {
+                if (result == null)
+                    result = new HashMap<BasicBlock, BasicBlock>();
+                BasicBlock rcfg_reference = (BasicBlock) map.get(block);
+
+                if (rcfg_reference != null)
+                    result.put(cfg.stream().filter(p -> p.blockId == block.blockId).findFirst().orElseThrow(),
+                            cfg.stream().filter(p -> p.blockId == rcfg_reference.blockId).findFirst().orElseThrow());
+                else
+                    result.put(cfg.stream().filter(p -> p.blockId == block.blockId).findFirst().orElseThrow(), null);
+            }
+        }
+
+        if (result == null)
+            throw new RuntimeException("Reference conversion cannot be done.");
+        return (Map<BasicBlock, T>) result;
+    }*/
 
     ///////////////////////////////
     ///////////////////////////////
@@ -107,14 +158,14 @@ public class DominanceAnalyzer {
 
     private Map<BasicBlock, Set<BasicBlock>> generateDominatorTree(List<BasicBlock> basicBlocks, boolean reverse) {
         Map<BasicBlock, Set<BasicBlock>> dominators = new HashMap<>();
-        BasicBlock entryBlock = basicBlocks.stream().filter(BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);
+        BasicBlock initialBlock = basicBlocks.stream().filter((reverse) ? BasicBlock::isExitBlock : BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);
 
         // dominator of the entry block is the entry block itself
-        dominators.put(entryBlock, Collections.singleton(entryBlock));
+        dominators.put(initialBlock, Collections.singleton(initialBlock));
 
         // for all other nodes excluding the entry block set all nodes as the dominators
         for (BasicBlock b : basicBlocks) {
-            if (b == entryBlock)
+            if (b == initialBlock)
                 continue;
 
             dominators.put(b, new HashSet<>(basicBlocks));
@@ -125,13 +176,13 @@ public class DominanceAnalyzer {
             changed = false;
 
             for (BasicBlock b : basicBlocks) {
-                if (b == entryBlock)
+                if (b == initialBlock)
                     continue;
 
                 Set<BasicBlock> old = dominators.get(b);
 
                 List<Set<BasicBlock>> setOfPredecessors = new ArrayList<>();
-                for (BasicBlock predecessor : b.predecessor)
+                for (BasicBlock predecessor : (reverse ? b.successor : b.predecessor))
                     setOfPredecessors.add(dominators.get(predecessor));
                 Set<BasicBlock> tmp = new HashSet<>(setOfPredecessors.get(0));
                 for (Set<BasicBlock> toIntersectWith : setOfPredecessors)
@@ -147,12 +198,12 @@ public class DominanceAnalyzer {
 
         for (BasicBlock b : dominators.keySet()) {
             StringBuilder s = new StringBuilder();
-            if (!b.isEntryBlock())
+            if ((reverse ? !b.isExitBlock() : !b.isEntryBlock()))
                 dominators.get(b).forEach(p -> s.append(p.blockId).append(", "));
             else
                 s.append("entry, ");
 
-            System.out.println("Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+            System.out.println((reverse ? "R" : "") + "Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
         }
 
         return dominators;
@@ -216,8 +267,7 @@ public class DominanceAnalyzer {
             DominatorTreeNode newNode = new DominatorTreeNode(b);
             treeNodes.put(b, newNode);
 
-            if (b.isEntryBlock()) {
-
+            if ((reverse ? b.isExitBlock() : b.isEntryBlock())) {
                 if (reverse)
                     reverseDominatorTreeRoot = newNode;
                 else
@@ -256,7 +306,7 @@ public class DominanceAnalyzer {
 
             if (next.children.size() == 0 || visited.contains(next)) {
                 DominatorTreeNode X = stack.pop();
-                Set<BasicBlock> DF = singleDominanceFrontier(X, result, idoms);
+                Set<BasicBlock> DF = singleDominanceFrontier(X, result, idoms, reverse);
 
                 result.put(X.basicBlock, DF);
             } else {
@@ -279,11 +329,11 @@ public class DominanceAnalyzer {
         return result;
     }
 
-    private Set<BasicBlock> singleDominanceFrontier(DominatorTreeNode node, Map<BasicBlock, Set<BasicBlock>> DF, Map<BasicBlock, BasicBlock> idoms) {
+    private Set<BasicBlock> singleDominanceFrontier(DominatorTreeNode node, Map<BasicBlock, Set<BasicBlock>> DF, Map<BasicBlock, BasicBlock> idoms, boolean reverse) {
         Set<BasicBlock> frontier = new HashSet<>();
 
         // local (done on CFG)
-        for (BasicBlock Y : node.basicBlock.successor)
+        for (BasicBlock Y : (reverse ? node.basicBlock.predecessor : node.basicBlock.successor))
             if (idoms.get(Y) != node.basicBlock)
                 frontier.add(Y);
 
@@ -297,35 +347,6 @@ public class DominanceAnalyzer {
                     frontier.add(Y);
 
         return frontier;
-    }
-
-    /**
-     * The Reverse Control Flow Graph (RCFG) of a CFG
-     * has the same nodes as CFG and has edge Y -> X if X -> Y is
-     * an edge in CFG.
-     */
-    private List<BasicBlock> generateReverseCFG(List<BasicBlock> cfg) {
-        List<BasicBlock> rcfg = new ArrayList<>();
-
-        for (BasicBlock block : cfg) {
-            try {
-                BasicBlock reverseBlock = (BasicBlock) block.clone();
-                rcfg.add(reverseBlock);
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException("Will never happen!");
-            }
-        }
-
-        for (BasicBlock block : cfg) {
-            BasicBlock analog = rcfg.stream().filter(p -> p.blockId == block.blockId).collect(Collectors.toList()).get(0);
-
-            for (BasicBlock successor : block.successor)
-                analog.predecessor.add(rcfg.stream().filter(p -> p.blockId == successor.blockId).collect(Collectors.toList()).get(0));
-            for (BasicBlock predecessor : block.predecessor)
-                analog.successor.add(rcfg.stream().filter(p -> p.blockId == predecessor.blockId).collect(Collectors.toList()).get(0));
-        }
-
-        return rcfg;
     }
 
     /**
@@ -360,11 +381,16 @@ public class DominanceAnalyzer {
     // DUMPING
     ///////////////////////////////
 
-    public static void dumpCFG(String path, List<BasicBlock> basicBlocks) {
+    public static void dumpCFG(String path, String reversePath, List<BasicBlock> basicBlocks) {
         (new File(path)).getParentFile().mkdir();
-        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))) {
+        (new File(reversePath)).getParentFile().mkdir();
+
+        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)));
+             PrintWriter reverseWriter = new PrintWriter(new BufferedWriter(new FileWriter(reversePath)))) {
             writer.println("digraph G {");
             writer.println("node [ shape = rect ]");
+            reverseWriter.println("digraph G {");
+            reverseWriter.println("node [ shape = rect ]");
 
             for (BasicBlock p : basicBlocks) {
                 StringBuilder label = new StringBuilder();
@@ -372,12 +398,16 @@ public class DominanceAnalyzer {
                 label.append("ID = ").append(p.blockId).append("\n\n");
 
                 p.instructions.forEach(q -> label.append(q.getNonformattedOutput()).append("\n"));
+
                 writer.println(p.blockId + " [ label = " + '"' + label.toString() + '"' + " ]");
+                reverseWriter.println(p.blockId + " [ label = " + '"' + label.toString() + '"' + " ]");
 
                 p.successor.forEach(s -> writer.println(p.blockId + " -> " + s.blockId));
+                p.successor.forEach(s -> reverseWriter.println(s.blockId + " -> " + p.blockId));
             }
 
             writer.println("}");
+            reverseWriter.println("}");
         } catch (IOException e) {
             e.printStackTrace();
         }
