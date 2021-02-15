@@ -1,0 +1,35 @@
+program MJProgram
+{
+    int fun(int a, int b, int c, int n)
+        int x, y, i;
+    {
+        x=17+a;
+        y=a;
+        i=0;
+        if (x==0) {
+            b=x+1;
+        }
+        else {
+            if (x == 1) {
+                b=x+2;
+            }
+            else {
+                b=x+3;
+            }
+
+            i=y;
+        }
+
+        for (; i<n;) {
+            c=c+y;
+            i=i+1;
+        }
+
+        return c;
+    }
+
+	void main()
+	{
+	    fun(1,2,3,4);
+	}
+}

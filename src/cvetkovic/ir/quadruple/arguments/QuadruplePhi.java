@@ -23,7 +23,7 @@ public class QuadruplePhi extends QuadrupleVariable {
 
         int cnt = 0;
         for (Integer i : varList) {
-            if (cnt == index)
+            if (cnt++ == index)
                 return i;
         }
 

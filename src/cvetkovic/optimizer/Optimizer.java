@@ -25,8 +25,8 @@ public abstract class Optimizer {
             SSAConverter ssaConverter = new SSAConverter(dominanceAnalyzer);
 
             // before SSA conversion
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_before_ssa_" + sequence.function + ".dot",
-                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\reverse_cfg_before_ssa_" + sequence.function + ".dot",
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\normal_cfg_pre_ssa_" + sequence.function + ".dot",
+                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\normal_rcfg_pre_ssa_" + sequence.function + ".dot",
                     dominanceAnalyzer.getBasicBlocks());
             DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree_" + sequence.function + ".dot",
                     dominanceAnalyzer.getImmediateDominators());
@@ -36,8 +36,8 @@ public abstract class Optimizer {
             ssaConverter.doPhiPlacement();
             ssaConverter.renameVariables();
 
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_ssa_before_optimizer_" + sequence.function + ".dot",
-                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\reverse_cfg_ssa_before_optimizer_" + sequence.function + ".dot",
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\ssa_cfg_pre_opt_" + sequence.function + ".dot",
+                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\ssa_rcfg_pre_opt_" + sequence.function + ".dot",
                     dominanceAnalyzer.getBasicBlocks());
 
             //addOptimizationPass(new DeadCodeElimination(dominanceAnalyzer));
@@ -47,11 +47,15 @@ public abstract class Optimizer {
                 pass.finalizePass();
             }
 
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\ssa_cfg_post_opt_" + sequence.function + ".dot",
+                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\ssa_rcfg_post_opt_" + sequence.function + ".dot",
+                    dominanceAnalyzer.getBasicBlocks());
+
             // eliminating SSA from code
             ssaConverter.toNormalForm();
 
-            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_post_ssa_" + sequence.function + ".dot",
-                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\reverse_cfg_post_ssa_" + sequence.function + ".dot",
+            DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\normal_cfg_post_ssa_" + sequence.function + ".dot",
+                    "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\normal_rcfg_post_ssa_" + sequence.function + ".dot",
                     dominanceAnalyzer.getBasicBlocks());
         }
     }

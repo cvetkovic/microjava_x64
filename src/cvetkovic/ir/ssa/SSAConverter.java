@@ -199,15 +199,21 @@ public class SSAConverter {
                 Obj sourceNode = new Obj(destinationNode.getKind(), Config.prefix_phi + instruction.getPhiID(), destinationNode.getType());
 
                 // adding STORE to predecessors
-                for (BasicBlock p : block.predecessors) {
+                for (BasicBlock p : block.getAllPredecessors()) {
+                    // only if p defines 'sourceNode'
+                    if (!p.getSetOfDefinedVariables().contains(destinationNode))
+                        continue;
+
                     Quadruple mov = new Quadruple(IRInstruction.STORE);
                     mov.setArg1(new QuadrupleObjVar(destinationNode));
                     mov.setResult(new QuadrupleObjVar(sourceNode));
 
                     p.allVariables.add(sourceNode);
                     p.allVariables.add(destinationNode);
-                    if (IRInstruction.isJumpInstruction(p.instructions.get(p.instructions.size() - 1).getInstruction()))
+                    if (IRInstruction.isUnconditionalJumpInstruction(p.instructions.get(p.instructions.size() - 1).getInstruction()))
                         p.instructions.add(p.instructions.size() - 1, mov);
+                    else if (IRInstruction.isConditionalJumpInstruction(p.instructions.get(p.instructions.size() - 1).getInstruction()))
+                        p.instructions.add(p.instructions.size() - 2, mov);
                     else
                         p.instructions.add(mov);
                 }

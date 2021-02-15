@@ -140,4 +140,8 @@ public enum IRInstruction {
                 return false;
         }
     }
+
+    public static boolean isUnconditionalJumpInstruction(IRInstruction instruction) {
+        return instruction == JMP;
+    }
 }
