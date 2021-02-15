@@ -376,6 +376,7 @@ public class BasicBlock {
                     // memory
                 case LOAD:
                 case STORE:
+                case STORE_PHI:
                 case MALLOC:
                 case ALOAD:
                 case ASTORE:

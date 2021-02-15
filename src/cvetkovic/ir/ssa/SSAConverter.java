@@ -62,7 +62,8 @@ public class SSAConverter {
 
                 for (BasicBlock y : DF_n) {
                     if (!A_phi.contains(y)) { // PRUNED SSA -> && liveVariables.liveIn.get(y).contains(a)) {
-                        QuadruplePhi phiArgs = new QuadruplePhi(a, y.predecessor.size());
+                        //int numberOfPredecessors = getAllPredecessors(y).size();
+                        QuadruplePhi phiArgs = new QuadruplePhi(a);
 
                         Quadruple phi = new Quadruple(IRInstruction.STORE_PHI, phiArgs, null);
                         phi.setResult(new QuadrupleObjVar(a));
@@ -90,6 +91,7 @@ public class SSAConverter {
     public void renameVariables() {
         Map<Obj, Integer> count = new HashMap<>();
         Map<Obj, Stack<Integer>> stack = new HashMap<>();
+        Set<BasicBlock> visited = new HashSet<>();
 
         // initialization
         for (BasicBlock b : dominanceAnalyzer.getBasicBlocks()) {
@@ -103,13 +105,60 @@ public class SSAConverter {
         }
 
         // renaming starts from the entry block
-        internalRenaming(dominanceAnalyzer.dominatorTreeRoot, count, stack);
+        internalRenaming(dominanceAnalyzer.dominatorTreeRoot, visited, count, stack);
 
         System.out.println("Renaming has been done.");
     }
 
-    private void internalRenaming(DominanceAnalyzer.DominatorTreeNode dominatorTreeNode, Map<Obj, Integer> count, Map<Obj, Stack<Integer>> stack) {
+    private Set<BasicBlock> getAllPredecessors(BasicBlock initial) {
+        Set<BasicBlock> result = new HashSet<>();
+
+        Stack<BasicBlock> stack = new Stack<>();
+        stack.push(initial);
+        while (!stack.isEmpty()) {
+            BasicBlock current = stack.pop();
+
+            for (BasicBlock child : current.predecessor)
+                if (!result.contains(current))
+                    stack.push(child);
+
+            result.add(current);
+        }
+
+        // initial is not a successor
+        result.remove(initial);
+
+        return result;
+    }
+
+    private Set<BasicBlock> getAllSuccessors(BasicBlock initial) {
+        Set<BasicBlock> result = new HashSet<>();
+
+        Stack<BasicBlock> stack = new Stack<>();
+        stack.push(initial);
+        while (!stack.isEmpty()) {
+            BasicBlock current = stack.pop();
+
+            for (BasicBlock child : current.successor)
+                if (!result.contains(current))
+                    stack.push(child);
+
+            result.add(current);
+        }
+
+        // initial is not a successor
+        result.remove(initial);
+
+        return result;
+    }
+
+    private void internalRenaming(DominanceAnalyzer.DominatorTreeNode dominatorTreeNode, Set<BasicBlock> visited, Map<Obj, Integer> count, Map<Obj, Stack<Integer>> stack) {
         BasicBlock n = dominatorTreeNode.basicBlock;
+
+        if (visited.contains(n))
+            return;
+
+        visited.add(n);
 
         // usages and definitions in each statement of the basic block
         for (Quadruple statement : n.instructions) {
@@ -142,8 +191,8 @@ public class SSAConverter {
             }
         }
 
-        // patching the successors of CFG
-        for (BasicBlock Y : n.successor) {
+        // patching the successors of a basic block with respect to the CFG
+        for (BasicBlock Y : getAllSuccessors(n)) {
             for (Quadruple statement : Y.instructions) {
                 if (statement.getInstruction() != IRInstruction.STORE_PHI)
                     continue;
@@ -157,7 +206,7 @@ public class SSAConverter {
 
         // renaming by traversing the dominator tree
         for (DominanceAnalyzer.DominatorTreeNode node : dominatorTreeNode.children)
-            internalRenaming(node, count, stack);
+            internalRenaming(node, visited, count, stack);
 
         // popping off stack
         for (Obj o : n.getSetOfDefinedVariables())
