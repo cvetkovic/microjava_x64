@@ -25,6 +25,7 @@ public class IROptimizer extends Optimizer {
             sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
             sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(sequence.function, quadrupleList, sequence.labelIndices);
 
+            assert sequence.basicBlocks != null;
             for (BasicBlock b : sequence.basicBlocks) {
                 if (b.isEntryBlock()) {
                     sequence.entryBlock = b;
@@ -78,7 +79,7 @@ public class IROptimizer extends Optimizer {
 
     public static int giveAddressToTemps(Collection<Obj> variables, int startValue) {
         for (Obj obj : variables) {
-            if (((obj.tempVar || obj.getName().startsWith(Config.prefix_phi)) || (obj.parameter && obj.stackParameter == false)) && obj.getKind() != Obj.Con) {
+            if (((obj.tempVar || obj.getName().startsWith(Config.prefix_phi)) || (obj.parameter && !obj.stackParameter)) && obj.getKind() != Obj.Con) {
                 int lastTaken = startValue;
                 if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(obj.getType()))
                     lastTaken = SystemV_ABI.alignTo16(lastTaken);
@@ -95,13 +96,12 @@ public class IROptimizer extends Optimizer {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (int i = 0; i < codeSequenceList.size(); i++) {
+        for (CodeSequence codeSequence : codeSequenceList) {
             stringBuilder.append("-----------------------------------------------------------------------------------------\n");
 
-            CodeSequence sequence = codeSequenceList.get(i);
-            for (BasicBlock basicBlock : IROptimizer.reassembleBasicBlocks(sequence.basicBlocks))
+            for (BasicBlock basicBlock : IROptimizer.reassembleBasicBlocks(codeSequence.basicBlocks))
                 for (Quadruple q : basicBlock.instructions)
-                    stringBuilder.append(q + "\n");
+                    stringBuilder.append(q).append(System.lineSeparator());
 
             stringBuilder.append("-----------------------------------------------------------------------------------------\n");
         }

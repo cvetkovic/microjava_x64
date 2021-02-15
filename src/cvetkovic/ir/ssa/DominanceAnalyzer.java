@@ -125,7 +125,7 @@ public class DominanceAnalyzer {
                 Set<BasicBlock> old = dominators.get(b);
 
                 List<Set<BasicBlock>> setOfPredecessors = new ArrayList<>();
-                for (BasicBlock predecessor : (reverse ? b.successor : b.predecessor))
+                for (BasicBlock predecessor : (reverse ? b.successors : b.predecessors))
                     setOfPredecessors.add(dominators.get(predecessor));
                 Set<BasicBlock> tmp = new HashSet<>(setOfPredecessors.get(0));
                 for (Set<BasicBlock> toIntersectWith : setOfPredecessors)
@@ -276,7 +276,7 @@ public class DominanceAnalyzer {
         Set<BasicBlock> frontier = new HashSet<>();
 
         // local (done on CFG)
-        for (BasicBlock Y : (reverse ? node.basicBlock.predecessor : node.basicBlock.successor))
+        for (BasicBlock Y : (reverse ? node.basicBlock.predecessors : node.basicBlock.successors))
             if (idoms.get(Y) != node.basicBlock)
                 frontier.add(Y);
 
@@ -345,8 +345,8 @@ public class DominanceAnalyzer {
                 writer.println(p.blockId + " [ label = " + '"' + label.toString() + '"' + " ]");
                 reverseWriter.println(p.blockId + " [ label = " + '"' + label.toString() + '"' + " ]");
 
-                p.successor.forEach(s -> writer.println(p.blockId + " -> " + s.blockId));
-                p.successor.forEach(s -> reverseWriter.println(s.blockId + " -> " + p.blockId));
+                p.successors.forEach(s -> writer.println(p.blockId + " -> " + s.blockId));
+                p.successors.forEach(s -> reverseWriter.println(s.blockId + " -> " + p.blockId));
             }
 
             writer.println("}");

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public class SSAConverter {
 
-    private DominanceAnalyzer dominanceAnalyzer;
+    private final DominanceAnalyzer dominanceAnalyzer;
 
     public SSAConverter(DominanceAnalyzer dominanceAnalyzer) {
         this.dominanceAnalyzer = dominanceAnalyzer;
@@ -110,48 +110,6 @@ public class SSAConverter {
         System.out.println("Renaming has been done.");
     }
 
-    private Set<BasicBlock> getAllPredecessors(BasicBlock initial) {
-        Set<BasicBlock> result = new HashSet<>();
-
-        Stack<BasicBlock> stack = new Stack<>();
-        stack.push(initial);
-        while (!stack.isEmpty()) {
-            BasicBlock current = stack.pop();
-
-            for (BasicBlock child : current.predecessor)
-                if (!result.contains(current))
-                    stack.push(child);
-
-            result.add(current);
-        }
-
-        // initial is not a successor
-        result.remove(initial);
-
-        return result;
-    }
-
-    private Set<BasicBlock> getAllSuccessors(BasicBlock initial) {
-        Set<BasicBlock> result = new HashSet<>();
-
-        Stack<BasicBlock> stack = new Stack<>();
-        stack.push(initial);
-        while (!stack.isEmpty()) {
-            BasicBlock current = stack.pop();
-
-            for (BasicBlock child : current.successor)
-                if (!result.contains(current))
-                    stack.push(child);
-
-            result.add(current);
-        }
-
-        // initial is not a successor
-        result.remove(initial);
-
-        return result;
-    }
-
     private void internalRenaming(DominanceAnalyzer.DominatorTreeNode dominatorTreeNode, Set<BasicBlock> visited, Map<Obj, Integer> count, Map<Obj, Stack<Integer>> stack) {
         BasicBlock n = dominatorTreeNode.basicBlock;
 
@@ -192,7 +150,7 @@ public class SSAConverter {
         }
 
         // patching the successors of a basic block with respect to the CFG
-        for (BasicBlock Y : getAllSuccessors(n)) {
+        for (BasicBlock Y : n.getAllSuccessors()) {
             for (Quadruple statement : Y.instructions) {
                 if (statement.getInstruction() != IRInstruction.STORE_PHI)
                     continue;
@@ -241,7 +199,7 @@ public class SSAConverter {
                 Obj sourceNode = new Obj(destinationNode.getKind(), Config.prefix_phi + instruction.getPhiID(), destinationNode.getType());
 
                 // adding STORE to predecessors
-                for (BasicBlock p : block.predecessor) {
+                for (BasicBlock p : block.predecessors) {
                     Quadruple mov = new Quadruple(IRInstruction.STORE);
                     mov.setArg1(new QuadrupleObjVar(destinationNode));
                     mov.setResult(new QuadrupleObjVar(sourceNode));
