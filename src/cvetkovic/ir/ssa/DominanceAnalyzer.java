@@ -30,7 +30,6 @@ public class DominanceAnalyzer {
     private final Map<BasicBlock, BasicBlock> idoms;
     private final Map<BasicBlock, Set<BasicBlock>> dominanceFrontier;
 
-    //private final List<BasicBlock> RCFG;
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominators;
     private final Map<BasicBlock, BasicBlock> reverseIdoms;
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominanceFrontier;
@@ -49,7 +48,6 @@ public class DominanceAnalyzer {
         idoms = generateImmediateDominators(CFG, dominators, false);
         dominanceFrontier = generateDominanceFrontier(dominators, idoms, false);
 
-        //RCFG = generateReverseCFG(getBasicBlocks());
         reverseDominators = generateDominatorTree(CFG, true);
         reverseIdoms = generateImmediateDominators(CFG, reverseDominators, true);
         reverseDominanceFrontier = generateDominanceFrontier(reverseDominators, reverseIdoms, true);
@@ -69,10 +67,6 @@ public class DominanceAnalyzer {
         return sequence.basicBlocks;
     }
 
-    /*public List<BasicBlock> getRCFG() {
-        return RCFG;
-    }*/
-
     public Map<BasicBlock, Set<BasicBlock>> getDominators() {
         return dominators;
     }
@@ -85,72 +79,21 @@ public class DominanceAnalyzer {
         return dominanceFrontier;
     }
 
-    /**
-     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
-     */
     public Map<BasicBlock, Set<BasicBlock>> getReverseDominators() {
-        return reverseDominators; //convertToCFGReferences(reverseDominators, getBasicBlocks());
+        return reverseDominators;
     }
 
-    /**
-     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
-     */
     public Map<BasicBlock, BasicBlock> getReverseImmediateDominators() {
-        return reverseIdoms; //convertToCFGReferences(reverseIdoms, getBasicBlocks());
+        return reverseIdoms;
     }
 
-    /**
-     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
-     */
     public Map<BasicBlock, Set<BasicBlock>> getReverseDominanceFrontier() {
-        return reverseDominanceFrontier; //convertToCFGReferences(reverseDominanceFrontier, getBasicBlocks());
+        return reverseDominanceFrontier;
     }
 
-    /**
-     * Should never be used inside this class. Only for outsiders. RCFG and CFG basic block references are not equal.
-     */
     public Map<BasicBlock, Set<BasicBlock>> getControlDependenies() {
-        return controlDependence; //convertToCFGReferences(controlDependence, getBasicBlocks());
+        return controlDependence;
     }
-
-    ///////////////////////////////
-    ///////////////////////////////
-    ///////////////////////////////
-
-    //private static Map<BasicBlock, BasicBlock> obj_bb = new HashMap<>();
-    //private static Map<BasicBlock, Set<BasicBlock>> obj_bsb = new HashMap<>();
-
-    /*private static <T> Map<BasicBlock, T> convertToCFGReferences(Map<BasicBlock, T> map, List<BasicBlock> cfg) {
-        Map result = null;
-
-        for (BasicBlock block : map.keySet()) {
-            if (map.get(block) instanceof Set) {
-                if (result == null)
-                    result = new HashMap<BasicBlock, Set<BasicBlock>>();
-
-                Set<BasicBlock> set = new HashSet<>();
-
-                for (BasicBlock setMember : ((Map<BasicBlock, Set<BasicBlock>>) map.get(block)).keySet())
-                    set.add(cfg.stream().filter(p -> p.blockId == setMember.blockId).findFirst().orElseThrow());
-
-                result.put(cfg.stream().filter(p -> p.blockId == block.blockId).findFirst().orElseThrow(), set);
-            } else if (map.get(block) instanceof BasicBlock) {
-                if (result == null)
-                    result = new HashMap<BasicBlock, BasicBlock>();
-                BasicBlock rcfg_reference = (BasicBlock) map.get(block);
-
-                if (rcfg_reference != null)
-                    result.put(cfg.stream().filter(p -> p.blockId == block.blockId).findFirst().orElseThrow(),
-                            cfg.stream().filter(p -> p.blockId == rcfg_reference.blockId).findFirst().orElseThrow());
-                else
-                    result.put(cfg.stream().filter(p -> p.blockId == block.blockId).findFirst().orElseThrow(), null);
-            }
-        }
-
-        if (result == null)
-            throw new RuntimeException("Reference conversion cannot be done.");
-        return (Map<BasicBlock, T>) result;
-    }*/
 
     ///////////////////////////////
     ///////////////////////////////
