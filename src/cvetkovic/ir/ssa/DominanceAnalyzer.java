@@ -18,29 +18,59 @@ public class DominanceAnalyzer {
         }
     }
 
-    DominatorTreeNode dominatorTreeRoot;
-    private final CodeSequence sequence;
-    private final List<BasicBlock> basicBlocks;
+    ///////////////////////////////
+    // MEMBERS
+    ///////////////////////////////
 
-    private Map<BasicBlock, Set<BasicBlock>> dominators;
-    private Map<BasicBlock, BasicBlock> idoms;
-    private Map<BasicBlock, Set<BasicBlock>> dominanceFrontier;
+    DominatorTreeNode dominatorTreeRoot;
+    DominatorTreeNode reverseDominatorTreeRoot;
+    private final CodeSequence sequence;
+
+    private final Map<BasicBlock, Set<BasicBlock>> dominators;
+    private final Map<BasicBlock, BasicBlock> idoms;
+    private final Map<BasicBlock, Set<BasicBlock>> dominanceFrontier;
+
+    private final List<BasicBlock> RCFG;
+    private final Map<BasicBlock, Set<BasicBlock>> reverseDominators;
+    private final Map<BasicBlock, BasicBlock> reverseIdoms;
+    private final Map<BasicBlock, Set<BasicBlock>> reverseDominanceFrontier;
+
+    private final Map<BasicBlock, Set<BasicBlock>> controlDependence;
+
+    ///////////////////////////////
+    // CONSTRUCTOR
+    ///////////////////////////////
 
     public DominanceAnalyzer(CodeSequence sequence) {
         this.sequence = sequence;
-        this.basicBlocks = sequence.basicBlocks;
 
-        dominators = generateDominatorTree();
-        idoms = generateImmediateDominators();
-        dominanceFrontier = generateDominanceFrontier();
+        List<BasicBlock> CFG = getBasicBlocks();
+        dominators = generateDominatorTree(CFG, false);
+        idoms = generateImmediateDominators(CFG, dominators, false);
+        dominanceFrontier = generateDominanceFrontier(dominators, idoms, false);
+
+        RCFG = generateReverseCFG(getBasicBlocks());
+        reverseDominators = generateDominatorTree(RCFG, true);
+        reverseIdoms = generateImmediateDominators(RCFG, reverseDominators, true);
+        reverseDominanceFrontier = generateDominanceFrontier(reverseDominators, reverseIdoms, true);
+
+        controlDependence = determineControlDependence(RCFG, reverseDominanceFrontier);
     }
+
+    ///////////////////////////////
+    // GETTERS
+    ///////////////////////////////
 
     public CodeSequence getSequence() {
         return sequence;
     }
 
     public List<BasicBlock> getBasicBlocks() {
-        return basicBlocks;
+        return sequence.basicBlocks;
+    }
+
+    public List<BasicBlock> getRCFG() {
+        return RCFG;
     }
 
     public Map<BasicBlock, Set<BasicBlock>> getDominators() {
@@ -55,7 +85,27 @@ public class DominanceAnalyzer {
         return dominanceFrontier;
     }
 
-    private Map<BasicBlock, Set<BasicBlock>> generateDominatorTree() {
+    public Map<BasicBlock, Set<BasicBlock>> getReverseDominators() {
+        return reverseDominators;
+    }
+
+    public Map<BasicBlock, BasicBlock> getReverseImmediateDominators() {
+        return reverseIdoms;
+    }
+
+    public Map<BasicBlock, Set<BasicBlock>> getReverseDominanceFrontier() {
+        return reverseDominanceFrontier;
+    }
+
+    public Map<BasicBlock, Set<BasicBlock>> getControlDependenies() {
+        return controlDependence;
+    }
+
+    ///////////////////////////////
+    ///////////////////////////////
+    ///////////////////////////////
+
+    private Map<BasicBlock, Set<BasicBlock>> generateDominatorTree(List<BasicBlock> basicBlocks, boolean reverse) {
         Map<BasicBlock, Set<BasicBlock>> dominators = new HashMap<>();
         BasicBlock entryBlock = basicBlocks.stream().filter(BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);
 
@@ -153,7 +203,7 @@ public class DominanceAnalyzer {
         return null;
     }
 
-    private Map<BasicBlock, BasicBlock> generateImmediateDominators() {
+    private Map<BasicBlock, BasicBlock> generateImmediateDominators(List<BasicBlock> basicBlocks, Map<BasicBlock, Set<BasicBlock>> dominators, boolean reverse) {
         Map<BasicBlock, BasicBlock> idoms = new HashMap<>();
 
         // calculating immediate dominators for each basic block
@@ -166,8 +216,13 @@ public class DominanceAnalyzer {
             DominatorTreeNode newNode = new DominatorTreeNode(b);
             treeNodes.put(b, newNode);
 
-            if (b.isEntryBlock())
-                dominatorTreeRoot = newNode;
+            if (b.isEntryBlock()) {
+
+                if (reverse)
+                    reverseDominatorTreeRoot = newNode;
+                else
+                    dominatorTreeRoot = newNode;
+            }
         }
 
         for (BasicBlock p : idoms.keySet()) {
@@ -185,7 +240,7 @@ public class DominanceAnalyzer {
      * df(n) contains the first nodes reachable from n that n does not
      * dominate, on each cfg path leaving n.
      */
-    private Map<BasicBlock, Set<BasicBlock>> generateDominanceFrontier() {
+    private Map<BasicBlock, Set<BasicBlock>> generateDominanceFrontier(Map<BasicBlock, Set<BasicBlock>> dominators, Map<BasicBlock, BasicBlock> idoms, boolean reverse) {
         Map<BasicBlock, Set<BasicBlock>> result = new HashMap<>();
         dominators.forEach((p, v) -> result.put(p, new HashSet<>()));
 
@@ -193,7 +248,7 @@ public class DominanceAnalyzer {
         Stack<DominatorTreeNode> stack = new Stack<>();
         Set<DominatorTreeNode> visited = new HashSet<>();
 
-        DominatorTreeNode next = dominatorTreeRoot;
+        DominatorTreeNode next = (reverse ? reverseDominatorTreeRoot : dominatorTreeRoot);
         stack.push(next);
 
         while (!stack.isEmpty()) {
@@ -218,7 +273,7 @@ public class DominanceAnalyzer {
             else
                 s.append("null, ");
 
-            System.out.println("DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+            System.out.println((reverse ? "R" : "") + "DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
         }
 
         return result;
@@ -243,6 +298,67 @@ public class DominanceAnalyzer {
 
         return frontier;
     }
+
+    /**
+     * The Reverse Control Flow Graph (RCFG) of a CFG
+     * has the same nodes as CFG and has edge Y -> X if X -> Y is
+     * an edge in CFG.
+     */
+    private List<BasicBlock> generateReverseCFG(List<BasicBlock> cfg) {
+        List<BasicBlock> rcfg = new ArrayList<>();
+
+        for (BasicBlock block : cfg) {
+            try {
+                BasicBlock reverseBlock = (BasicBlock) block.clone();
+                rcfg.add(reverseBlock);
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException("Will never happen!");
+            }
+        }
+
+        for (BasicBlock block : cfg) {
+            BasicBlock analog = rcfg.stream().filter(p -> p.blockId == block.blockId).collect(Collectors.toList()).get(0);
+
+            for (BasicBlock successor : block.successor)
+                analog.predecessor.add(rcfg.stream().filter(p -> p.blockId == successor.blockId).collect(Collectors.toList()).get(0));
+            for (BasicBlock predecessor : block.predecessor)
+                analog.successor.add(rcfg.stream().filter(p -> p.blockId == predecessor.blockId).collect(Collectors.toList()).get(0));
+        }
+
+        return rcfg;
+    }
+
+    /**
+     * Node Y is control-dependent on B iff B ∈ DF(Y) in RCFG.
+     */
+    public Map<BasicBlock, Set<BasicBlock>> determineControlDependence(List<BasicBlock> reverseCFG, Map<BasicBlock, Set<BasicBlock>> reverseDF) {
+        Map<BasicBlock, Set<BasicBlock>> result = new HashMap<>();
+
+        for (BasicBlock b : reverseCFG) {
+            result.put(b, new HashSet<>());
+
+            for (BasicBlock y : reverseDF.keySet())
+                if (reverseDF.get(y).contains(b))
+                    result.get(b).add(y);
+        }
+
+        for (BasicBlock b : result.keySet()) {
+            StringBuilder s = new StringBuilder();
+
+            if (result.get(b).size() != 0)
+                result.get(b).forEach(p -> s.append(p.blockId).append(", "));
+            else
+                s.append("null, ");
+
+            System.out.println(b.blockId + " is control dependent on { " + s.substring(0, s.length() - 2) + " }");
+        }
+
+        return result;
+    }
+
+    ///////////////////////////////
+    // DUMPING
+    ///////////////////////////////
 
     public static void dumpCFG(String path, List<BasicBlock> basicBlocks) {
         (new File(path)).getParentFile().mkdir();

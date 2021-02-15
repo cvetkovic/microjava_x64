@@ -12,7 +12,7 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BasicBlock {
+public class BasicBlock implements Cloneable {
 
     //////////////////////////////////////////////////////////////////////////////////
     // CLASS FIELDS
@@ -37,6 +37,18 @@ public class BasicBlock {
     //////////////////////////////////////////////////////////////////////////////////
     // BASIC BLOCK INFORMATION EXTRACTION
     //////////////////////////////////////////////////////////////////////////////////
+
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        BasicBlock b = new BasicBlock(enclosingFunction);
+
+        b.allVariables = Collections.unmodifiableCollection(allVariables);
+        b.instructions = Collections.unmodifiableList(instructions);
+        b.blockId = blockId;
+
+        return b;
+    }
 
     private void prepareBasicBlockClass(List<Quadruple> quadrupleList) {
         if (Config.printBasicBlockInfo) {

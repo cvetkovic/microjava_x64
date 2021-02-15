@@ -1,14 +1,10 @@
 package cvetkovic.optimizer;
 
-import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class Optimizer {
 
@@ -30,6 +26,7 @@ public abstract class Optimizer {
             // before SSA conversion
             DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\cfg_before_ssa_" + sequence.function + ".dot", dominanceAnalyzer.getBasicBlocks());
             DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\dominator_tree_" + sequence.function + ".dot", dominanceAnalyzer.getImmediateDominators());
+            DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\reverse_dominator_tree_" + sequence.function + ".dot", dominanceAnalyzer.getReverseImmediateDominators());
 
             ssaConverter.doPhiPlacement();
             ssaConverter.renameVariables();
