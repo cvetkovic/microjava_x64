@@ -5,6 +5,7 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -52,6 +53,7 @@ public class DeadCodeElimination implements OptimizerPass {
             case RETURN:
                 return true;
             // calls to other procedures
+            case PARAM:
             case CALL:
             case INVOKE_VIRTUAL:
                 return true;
@@ -66,7 +68,7 @@ public class DeadCodeElimination implements OptimizerPass {
      * marks instruction whose results are used.
      */
     private void mark() {
-        Queue<Quadruple> worklist = new ArrayDeque<>();
+        Set<Quadruple> worklist = new HashSet<>();
 
         Map<Obj, Set<Quadruple>> defined = new HashMap<>();
         Map<Quadruple, BasicBlock> quadrupleBelongsTo = new HashMap<>();
@@ -90,6 +92,8 @@ public class DeadCodeElimination implements OptimizerPass {
                     set.add(q);
                 }
 
+                // TODO: what to do with instructions that alter the global variables
+
                 // mark only critical instructions
                 if (isCritical(q)) {
                     marked.add(q);
@@ -99,18 +103,44 @@ public class DeadCodeElimination implements OptimizerPass {
         }
 
         while (!worklist.isEmpty()) {
-            Quadruple instruction = worklist.poll();
+            Quadruple instruction = worklist.iterator().next();
+            worklist.remove(instruction);
 
-            if (instruction.getArg1() != null && instruction.getArg1() instanceof QuadrupleObjVar) {
-                // if def(y) is not marked
-                Obj arg1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
-                if (arg1.getKind() != Obj.Con) {
-                    Set<Quadruple> defSet = defined.get(arg1);
+            if (instruction.getArg1() != null) {
+                if (instruction.getArg1() instanceof QuadrupleObjVar) {
+                    // if def(y) is not marked
+                    Obj arg1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
+                    if (arg1.getKind() != Obj.Con) {
+                        Set<Quadruple> defSet = defined.get(arg1);
 
-                    List<Quadruple> c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg1Count()).collect(Collectors.toList());
-                    if (!c.isEmpty()) {
-                        marked.add(c.get(0));
-                        worklist.add(c.get(0));
+                        // defSet will be null when 'arg1' is function parameter or global variable
+                        if (defSet != null) {
+                            Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg1Count()).findFirst().orElseThrow();
+                            if (!marked.contains(c)) {
+                                marked.add(c);
+                                worklist.add(c);
+                            }
+                        }
+                    }
+                } else if (instruction.getArg1() instanceof QuadruplePhi) {
+                    QuadruplePhi phiFunction = (QuadruplePhi) instruction.getArg1();
+                    Obj obj = phiFunction.getObj();
+
+                    if (obj.getKind() != Obj.Con) {
+                        Set<Quadruple> defSet = defined.get(obj);
+
+                        for (int i = 0; i < phiFunction.size(); i++) {
+                            // first assignment is defined outside of function -> parameter or global variable
+                            if (phiFunction.getPhiArg(i) == 0)
+                                continue;
+
+                            int finalI = i;
+                            Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == phiFunction.getPhiArg(finalI)).findFirst().orElseThrow();
+                            if (!marked.contains(c)) {
+                                marked.add(c);
+                                worklist.add(c);
+                            }
+                        }
                     }
                 }
             }
@@ -121,10 +151,13 @@ public class DeadCodeElimination implements OptimizerPass {
                 if (arg2.getKind() != Obj.Con) {
                     Set<Quadruple> defSet = defined.get(arg2);
 
-                    List<Quadruple> c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).collect(Collectors.toList());
-                    if (!c.isEmpty()) {
-                        marked.add(c.get(0));
-                        worklist.add(c.get(0));
+                    // defSet will be null when 'arg2' is function parameter or global variable
+                    if (defSet != null) {
+                        List<Quadruple> c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).collect(Collectors.toList());
+                        if (!c.isEmpty()) {
+                            marked.add(c.get(0));
+                            worklist.add(c.get(0));
+                        }
                     }
                 }
             }
@@ -138,12 +171,16 @@ public class DeadCodeElimination implements OptimizerPass {
                 assert cmp.getInstruction() == IRInstruction.CMP;
                 assert IRInstruction.isConditionalJumpInstruction(branch.getInstruction());
 
-                marked.add(cmp);
-                marked.add(branch);
+                if (!marked.contains(cmp) && !marked.contains(branch)) {
+                    marked.add(cmp);
+                    marked.add(branch);
 
-                worklist.add(cmp);
-                worklist.add(branch);
+                    worklist.add(cmp);
+                    worklist.add(branch);
+                }
             }
+
+            assert (long) worklist.size() == worklist.stream().distinct().count();
         }
     }
 

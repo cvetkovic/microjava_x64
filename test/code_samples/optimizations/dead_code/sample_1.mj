@@ -1,0 +1,12 @@
+program MJProgram
+{
+	void main()
+	    int i, j, k, t;
+	{
+	    t = 0;
+	    t=1;
+	    t=2;
+	    t=3;
+	    print(t);
+	}
+}

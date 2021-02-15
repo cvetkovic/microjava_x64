@@ -22,6 +22,21 @@ public class QuadruplePhi extends QuadrupleVariable {
         varList[indexCnt++] = cnt;
     }
 
+    public int getPhiArg(int index) {
+        if (index >= varList.length || index < 0)
+            throw new RuntimeException("Invalid QuadruplePhi indexing argument.");
+
+        return varList[index];
+    }
+
+    public int size() {
+        return varList.length;
+    }
+
+    public Obj getObj() {
+        return obj;
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("φ(");

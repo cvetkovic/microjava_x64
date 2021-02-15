@@ -397,4 +397,10 @@ public class BasicBlock {
 
         return result;
     }
+
+    public boolean isEmpty() {
+        return instructions.size() == 2 &&
+                instructions.get(0).getInstruction() == IRInstruction.GEN_LABEL &&
+                instructions.get(1).getInstruction() == IRInstruction.JMP;
+    }
 }
