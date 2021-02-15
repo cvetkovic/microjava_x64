@@ -40,12 +40,12 @@ public abstract class Optimizer {
                     "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\reverse_cfg_ssa_before_optimizer_" + sequence.function + ".dot",
                     dominanceAnalyzer.getBasicBlocks());
 
-            //addOptimizationPass(new DeadCodeElimination(dominanceAnalyzer));
+            addOptimizationPass(new DeadCodeElimination(dominanceAnalyzer));
 
-            /*for (OptimizerPass pass : optimizationList) {
+            for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
-            }*/
+            }
 
             // eliminating SSA from code
             ssaConverter.toNormalForm();

@@ -1,0 +1,173 @@
+package cvetkovic.ir.optimizations.ssa;
+
+import cvetkovic.ir.IRInstruction;
+import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
+import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.ssa.DominanceAnalyzer;
+import cvetkovic.optimizer.OptimizerPass;
+import rs.etf.pp1.symboltable.concepts.Obj;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class DeadCodeElimination implements OptimizerPass {
+
+    private final DominanceAnalyzer dominanceAnalyzer;
+    private final Set<Quadruple> marked = new HashSet<>();
+
+    public DeadCodeElimination(DominanceAnalyzer dominanceAnalyzer) {
+        this.dominanceAnalyzer = dominanceAnalyzer;
+
+        // TODO: check if code is in SSA form
+    }
+
+    @Override
+    public void optimize() {
+        mark();
+        sweep();
+    }
+
+    @Override
+    public void finalizePass() {
+        // simplify CFG
+        // removal of unreachable blocks
+    }
+
+    /**
+     * Critical statements are I/O statements, linkage code (entry & exit blocks),
+     * return values, calls to other procedures.
+     */
+    private boolean isCritical(Quadruple instruction) {
+        switch (instruction.getInstruction()) {
+            // I/O statements
+            case SCANF:
+            case PRINTF:
+                return true;
+            // linkage code
+            case GEN_LABEL:
+            case ENTER:
+            case LEAVE:
+            case RETURN:
+                return true;
+            // calls to other procedures
+            case CALL:
+            case INVOKE_VIRTUAL:
+                return true;
+            // other
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Algorithm starts from the critical instructions and then iteratively
+     * marks instruction whose results are used.
+     */
+    private void mark() {
+        Queue<Quadruple> worklist = new ArrayDeque<>();
+
+        Map<Obj, Set<Quadruple>> defined = new HashMap<>();
+        Map<Quadruple, BasicBlock> quadrupleBelongsTo = new HashMap<>();
+
+        for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
+            for (Quadruple q : block.instructions) {
+                // building the defined map
+                quadrupleBelongsTo.put(q, block);
+
+                if (q.getResult() != null && q.getResult() instanceof QuadrupleObjVar) {
+                    Obj result = ((QuadrupleObjVar) q.getResult()).getObj();
+
+                    Set<Quadruple> set;
+                    if (defined.containsKey(result))
+                        set = defined.get(result);
+                    else {
+                        set = new HashSet<>();
+                        defined.put(result, set);
+                    }
+
+                    set.add(q);
+                }
+
+                // mark only critical instructions
+                if (isCritical(q)) {
+                    marked.add(q);
+                    worklist.add(q);
+                }
+            }
+        }
+
+        while (!worklist.isEmpty()) {
+            Quadruple instruction = worklist.poll();
+
+            if (instruction.getArg1() != null && instruction.getArg1() instanceof QuadrupleObjVar) {
+                // if def(y) is not marked
+                Obj arg1 = ((QuadrupleObjVar) instruction.getArg1()).getObj();
+                if (arg1.getKind() != Obj.Con) {
+                    Set<Quadruple> defSet = defined.get(arg1);
+
+                    List<Quadruple> c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg1Count()).collect(Collectors.toList());
+                    if (!c.isEmpty()) {
+                        marked.add(c.get(0));
+                        worklist.add(c.get(0));
+                    }
+                }
+            }
+
+            if (instruction.getArg2() != null && instruction.getArg2() instanceof QuadrupleObjVar) {
+                // if def(z) is not marked
+                Obj arg2 = ((QuadrupleObjVar) instruction.getArg2()).getObj();
+                if (arg2.getKind() != Obj.Con) {
+                    Set<Quadruple> defSet = defined.get(arg2);
+
+                    List<Quadruple> c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).collect(Collectors.toList());
+                    if (!c.isEmpty()) {
+                        marked.add(c.get(0));
+                        worklist.add(c.get(0));
+                    }
+                }
+            }
+
+            Map<BasicBlock, Set<BasicBlock>> RDF = dominanceAnalyzer.getReverseDominanceFrontier();
+            BasicBlock quadrupleIsIn = quadrupleBelongsTo.get(instruction);
+            for (BasicBlock b : RDF.get(quadrupleIsIn)) {
+                Quadruple cmp = b.instructions.get(b.instructions.size() - 2);
+                Quadruple branch = b.instructions.get(b.instructions.size() - 1);
+
+                assert cmp.getInstruction() == IRInstruction.CMP;
+                assert IRInstruction.isConditionalJumpInstruction(branch.getInstruction());
+
+                marked.add(cmp);
+                marked.add(branch);
+
+                worklist.add(cmp);
+                worklist.add(branch);
+            }
+        }
+    }
+
+    /**
+     * Does the deletion of instructions that are not marked and not jump instructions.
+     * If non-marked instruction is a jump instruction then route the jump to the
+     * nearest useful post-dominator.
+     */
+    private void sweep() {
+        for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
+            Set<Quadruple> toRemove = new HashSet<>();
+
+            for (Quadruple q : block.instructions) {
+                if (marked.contains(q))
+                    continue;
+
+                if (IRInstruction.isConditionalJumpInstruction(q.getInstruction())) {
+                    throw new RuntimeException("Rewrite a jump to the nearest useful post-dominator.");
+                } else {
+                    toRemove.add(q);
+                }
+            }
+
+            block.instructions.removeAll(toRemove);
+        }
+    }
+}
