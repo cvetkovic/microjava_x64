@@ -58,7 +58,11 @@ public class DeadCodeElimination implements OptimizerPass {
             case CALL:
             case INVOKE_VIRTUAL:
                 return true;
-            // other
+            // array
+            case MALLOC:
+            case ALOAD:
+            case ASTORE:
+                return true;
             default:
                 return false;
         }
