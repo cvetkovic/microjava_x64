@@ -24,6 +24,9 @@ public abstract class Optimizer {
             DominanceAnalyzer dominanceAnalyzer = new DominanceAnalyzer(sequence);
             SSAConverter ssaConverter = new SSAConverter(dominanceAnalyzer);
 
+            // DO NOT REMOVE THIS LINE
+            optimizationList.clear();
+
             // before SSA conversion
             DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\normal_cfg_pre_ssa_" + sequence.function + ".dot",
                     "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\normal_rcfg_pre_ssa_" + sequence.function + ".dot",
@@ -40,8 +43,7 @@ public abstract class Optimizer {
                     "C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\ssa_rcfg_pre_opt_" + sequence.function + ".dot",
                     dominanceAnalyzer.getBasicBlocks());
 
-            //addOptimizationPass(new DeadCodeElimination(dominanceAnalyzer));
-
+            addOptimizationPass(new DeadCodeElimination(dominanceAnalyzer));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();

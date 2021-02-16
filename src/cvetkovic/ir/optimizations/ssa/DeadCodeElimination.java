@@ -3,10 +3,7 @@ package cvetkovic.ir.optimizations.ssa;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
-import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
-import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
-import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
+import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -63,6 +60,10 @@ public class DeadCodeElimination implements OptimizerPass {
             case ALOAD:
             case ASTORE:
                 return true;
+            // pointer store
+            case STORE:
+                if (instruction.getArg2() != null && instruction.getArg2() instanceof QuadruplePTR)
+                    return true;
             default:
                 return false;
         }
@@ -160,11 +161,27 @@ public class DeadCodeElimination implements OptimizerPass {
 
                     // defSet will be null when 'arg2' is function parameter or global variable
                     if (defSet != null) {
-                        List<Quadruple> c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).collect(Collectors.toList());
-                        if (!c.isEmpty()) {
-                            marked.add(c.get(0));
-                            worklist.add(c.get(0));
+                        Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).findFirst().orElseThrow();
+                        if (!marked.contains(c)) {
+                            marked.add(c);
+                            worklist.add(c);
                         }
+                    }
+                }
+            }
+
+            // instructions that use pointers need to be handled separately
+            if (instruction.getInstruction() == IRInstruction.STORE && instruction.getArg2() != null &&
+                    instruction.getArg2() instanceof QuadruplePTR) {
+                Obj result = ((QuadrupleObjVar) instruction.getResult()).getObj();
+                Set<Quadruple> defSet = defined.get(result);
+
+                // defSet will be null when 'result' is function parameter or global variable
+                if (defSet != null) {
+                    Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaResultCount() - 1).findFirst().orElseThrow();
+                    if (!marked.contains(c)) {
+                        marked.add(c);
+                        worklist.add(c);
                     }
                 }
             }
