@@ -171,7 +171,8 @@ public class DeadCodeElimination implements OptimizerPass {
             }
 
             // instructions that use pointers need to be handled separately
-            if (instruction.getInstruction() == IRInstruction.STORE && instruction.getArg2() != null &&
+            if ((instruction.getInstruction() == IRInstruction.STORE || instruction.getInstruction() == IRInstruction.MALLOC)
+                    && instruction.getArg2() != null &&
                     instruction.getArg2() instanceof QuadruplePTR) {
                 Obj result = ((QuadrupleObjVar) instruction.getResult()).getObj();
                 Set<Quadruple> defSet = defined.get(result);
