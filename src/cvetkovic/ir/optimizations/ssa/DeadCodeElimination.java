@@ -4,6 +4,7 @@ import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
+import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
@@ -97,7 +98,9 @@ public class DeadCodeElimination implements OptimizerPass {
                 // mark only critical instructions
                 if (isCritical(q)) {
                     marked.add(q);
-                    worklist.add(q);
+
+                    if (q.getInstruction() != IRInstruction.GEN_LABEL)
+                        worklist.add(q);
                 }
             }
         }
@@ -193,18 +196,33 @@ public class DeadCodeElimination implements OptimizerPass {
         for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
             Set<Quadruple> toRemove = new HashSet<>();
 
+            boolean branchRemoved = false;
             for (Quadruple q : block.instructions) {
                 if (marked.contains(q))
                     continue;
 
                 if (IRInstruction.isConditionalJumpInstruction(q.getInstruction())) {
-                    throw new RuntimeException("Rewrite a jump to the nearest useful post-dominator.");
+                    toRemove.add(block.instructions.get(block.instructions.size() - 2)); // CMP
+                    toRemove.add(block.instructions.get(block.instructions.size() - 1)); // conditional branch
+                    branchRemoved = true;
+                } else if (IRInstruction.isUnconditionalJumpInstruction(q.getInstruction())) {
+                    continue;
                 } else {
                     toRemove.add(q);
                 }
             }
 
             block.instructions.removeAll(toRemove);
+            if (branchRemoved) {
+                BasicBlock successor = dominanceAnalyzer.getReverseImmediateDominators().get(block);
+
+                Quadruple rewrittenJump = new Quadruple(IRInstruction.JMP);
+                rewrittenJump.setResult(new QuadrupleLabel(successor.instructions.get(0).getArg1().toString()));
+                block.instructions.add(rewrittenJump);
+
+                block.successors.clear();
+                block.successors.add(successor);
+            }
         }
     }
 }
