@@ -73,8 +73,8 @@ public class SSAConverter {
 
                         A_phi.add(y);
 
-                        if (!y.getSetOfDefinedVariables().contains(a))
-                            W.add(y);
+                        //if (!y.getSetOfDefinedVariables().contains(a))
+                        W.add(y);
                     }
                 }
 
