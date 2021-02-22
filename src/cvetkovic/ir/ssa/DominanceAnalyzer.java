@@ -35,6 +35,7 @@ public class DominanceAnalyzer {
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominanceFrontier;
 
     private final Map<BasicBlock, Set<BasicBlock>> controlDependence;
+    private final List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> naturalLoops;
 
     ///////////////////////////////
     // CONSTRUCTOR
@@ -53,6 +54,7 @@ public class DominanceAnalyzer {
         reverseDominanceFrontier = generateDominanceFrontier(reverseDominators, reverseIdoms, true);
 
         controlDependence = determineControlDependence(CFG, reverseDominanceFrontier);
+        naturalLoops = determineNaturalLoops();
     }
 
     ///////////////////////////////
@@ -91,8 +93,12 @@ public class DominanceAnalyzer {
         return reverseDominanceFrontier;
     }
 
-    public Map<BasicBlock, Set<BasicBlock>> getControlDependenies() {
+    public Map<BasicBlock, Set<BasicBlock>> getControlDependencies() {
         return controlDependence;
+    }
+
+    public List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> getNaturalLoops() {
+        return naturalLoops;
     }
 
     ///////////////////////////////
@@ -318,6 +324,97 @@ public class DominanceAnalyzer {
         }
 
         return result;
+    }
+
+    /**
+     * http://www.cs.cmu.edu/afs/cs/academic/class/15745-f03/public/lectures/L7_handouts.pdf
+     */
+    public List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> determineNaturalLoops() {
+        List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> loops = new ArrayList<>();
+
+        /*
+        Three steps:
+        - finding dominators
+        - finding back edges (t -> h such that h dom t)
+        - detecting basic blocks that constitute loops
+         */
+
+        // DFS of the CFG
+        List<BasicBlock.Tuple<BasicBlock, BasicBlock>> backEdges = new ArrayList<>();
+        Stack<BasicBlock> dfsStack = new Stack<>();
+        Set<BasicBlock> visited = new HashSet<>();
+        dfsStack.push(dominatorTreeRoot.basicBlock);
+
+        while (!dfsStack.isEmpty()) {
+            BasicBlock t = dfsStack.pop();
+            visited.add(t);
+
+            for (BasicBlock h : t.successors) {
+                // traverse children
+                if (!visited.contains(h) && !dfsStack.contains(h))
+                    dfsStack.push(h);
+
+                // check for back edge condition
+                if (dominators.get(t).contains(h))
+                    backEdges.add(new BasicBlock.Tuple<>(t, h));
+            }
+        }
+
+        System.out.println("Back edges in " + sequence.function.getName() + ":");
+        backEdges.forEach(p -> System.out.println("\t" + p.u.blockId + " -> " + p.v.blockId));
+
+        // detecting constitutive blocks
+        for (BasicBlock.Tuple<BasicBlock, BasicBlock> backEdge : backEdges) {
+            BasicBlock n = backEdge.u;
+            BasicBlock d = backEdge.v;
+
+            Set<BasicBlock> loop = new HashSet<>();
+            // the following ensures ignorance of loop header's predecessors
+            loop.add(d);
+
+            Stack<BasicBlock> stack = new Stack<>();
+            stack.push(n);
+            loop.add(n);
+
+            while (!stack.isEmpty()) {
+                BasicBlock m = stack.pop();
+
+                for (BasicBlock p : m.predecessors) {
+                    if (!loop.contains(p)) {
+                        loop.add(p);
+                        stack.push(p);
+                    }
+                }
+            }
+
+            loops.add(new BasicBlock.Tuple<>(d, loop));
+        }
+
+        if (loops.size() > 0)
+            System.out.println("Natural loops detected in " + sequence.function.getName() + ":");
+
+        for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
+            StringBuilder sb = new StringBuilder();
+            loop.v.forEach(p -> sb.append(p.blockId).append(", "));
+            String members = sb.substring(0, sb.length() - 2);
+            boolean subset = false;
+            int subsetHeaderIndex = -1;
+
+            /* Nesting is checked by testing whether the set of nodes of a
+               loop A is a subset of the set of nodes of another loop B */
+            for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
+                if (parent.v.containsAll(loop.v) && loop != parent) {
+                    subset = true;
+                    subsetHeaderIndex = parent.u.blockId;
+                }
+            }
+
+            System.out.println("\tHeader: " + loop.u.blockId +
+                    ", Nested: " + (subset ? "True (" + subsetHeaderIndex + ")" : "False") +
+                    ", Members: { " + members + " }");
+        }
+
+        return loops;
     }
 
     ///////////////////////////////
