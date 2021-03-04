@@ -1,6 +1,7 @@
 package cvetkovic.optimizer;
 
 import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.optimizations.ssa.CFGCleaner;
 import cvetkovic.ir.optimizations.ssa.DeadCodeElimination;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
@@ -13,6 +14,7 @@ public abstract class Optimizer {
     protected List<CodeSequence> codeSequenceList = new ArrayList<>();
 
     protected Optimizer() {
+
     }
 
     protected void addOptimizationPass(OptimizerPass optimizerPass) {
@@ -21,8 +23,8 @@ public abstract class Optimizer {
 
     public void executeOptimizations() {
         for (CodeSequence sequence : codeSequenceList) {
-            DominanceAnalyzer dominanceAnalyzer = new DominanceAnalyzer(sequence);
-            SSAConverter ssaConverter = new SSAConverter(dominanceAnalyzer);
+            sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
+            SSAConverter ssaConverter = new SSAConverter(sequence.dominanceAnalyzer);
 
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
@@ -30,20 +32,21 @@ public abstract class Optimizer {
             // before SSA conversion
             DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\normal_cfg_pre_ssa_" + sequence.function + ".dot",
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\normal_rcfg_pre_ssa_" + sequence.function + ".dot",
-                    dominanceAnalyzer.getBasicBlocks());
+                    sequence.dominanceAnalyzer.getBasicBlocks());
             DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\dominator_tree_" + sequence.function + ".dot",
-                    dominanceAnalyzer.getImmediateDominators());
+                    sequence.dominanceAnalyzer.getImmediateDominators());
             DominanceAnalyzer.dumpDominatorTree("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\reverse_dominator_tree_" + sequence.function + ".dot",
-                    dominanceAnalyzer.getReverseImmediateDominators());
+                    sequence.dominanceAnalyzer.getReverseImmediateDominators());
 
             ssaConverter.doPhiPlacement();
             ssaConverter.renameVariables();
 
             DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\ssa_cfg_pre_opt_" + sequence.function + ".dot",
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\ssa_rcfg_pre_opt_" + sequence.function + ".dot",
-                    dominanceAnalyzer.getBasicBlocks());
+                    sequence.dominanceAnalyzer.getBasicBlocks());
 
-            addOptimizationPass(new DeadCodeElimination(dominanceAnalyzer));
+            addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
+            addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
@@ -51,14 +54,14 @@ public abstract class Optimizer {
 
             DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\microjava_x64\\test\\debug\\ssa_cfg_post_opt_" + sequence.function + ".dot",
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\ssa_rcfg_post_opt_" + sequence.function + ".dot",
-                    dominanceAnalyzer.getBasicBlocks());
+                    sequence.dominanceAnalyzer.getBasicBlocks());
 
             // eliminating SSA from code
             ssaConverter.toNormalForm();
 
             DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\normal_cfg_post_ssa_" + sequence.function + ".dot",
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\normal_rcfg_post_ssa_" + sequence.function + ".dot",
-                    dominanceAnalyzer.getBasicBlocks());
+                    sequence.dominanceAnalyzer.getBasicBlocks());
         }
     }
 

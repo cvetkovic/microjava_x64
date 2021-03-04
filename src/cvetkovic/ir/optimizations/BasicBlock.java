@@ -92,6 +92,13 @@ public class BasicBlock {
         return result;
     }
 
+    public Quadruple getLastInstruction() {
+        if (instructions.size() == 0)
+            throw new RuntimeException("There are no instructions in the block.");
+
+        return instructions.get(instructions.size() - 1);
+    }
+
     public static class Tuple<U, V> {
         public U u;
         public V v;
@@ -335,7 +342,7 @@ public class BasicBlock {
     }
 
     public boolean isEntryBlock() {
-        return predecessors.size() == 0;
+        return instructions.stream().filter(p -> p.getInstruction() == IRInstruction.ENTER).count() == 1;
     }
 
     public boolean isExitBlock() {
@@ -445,5 +452,16 @@ public class BasicBlock {
         result.remove(this);
 
         return result;
+    }
+
+    public String getLabelName() {
+        if (instructions.size() == 0)
+            throw new RuntimeException("Invalid basic block to get label name.");
+
+        Quadruple firstInstruction = instructions.get(0);
+        if (firstInstruction.getInstruction() != IRInstruction.GEN_LABEL)
+            throw new RuntimeException("Invalid basic block to get label name (first instruction is not GEN_LABEL).");
+
+        return ((QuadrupleLabel) firstInstruction.getArg1()).getLabelName();
     }
 }

@@ -5,33 +5,33 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
+import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
+import javax.swing.plaf.basic.BasicOptionPaneUI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DeadCodeElimination implements OptimizerPass {
 
-    private final DominanceAnalyzer dominanceAnalyzer;
+    private final CodeSequence sequence;
     private final Set<Quadruple> marked = new HashSet<>();
 
-    public DeadCodeElimination(DominanceAnalyzer dominanceAnalyzer) {
-        this.dominanceAnalyzer = dominanceAnalyzer;
-
-        // TODO: check if code is in SSA form
+    public DeadCodeElimination(CodeSequence sequence) {
+        this.sequence = sequence;
     }
 
     @Override
     public void optimize() {
         mark();
         sweep();
+
+        System.out.println("Dead code elimination completed.");
     }
 
     @Override
     public void finalizePass() {
-        // simplify CFG
-        // removal of unreachable blocks
+
     }
 
     /**
@@ -79,7 +79,7 @@ public class DeadCodeElimination implements OptimizerPass {
         Map<Obj, Set<Quadruple>> defined = new HashMap<>();
         Map<Quadruple, BasicBlock> quadrupleBelongsTo = new HashMap<>();
 
-        for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
+        for (BasicBlock block : sequence.dominanceAnalyzer.getBasicBlocks()) {
             for (Quadruple q : block.instructions) {
                 // building the defined map
                 quadrupleBelongsTo.put(q, block);
@@ -97,8 +97,6 @@ public class DeadCodeElimination implements OptimizerPass {
 
                     set.add(q);
                 }
-
-                // TODO: what to do with instructions that alter the global variables
 
                 // mark only critical instructions
                 if (isCritical(q)) {
@@ -187,7 +185,7 @@ public class DeadCodeElimination implements OptimizerPass {
                 }
             }
 
-            Map<BasicBlock, Set<BasicBlock>> RDF = dominanceAnalyzer.getReverseDominanceFrontier();
+            Map<BasicBlock, Set<BasicBlock>> RDF = sequence.dominanceAnalyzer.getReverseDominanceFrontier();
             BasicBlock quadrupleIsIn = quadrupleBelongsTo.get(instruction);
             for (BasicBlock b : RDF.get(quadrupleIsIn)) {
                 Quadruple cmp = b.instructions.get(b.instructions.size() - 2);
@@ -215,7 +213,7 @@ public class DeadCodeElimination implements OptimizerPass {
      * nearest useful post-dominator.
      */
     private void sweep() {
-        for (BasicBlock block : dominanceAnalyzer.getBasicBlocks()) {
+        for (BasicBlock block : sequence.dominanceAnalyzer.getBasicBlocks()) {
             Set<Quadruple> toRemove = new HashSet<>();
 
             boolean branchRemoved = false;
@@ -236,15 +234,25 @@ public class DeadCodeElimination implements OptimizerPass {
 
             block.instructions.removeAll(toRemove);
             if (branchRemoved) {
-                BasicBlock successor = dominanceAnalyzer.getReverseImmediateDominators().get(block);
+                BasicBlock successor = findFirstUsefulRDFBlock(block);
+                //sequence.dominanceAnalyzer.getReverseImmediateDominators().get(block);
 
                 Quadruple rewrittenJump = new Quadruple(IRInstruction.JMP);
                 rewrittenJump.setResult(new QuadrupleLabel(successor.instructions.get(0).getArg1().toString()));
                 block.instructions.add(rewrittenJump);
 
+                for (BasicBlock s : block.successors)
+                    s.predecessors.remove(block);
+                successor.predecessors.add(block);
+
                 block.successors.clear();
                 block.successors.add(successor);
             }
         }
+    }
+
+    public BasicBlock findFirstUsefulRDFBlock(BasicBlock block) {
+        // TODO: find first useful postdominator -> walk up the postdominator tree until finding a block that contains a useful operation
+        return sequence.dominanceAnalyzer.getReverseImmediateDominators().get(block);
     }
 }
