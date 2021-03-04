@@ -4,13 +4,14 @@ import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
-import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
-import javax.swing.plaf.basic.BasicOptionPaneUI;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Map.Entry.comparingByKey;
 
 public class DeadCodeElimination implements OptimizerPass {
 
@@ -234,8 +235,7 @@ public class DeadCodeElimination implements OptimizerPass {
 
             block.instructions.removeAll(toRemove);
             if (branchRemoved) {
-                BasicBlock successor = findFirstUsefulRDFBlock(block);
-                //sequence.dominanceAnalyzer.getReverseImmediateDominators().get(block);
+                BasicBlock successor = findFirstUsefulPostdominatorBlock(block);
 
                 Quadruple rewrittenJump = new Quadruple(IRInstruction.JMP);
                 rewrittenJump.setResult(new QuadrupleLabel(successor.instructions.get(0).getArg1().toString()));
@@ -251,8 +251,59 @@ public class DeadCodeElimination implements OptimizerPass {
         }
     }
 
-    public BasicBlock findFirstUsefulRDFBlock(BasicBlock block) {
-        // TODO: find first useful postdominator -> walk up the postdominator tree until finding a block that contains a useful operation
-        return sequence.dominanceAnalyzer.getReverseImmediateDominators().get(block);
+    private BasicBlock findFirstUsefulPostdominatorBlock(BasicBlock source) {
+        Map<BasicBlock, BasicBlock> previous = new HashMap<>();
+        Map<BasicBlock, Integer> distance = new HashMap<>();
+        PriorityQueue<BasicBlock> Q = new PriorityQueue<>((o1, o2) -> {
+            int distance1 = distance.get(o1);
+            int distance2 = distance.get(o2);
+
+            return Integer.compare(distance1, distance2);
+        });
+
+        for (BasicBlock v : sequence.basicBlocks) {
+            if (v == source)
+                distance.put(source, 0);
+            else
+                distance.put(v, Integer.MAX_VALUE - 1);
+            previous.put(v, null);
+            Q.add(v);
+        }
+
+        while (!Q.isEmpty()) {
+            BasicBlock u = Q.poll();
+
+            // we look at RCFG, hence predecessors
+            for (BasicBlock v : u.successors) {
+                if (!Q.contains(v))
+                    continue;
+
+                int alt = distance.get(u) + 1;
+                if (alt < distance.get(v)) {
+                    distance.put(v, alt);
+                    previous.put(v, u);
+                }
+            }
+        }
+
+        // postdominators = reverse dominators
+        List<BasicBlock> rdomSorted = new ArrayList<>(sequence.dominanceAnalyzer.getReverseDominators().get(source));
+        rdomSorted.remove(source);
+        rdomSorted.sort(Comparator.comparing(distance::get));
+
+        assert rdomSorted.size() > 0;
+        if (rdomSorted.size() > 1)
+            assert distance.get(rdomSorted.get(0)) <= distance.get(rdomSorted.get(1));
+
+        // getting nearest non-empty postdominator
+        BasicBlock toReturn = null;
+        for (int i = 0; i < rdomSorted.size(); i++) {
+            if (!rdomSorted.get(i).isEmpty()) {
+                toReturn = rdomSorted.get(i);
+                break;
+            }
+        }
+
+        return toReturn;
     }
 }
