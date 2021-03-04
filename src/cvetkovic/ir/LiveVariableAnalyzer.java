@@ -34,7 +34,7 @@ public class LiveVariableAnalyzer {
         while (!w.isEmpty()) {
             BasicBlock n = w.poll();
 
-            for (BasicBlock t : n.successor)
+            for (BasicBlock t : n.successors)
                 result.liveOut.get(n).addAll(result.liveIn.get(t));
             Set<Obj> old = new HashSet<>(result.liveIn.get(n));
 
@@ -44,7 +44,7 @@ public class LiveVariableAnalyzer {
             result.liveIn.put(n, newSet);
 
             if (!newSet.equals(old))
-                w.addAll(n.predecessor);
+                w.addAll(n.predecessors);
         }
 
         return result;

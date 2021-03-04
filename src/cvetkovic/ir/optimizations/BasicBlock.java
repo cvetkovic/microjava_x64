@@ -21,8 +21,8 @@ public class BasicBlock {
     private static int blockCounter = 0;
     public int blockId = blockCounter++;
 
-    public List<BasicBlock> predecessor = new ArrayList<>();
-    public List<BasicBlock> successor = new ArrayList<>(2);
+    public List<BasicBlock> predecessors = new ArrayList<>();
+    public List<BasicBlock> successors = new ArrayList<>(2);
 
     public List<Quadruple> instructions = new ArrayList<>();
 
@@ -90,6 +90,13 @@ public class BasicBlock {
         }
 
         return result;
+    }
+
+    public Quadruple getLastInstruction() {
+        if (instructions.size() == 0)
+            throw new RuntimeException("There are no instructions in the block.");
+
+        return instructions.get(instructions.size() - 1);
     }
 
     public static class Tuple<U, V> {
@@ -184,8 +191,8 @@ public class BasicBlock {
             List<Integer> followers = t.v;
 
             for (Integer i : followers) {
-                b.successor.add(firstInstruction.get(i));
-                firstInstruction.get(i).predecessor.add(b);
+                b.successors.add(firstInstruction.get(i));
+                firstInstruction.get(i).predecessors.add(b);
             }
         }
 
@@ -240,7 +247,7 @@ public class BasicBlock {
 
             // if basic block just falls through then add explicit JMP
             if (!IRInstruction.isJumpInstruction(lastInstruction.getInstruction()) && block.hasSuccessors()) {
-                BasicBlock followingBlock = block.successor.get(0);
+                BasicBlock followingBlock = block.successors.get(0);
 
                 Quadruple firstTargetInstruction = followingBlock.instructions.get(0);
                 QuadrupleLabel targetJump;
@@ -267,8 +274,8 @@ public class BasicBlock {
                 block.instructions.add(block.instructions.size() - 1, cmp);
                 block.allVariables.add(cmpResult);
 
-                BasicBlock successor1 = block.successor.get(0);
-                BasicBlock successor2 = block.successor.get(1);
+                BasicBlock successor1 = block.successors.get(0);
+                BasicBlock successor2 = block.successors.get(1);
                 BasicBlock addInstructionIn = successor1;
 
                 String trueDestination = ((QuadrupleLabel) lastInstruction.getResult()).getLabelName();
@@ -301,7 +308,7 @@ public class BasicBlock {
     //////////////////////////////////////////////////////////////////////////////////
 
     private boolean hasSuccessors() {
-        return successor.size() > 0;
+        return successors.size() > 0;
     }
 
     private Collection<Obj> extractAllVariables() {
@@ -335,23 +342,23 @@ public class BasicBlock {
     }
 
     public boolean isEntryBlock() {
-        return predecessor.size() == 0;
+        return instructions.stream().filter(p -> p.getInstruction() == IRInstruction.ENTER).count() == 1;
     }
 
     public boolean isExitBlock() {
-        return successor.size() == 0;
+        return successors.size() == 0;
     }
 
     @Override
     public String toString() {
         final StringBuilder p = new StringBuilder();
         p.append("(");
-        predecessor.forEach(x -> p.append(x.blockId).append(", "));
+        predecessors.forEach(x -> p.append(x.blockId).append(", "));
         p.append(")");
 
         final StringBuilder s = new StringBuilder();
         s.append("(");
-        successor.forEach(x -> s.append(x.blockId).append(", "));
+        successors.forEach(x -> s.append(x.blockId).append(", "));
         s.append(")");
 
         return "[id = " + blockId +
@@ -376,6 +383,7 @@ public class BasicBlock {
                     // memory
                 case LOAD:
                 case STORE:
+                case STORE_PHI:
                 case MALLOC:
                 case ALOAD:
                 case ASTORE:
@@ -396,5 +404,64 @@ public class BasicBlock {
         }
 
         return result;
+    }
+
+    public boolean isEmpty() {
+        return instructions.size() == 2 &&
+                instructions.get(0).getInstruction() == IRInstruction.GEN_LABEL &&
+                instructions.get(1).getInstruction() == IRInstruction.JMP;
+    }
+
+    public Set<BasicBlock> getAllPredecessors() {
+        Set<BasicBlock> result = new HashSet<>();
+
+        Stack<BasicBlock> stack = new Stack<>();
+        stack.push(this);
+        while (!stack.isEmpty()) {
+            BasicBlock current = stack.pop();
+
+            for (BasicBlock child : current.predecessors)
+                if (!result.contains(current))
+                    stack.push(child);
+
+            result.add(current);
+        }
+
+        // initial is not a successor
+        result.remove(this);
+
+        return result;
+    }
+
+    public Set<BasicBlock> getAllSuccessors() {
+        Set<BasicBlock> result = new HashSet<>();
+
+        Stack<BasicBlock> stack = new Stack<>();
+        stack.push(this);
+        while (!stack.isEmpty()) {
+            BasicBlock current = stack.pop();
+
+            for (BasicBlock child : current.successors)
+                if (!result.contains(current))
+                    stack.push(child);
+
+            result.add(current);
+        }
+
+        // initial is not a successor
+        result.remove(this);
+
+        return result;
+    }
+
+    public String getLabelName() {
+        if (instructions.size() == 0)
+            throw new RuntimeException("Invalid basic block to get label name.");
+
+        Quadruple firstInstruction = instructions.get(0);
+        if (firstInstruction.getInstruction() != IRInstruction.GEN_LABEL)
+            throw new RuntimeException("Invalid basic block to get label name (first instruction is not GEN_LABEL).");
+
+        return ((QuadrupleLabel) firstInstruction.getArg1()).getLabelName();
     }
 }

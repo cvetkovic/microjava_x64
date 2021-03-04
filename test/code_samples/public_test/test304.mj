@@ -77,6 +77,9 @@ program MJProgram
 		char choice;
 	{
 		shapes = new Shape[size];
+		index = 0;
+		O = 0;
+		P = 0;
 
 		read(choice);
 		for (; choice != '.' && index < size;)

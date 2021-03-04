@@ -1,0 +1,37 @@
+program MJProgram
+{
+    int fun(int a, int b, int c, int n) // 1 2 3 4
+        int x, y, i;
+    {
+        x=17+a;             // T 18
+        y=a;                // T 1
+        i=0;                // T 0
+        if (x==0) {         // T
+            b=x+1;
+        }
+        else {
+            if (x == 1) {                // goto i=y
+                b=x+2;
+            }
+            else {
+                b=x+3; // 21
+            }
+
+            i=y; // 1
+        }
+
+        for (; i<n;) {         // T 1 2 3 (i = 1, 2, 3)
+            c=c+y;             // T 4 5 6
+            i=i+1;             // T 2 3 4
+        }
+
+        return c;              // T 6
+    }
+
+	void main()
+	    int k;
+	{
+	    k = fun(1,2,3,4);
+	    print(k);
+	}
+}

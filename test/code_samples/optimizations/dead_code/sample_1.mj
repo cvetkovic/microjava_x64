@@ -1,0 +1,17 @@
+program MJProgram
+{
+	void main()
+	    int i, j, k, t;
+	{
+	    t = 0;
+	    t = 1;
+
+	    if (t == 0)
+	        t = 2;
+	    else
+	        t = 3;
+
+	    t = 4;
+	    print(t);
+	}
+}
