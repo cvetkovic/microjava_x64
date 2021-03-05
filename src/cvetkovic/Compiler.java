@@ -1,5 +1,6 @@
 package cvetkovic;
 
+import cvetkovic.exceptions.UninitializedVariableException;
 import cvetkovic.ir.IRCodeGenerator;
 import cvetkovic.ir.optimizations.IROptimizer;
 import cvetkovic.ir.quadruple.Quadruple;
@@ -30,16 +31,13 @@ public class Compiler {
             if (s.toLowerCase().equals("-help")) {
                 showHelp = true;
                 break;
-            }
-            else if (s.toLowerCase().equals("-input")) {
+            } else if (s.toLowerCase().equals("-input")) {
                 setInputFile = true;
                 setOutputFile = false;
-            }
-            else if (s.toLowerCase().equals("-output")) {
+            } else if (s.toLowerCase().equals("-output")) {
                 setOutputFile = true;
                 setInputFile = false;
-            }
-            else if (s.toLowerCase().equals("-dump_ast"))
+            } else if (s.toLowerCase().equals("-dump_ast"))
                 dumpAST = true;
             else if (s.toLowerCase().equals("-dump_symbols"))
                 dumpSymbolTable = true;
@@ -147,11 +145,13 @@ public class Compiler {
                 }
 
                 System.out.println("================ COMPILATION DONE ================");
-            }
-            else if (parser.isErrorDetected())
+            } else if (parser.isErrorDetected())
                 System.out.println("Error during syntax analysis. Semantic analyze and code generation aborted.");
             else if (semanticCheck.isErrorDetected())
                 System.out.println("Error during semantic analysis. Code generation aborted.");
+        } catch (UninitializedVariableException ex) {
+            System.err.println(ex.getMessage());
+            System.exit(1);
         }
     }
 

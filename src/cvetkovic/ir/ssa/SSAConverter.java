@@ -150,8 +150,9 @@ public class SSAConverter {
         }
 
         // patching the successors of a basic block with respect to the CFG
+        // TODO: not sure if here go all successors or just first successors
         Set<BasicBlock> allSuccessors = n.getAllSuccessors();
-        for (BasicBlock Y : allSuccessors) {
+        for (BasicBlock Y : n.successors) {
             for (Quadruple statement : Y.instructions) {
                 if (statement.getInstruction() != IRInstruction.STORE_PHI)
                     continue;

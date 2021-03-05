@@ -1,0 +1,19 @@
+program MJProgram
+{
+	void main()
+	    int t;
+	    int i;
+	    int k;
+	{
+	    read(t);
+
+	    if (t == 0)
+	        i = 0;
+	    else
+	        i = 1;
+
+	    print(i);
+
+	    // no exception
+	}
+}

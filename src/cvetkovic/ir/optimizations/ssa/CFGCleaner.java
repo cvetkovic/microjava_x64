@@ -105,6 +105,7 @@ public class CFGCleaner implements OptimizerPass {
 
                     i.instructions.add(newJump);
                     i.successors.remove(0); // remove any
+                    i.successors.get(0).predecessors.remove(i);
                     assert i.successors.size() == 1;
 
                     changed = true;
@@ -175,9 +176,11 @@ public class CFGCleaner implements OptimizerPass {
 
         assert predecessor.successors.contains(current);
         predecessor.successors.remove(current);
+        //if (!predecessor.successors.contains(successor))
         predecessor.successors.add(successor);
 
         successor.predecessors.remove(current);
+        //if (!successor.predecessors.contains(predecessor))
         successor.predecessors.add(predecessor);
 
         //current.predecessors.clear();

@@ -1,0 +1,13 @@
+program MJProgram
+{
+	void main()
+		int i;
+	{
+		if (i == 0) {
+		}
+		else {
+		}
+
+		print(i);
+	}
+}
