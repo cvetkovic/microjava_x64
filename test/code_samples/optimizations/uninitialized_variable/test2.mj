@@ -1,0 +1,17 @@
+program MJProgram
+{
+	void main()
+	    int t;
+	    int i;
+	    int k;
+	{
+	    read(t);
+
+	    if (t == 0)
+	        i = 0;
+
+	    print(i);
+
+	    // exception -> i not defined on all code paths
+	}
+}

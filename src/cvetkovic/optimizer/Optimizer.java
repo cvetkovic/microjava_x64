@@ -3,6 +3,7 @@ package cvetkovic.optimizer;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.optimizations.ssa.CFGCleaner;
 import cvetkovic.ir.optimizations.ssa.DeadCodeElimination;
+import cvetkovic.ir.optimizations.ssa.UninitializedVariableDetection;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
 
@@ -45,8 +46,9 @@ public abstract class Optimizer {
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\ssa_rcfg_pre_opt_" + sequence.function + ".dot",
                     sequence.dominanceAnalyzer.getBasicBlocks());
 
-            addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
-            addOptimizationPass(new CFGCleaner(sequence));
+            addOptimizationPass(new UninitializedVariableDetection(sequence));
+            //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
+            //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
