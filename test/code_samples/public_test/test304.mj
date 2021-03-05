@@ -81,6 +81,11 @@ program MJProgram
 		O = 0;
 		P = 0;
 
+        // the following three lines had to be inserted because of uninitialized variable detection
+		x = 0;
+		y = 0;
+		z = 0;
+
 		read(choice);
 		for (; choice != '.' && index < size;)
 		{
