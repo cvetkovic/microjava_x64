@@ -1,6 +1,7 @@
 package cvetkovic.ir.optimizations.ssa;
 
 import cvetkovic.exceptions.UninitializedVariableException;
+import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
@@ -30,14 +31,21 @@ public class UninitializedVariableDetection implements OptimizerPass {
                 QuadrupleVariable arg1 = instruction.getArg1();
                 QuadrupleVariable arg2 = instruction.getArg2();
 
-                if (arg1 instanceof QuadrupleObjVar && instruction.getSsaArg1Count() == 0)
-                    uninitializedVariables.add(((QuadrupleObjVar) arg1).getObj());
-                else if (arg2 instanceof QuadrupleObjVar && instruction.getSsaArg2Count() == 0)
-                    uninitializedVariables.add(((QuadrupleObjVar) arg2).getObj());
-                else if (arg1 instanceof QuadruplePhi) {
+                if (instruction.getInstruction() == IRInstruction.MALLOC)
+                    continue;
+                else if (instruction.getInstruction() == IRInstruction.INVOKE_VIRTUAL)
+                    continue;
+
+                if (arg1 instanceof QuadrupleObjVar && instruction.getSsaArg1Count() == 0) {
+                    if (!((QuadrupleObjVar) arg1).getObj().parameter)
+                        uninitializedVariables.add(((QuadrupleObjVar) arg1).getObj());
+                } else if (arg2 instanceof QuadrupleObjVar && instruction.getSsaArg2Count() == 0) {
+                    if (!((QuadrupleObjVar) arg2).getObj().parameter)
+                        uninitializedVariables.add(((QuadrupleObjVar) arg2).getObj());
+                } else if (arg1 instanceof QuadruplePhi) {
                     QuadruplePhi phi = (QuadruplePhi) arg1;
                     for (int i = 0; i < phi.size(); i++)
-                        if (phi.getPhiArg(i) == 0)
+                        if (phi.getPhiArg(i) == 0 && !phi.getObj().parameter)
                             uninitializedVariables.add(phi.getObj());
                 }
             }
