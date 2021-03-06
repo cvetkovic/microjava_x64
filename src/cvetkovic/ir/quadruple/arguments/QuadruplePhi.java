@@ -6,11 +6,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class QuadruplePhi extends QuadrupleVariable {
-    private Obj obj;
-    private Set<Integer> varList = new HashSet<>();
+    private final Obj obj;
+    private final Set<Integer> varList = new HashSet<>();
 
     public QuadruplePhi(Obj obj) {
         this.obj = obj;
+    }
+
+    @Override
+    public QuadrupleVariable makeClone() {
+        QuadruplePhi clone = new QuadruplePhi(obj);
+        clone.varList.addAll(varList);
+
+        return clone;
     }
 
     public void setPhiArg(int cnt) {

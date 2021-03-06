@@ -1,7 +1,7 @@
 package cvetkovic.ir.quadruple.arguments;
 
 public class QuadrupleLabel extends QuadrupleVariable {
-    private String labelName;
+    protected final String labelName;
 
     public QuadrupleLabel(String labelName) {
         this.labelName = labelName;
@@ -14,5 +14,10 @@ public class QuadrupleLabel extends QuadrupleVariable {
     @Override
     public String toString() {
         return labelName;
+    }
+
+    @Override
+    public QuadrupleVariable makeClone() {
+        return new QuadrupleLabel(labelName);
     }
 }

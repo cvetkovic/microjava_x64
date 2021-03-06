@@ -1,7 +1,7 @@
 package cvetkovic.ir.quadruple.arguments;
 
 public class QuadrupleIntegerConst extends QuadrupleVariable {
-    protected int value;
+    protected final int value;
 
     public QuadrupleIntegerConst(int value) {
         this.value = value;
@@ -14,5 +14,10 @@ public class QuadrupleIntegerConst extends QuadrupleVariable {
     @Override
     public String toString() {
         return Integer.toString(value);
+    }
+
+    @Override
+    public QuadrupleVariable makeClone() {
+        return new QuadrupleIntegerConst(value);
     }
 }

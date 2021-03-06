@@ -3,7 +3,7 @@ package cvetkovic.ir.quadruple.arguments;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 public class QuadrupleObjVar extends QuadrupleVariable {
-    protected Obj obj;
+    protected final Obj obj;
 
     public QuadrupleObjVar(Obj obj) {
         this.obj = obj;
@@ -19,5 +19,10 @@ public class QuadrupleObjVar extends QuadrupleVariable {
             return obj.getName().substring(12);
         else
             return obj.toString();
+    }
+
+    @Override
+    public QuadrupleVariable makeClone() {
+        return new QuadrupleObjVar(obj);
     }
 }

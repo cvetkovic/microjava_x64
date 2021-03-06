@@ -5,4 +5,9 @@ public class QuadrupleARR extends QuadrupleVariable {
     public String toString() {
         return "ARR";
     }
+
+    @Override
+    public QuadrupleVariable makeClone() {
+        return new QuadrupleARR();
+    }
 }

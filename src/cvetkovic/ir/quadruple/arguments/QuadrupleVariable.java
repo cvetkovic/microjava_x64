@@ -4,4 +4,6 @@ public abstract class QuadrupleVariable {
     public String toString() {
         return "";
     }
+
+    public abstract QuadrupleVariable makeClone();
 }

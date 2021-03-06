@@ -9,10 +9,7 @@ import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class FunctionInlining implements OptimizerPass {
 
@@ -38,6 +35,8 @@ public class FunctionInlining implements OptimizerPass {
                 }
             }
         }
+
+        // TODO: check that function has less basic blocks than the callee
 
         return allow;
     }
@@ -77,12 +76,50 @@ public class FunctionInlining implements OptimizerPass {
         return result;
     }
 
+    private List<BasicBlock> cloneCFG(Quadruple v, int startCntFrom) {
+        List<BasicBlock> result = new ArrayList<>();
+
+        Obj functionObj = ((QuadrupleObjVar) v.getArg1()).getObj();
+        CodeSequence sequenceToInline = program.stream().filter(p -> p.function == functionObj).findFirst().orElseThrow();
+
+        Map<BasicBlock, BasicBlock> mappingsToClones = new HashMap<>();
+
+        // cloning basic blocks
+        for (BasicBlock block : sequenceToInline.basicBlocks) {
+            BasicBlock clone = block.makeClone();
+            clone.blockId = startCntFrom++;
+
+            // TODO: change label names to be unique
+
+            result.add(clone);
+            mappingsToClones.put(block, clone);
+        }
+
+        // reconnecting CFG
+        for (BasicBlock block : sequenceToInline.basicBlocks) {
+            BasicBlock cloned = mappingsToClones.get(block);
+
+            // successors
+            for (BasicBlock b : block.successors)
+                cloned.successors.add(mappingsToClones.get(b));
+
+            // predecessors
+            for (BasicBlock b : block.predecessors)
+                cloned.predecessors.add(mappingsToClones.get(b));
+        }
+
+        return result;
+    }
+
     @Override
     public void optimize() {
         Set<BasicBlock.Tuple<BasicBlock, Quadruple>> placesToInline = getCallsToInline();
 
         for (BasicBlock.Tuple<BasicBlock, Quadruple> tuple : placesToInline) {
-            List<Quadruple> getParams = getCallParameters(tuple.u, tuple.v);
+            List<Quadruple> callParameters = getCallParameters(tuple.u, tuple.v);
+
+            int maxBlockCnt = currentSequence.basicBlocks.stream().mapToInt(p -> p.blockId).max().orElseThrow();
+            List<BasicBlock> clonedCFG = cloneCFG(tuple.v, maxBlockCnt + 1);
 
             cnt++;
         }

@@ -61,6 +61,19 @@ public class Quadruple {
         this.arg2 = arg2;
     }
 
+    public Quadruple makeClone() {
+        Quadruple q = new Quadruple(instruction);
+
+        if (arg1 != null)
+            q.setArg1(arg1.makeClone());
+        if (arg2 != null)
+            q.setArg2(arg2.makeClone());
+        if (result != null)
+            q.setResult(result.makeClone());
+
+        return q;
+    }
+
     public void setSSACountArg1(int i) {
         ssaArg1Count = i;
     }

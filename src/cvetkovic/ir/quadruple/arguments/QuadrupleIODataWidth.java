@@ -4,7 +4,7 @@ import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class QuadrupleIODataWidth extends QuadrupleVariable {
-    protected DataWidth width;
+    protected final DataWidth width;
 
     public QuadrupleIODataWidth(DataWidth width) {
         this.width = width;
@@ -15,9 +15,13 @@ public class QuadrupleIODataWidth extends QuadrupleVariable {
     }
 
     @Override
+    public QuadrupleVariable makeClone() {
+        return new QuadrupleIODataWidth(width);
+    }
+
+    @Override
     public String toString() {
-        switch (width)
-        {
+        switch (width) {
             case BIT:
                 return "%b";
             case BYTE:
@@ -31,8 +35,7 @@ public class QuadrupleIODataWidth extends QuadrupleVariable {
     }
 
     public Struct ioVarToStruct() {
-        switch (width)
-        {
+        switch (width) {
             case BIT:
                 return SymbolTable.BooleanStruct;
             case BYTE:
