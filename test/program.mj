@@ -1,123 +1,18 @@
 program MJProgram
-	const int size = 10;
-
-	class Point
-	{
-		int x, y;
-		{
-			void setX(int x) { this.x = x; }
-			void setY(int y) { this.y = y; }
-
-			void toString()
-			{
-				print('(');
-				print(x); print(','); print(' '); print(y);
-				print(')');
-			}
-		}
-	}
-
-	abstract class Shape
-	{
-		int r;
-		Point point;
-		{
-			void place(int x, int y, int r)
-			{
-				point = new Point;
-				point.setX(x);
-				point.setY(y);
-				this.r = r;
-			}
-
-			abstract int O();
-			abstract int P();
-			abstract void toString();
-		}
-	}
-
-	class Circle extends Shape
-	{
-		{
-			int O() { return 2 * r * 3; }
-			int P() { return r * r * 3; }
-
-			void toString()
-			{
-				print('C'); print('i'); print('r'); print('c'); print('l'); print('e');
-				print('(');
-				print(r); print(','); print(' '); point.toString();
-				print(')');
-			}
-		}
-	}
-
-	class Square extends Shape
-	{
-		{
-			int O() { return 4 * r; }
-			int P() { return r * r; }
-
-			void toString()
-			{
-				print('S'); print('q'); print('u'); print('a'); print('r'); print('e');
-				print('(');
-				print(r); print(','); print(' '); point.toString();
-				print(')');
-			}
-		}
-	}
-
-	Shape shapes[];
-	int index, O, P;
 {
+    void toInline(char i, char n)
+    {
+        print(i);
+        print(n);
+        print('l');
+        print('i');
+        print('n');
+        print('e');
+    }
+
 	void main()
-		int i;
-		int x, y, z;
-		char choice;
 	{
-		shapes = new Shape[size];
-		index = 0;
-		O = 0;
-		P = 0;
-
-		read(choice);
-		for (; choice != '.' && index < size;)
-		{
-			if (choice == 'c' || choice == 'C')
-			{
-				read(x); read(y); read(z);
-				shapes[index] = new Circle;
-				shapes[index].place(x, y, z);
-			}
-			else if (choice == 's' || choice == 'S')
-			{
-				read(x); read(y); read(z);
-				shapes[index] = new Square;
-				shapes[index].place(x, y, z);
-			}
-			else break;
-
-			O = O + shapes[index].O();
-			P = P + shapes[index].P();
-
-			index++;
-			read(choice);
-		}
-
-		for (i = 0; i < index; i++)
-		{
-			shapes[i].toString();
-			print(chr(10));
-		}
-
-		if (index > 0)
-		{
-			O = O / index;
-			P = P / index;
-		}
-
-		print('O'); print(' '); print('='); print(' '); print(O); print(chr(10));
-		print('P'); print(' '); print('='); print(' '); print(P);
+	    toInline('i', 'n');
+	    print(eol);
 	}
 }

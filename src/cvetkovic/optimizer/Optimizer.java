@@ -3,6 +3,7 @@ package cvetkovic.optimizer;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.optimizations.ssa.CFGCleaner;
 import cvetkovic.ir.optimizations.ssa.DeadCodeElimination;
+import cvetkovic.ir.optimizations.ssa.FunctionInlining;
 import cvetkovic.ir.optimizations.ssa.UninitializedVariableDetection;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
@@ -28,6 +29,19 @@ public abstract class Optimizer {
     public void executeOptimizations() {
         assert globalVariables != null;
 
+        // non-SSA optimizations
+        for (CodeSequence sequence : codeSequenceList) {
+            // DO NOT REMOVE THIS LINE
+            optimizationList.clear();
+
+            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            for (OptimizerPass pass : optimizationList) {
+                pass.optimize();
+                pass.finalizePass();
+            }
+        }
+
+        // SSA optimizations
         for (CodeSequence sequence : codeSequenceList) {
             sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
             SSAConverter ssaConverter = new SSAConverter(sequence.dominanceAnalyzer);
