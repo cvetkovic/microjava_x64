@@ -3,8 +3,10 @@ package cvetkovic.ir.optimizations.ssa;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
+import cvetkovic.misc.Config;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -89,7 +91,7 @@ public class FunctionInlining implements OptimizerPass {
             BasicBlock clone = block.makeClone();
             clone.blockId = startCntFrom++;
 
-            // TODO: change label names to be unique
+            // NOTE: labels are renamed to be unique in QuadrupleLabel.makeClone()
 
             result.add(clone);
             mappingsToClones.put(block, clone);
@@ -119,10 +121,90 @@ public class FunctionInlining implements OptimizerPass {
             List<Quadruple> callParameters = getCallParameters(tuple.u, tuple.v);
 
             int maxBlockCnt = currentSequence.basicBlocks.stream().mapToInt(p -> p.blockId).max().orElseThrow();
+            BasicBlock leftoversFromCurrentBlock = createLeftoversBlock(tuple.u, tuple.v, ++maxBlockCnt);
+
             List<BasicBlock> clonedCFG = cloneCFG(tuple.v, maxBlockCnt + 1);
+            BasicBlock inlinedStartBlock = clonedCFG.stream().filter(BasicBlock::isEntryBlock).findFirst().orElseThrow();
+            BasicBlock inlinedEndBlock = clonedCFG.stream().filter(BasicBlock::isExitBlock).findFirst().orElseThrow();
+
+            // TODO: fix call parameters
+            // TODO: clean ENTER and LEAVE
+            // TODO: see what to do with stack frame size -> change addresses
+            embedFunction(tuple.u, tuple.v, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
+            addJumps(tuple.u, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
+            removeStackFrameInstructions(inlinedStartBlock, inlinedEndBlock);
+
+            currentSequence.basicBlocks.add(leftoversFromCurrentBlock);
+            currentSequence.basicBlocks.addAll(clonedCFG);
 
             cnt++;
+            Config.inlinedCounter++;
         }
+    }
+
+    private void removeStackFrameInstructions(BasicBlock inlinedStartBlock, BasicBlock inlinedEndBlock) {
+        Quadruple enterInstruction = inlinedStartBlock.instructions.
+                stream().filter(p -> p.getInstruction() == IRInstruction.ENTER).findFirst().orElseThrow();
+        inlinedStartBlock.instructions.remove(enterInstruction);
+
+        Quadruple leaveInstruction = inlinedEndBlock.instructions.
+                stream().filter(p -> p.getInstruction() == IRInstruction.LEAVE).findFirst().orElseThrow();
+        inlinedEndBlock.instructions.remove(leaveInstruction);
+    }
+
+    private void addJumps(BasicBlock startFrom,
+                          BasicBlock inlinedStartBlock,
+                          BasicBlock inlinedEndBlock,
+                          BasicBlock leftoversFromCurrentBlock) {
+        Quadruple startFromJMP = new Quadruple(IRInstruction.JMP);
+        startFromJMP.setResult(new QuadrupleLabel(inlinedStartBlock.getLabelName()));
+        startFrom.instructions.add(startFromJMP);
+
+        Quadruple inlinedEndBlockJMP = new Quadruple(IRInstruction.JMP);
+        inlinedEndBlockJMP.setResult(new QuadrupleLabel(leftoversFromCurrentBlock.getLabelName()));
+        inlinedEndBlock.instructions.add(inlinedEndBlockJMP);
+    }
+
+    private BasicBlock createLeftoversBlock(BasicBlock block, Quadruple instruction, int newBlockID) {
+        int indexOfInstruction = block.instructions.indexOf(instruction);
+        BasicBlock newBlock = new BasicBlock(block.enclosingFunction);
+
+        newBlock.blockId = newBlockID;
+        // TODO: set newBlock all variables
+
+        Set<Quadruple> toRemove = new HashSet<>();
+
+        Quadruple genVar = new Quadruple(IRInstruction.GEN_LABEL);
+        genVar.setArg1(new QuadrupleLabel(Config.leftoversBlockPrefix + "_" + Config.leftoversLabelGenerator++));
+        newBlock.instructions.add(genVar);
+
+        for (int i = indexOfInstruction + 1; i < block.instructions.size(); i++) {
+            newBlock.instructions.add(block.instructions.get(i));
+            toRemove.add(block.instructions.get(i));
+        }
+
+        block.instructions.removeAll(toRemove);
+        return newBlock;
+    }
+
+    private void embedFunction(BasicBlock startFrom,
+                               Quadruple callInstruction,
+                               BasicBlock inlinedStartBlock,
+                               BasicBlock inlinedEndBlock,
+                               BasicBlock leftoversFromCurrentBlock) {
+        // link control flow graph vertices
+        inlinedStartBlock.predecessors.add(startFrom);
+        inlinedEndBlock.successors.add(leftoversFromCurrentBlock);
+
+        leftoversFromCurrentBlock.predecessors.add(inlinedEndBlock);
+        leftoversFromCurrentBlock.successors.addAll(startFrom.successors);
+
+        startFrom.successors.clear();
+        startFrom.successors.add(inlinedStartBlock);
+
+        // TODO: move to a separate function
+        // deleting call instruction
+        startFrom.instructions.remove(callInstruction);
     }
 
     public void finalizePass() {

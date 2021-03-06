@@ -1,5 +1,7 @@
 package cvetkovic.ir.quadruple.arguments;
 
+import cvetkovic.misc.Config;
+
 public class QuadrupleLabel extends QuadrupleVariable {
     protected final String labelName;
 
@@ -18,6 +20,6 @@ public class QuadrupleLabel extends QuadrupleVariable {
 
     @Override
     public QuadrupleVariable makeClone() {
-        return new QuadrupleLabel(labelName);
+        return new QuadrupleLabel(labelName + "_inl_" + Config.inlinedCounter);
     }
 }

@@ -1,6 +1,6 @@
 program MJProgram
 {
-    void toInline(char i, char n)
+    void toInline(char i, char n, int x)
     {
         print(i);
         print(n);
@@ -8,11 +8,14 @@ program MJProgram
         print('i');
         print('n');
         print('e');
+
+        if (x == 1)
+            print('d');
     }
 
 	void main()
 	{
-	    toInline('i', 'n');
+	    toInline('i', 'n', 1);
 	    print(eol);
 	}
 }
