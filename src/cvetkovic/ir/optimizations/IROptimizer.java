@@ -42,7 +42,7 @@ public class IROptimizer extends Optimizer {
 
             Collection<Obj> allVariables = new HashSet<>();
             for (BasicBlock b : sequence.basicBlocks) {
-                allVariables.addAll(extractAllVariables(b.instructions));
+                allVariables.addAll(b.extractAllVariables());
                 allVariables.addAll(new HashSet<>(sequence.function.getLocalSymbols()));
             }
 
@@ -56,27 +56,6 @@ public class IROptimizer extends Optimizer {
             codeSequenceList.add(sequence);
             i++;
         }
-    }
-
-    private Collection<Obj> extractAllVariables(List<Quadruple> allInstructions) {
-        Set<Obj> objs = new HashSet<>();
-
-        for (Quadruple q : allInstructions) {
-            Obj obj1 = (q.getArg1() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) q.getArg1()).getObj() : null);
-            Obj obj2 = (q.getArg2() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) q.getArg2()).getObj() : null);
-            Obj objResult = (q.getResult() instanceof QuadrupleObjVar ? ((QuadrupleObjVar) q.getResult()).getObj() : null);
-
-            if (obj1 != null && obj1.getKind() != Obj.Con)
-                objs.add(obj1);
-
-            if (obj2 != null && obj2.getKind() != Obj.Con)
-                objs.add(obj2);
-
-            if (objResult != null && objResult.getKind() != Obj.Con)
-                objs.add(objResult);
-        }
-
-        return objs;
     }
 
     public static int giveAddressToTemps(Collection<Obj> variables, int startValue) {

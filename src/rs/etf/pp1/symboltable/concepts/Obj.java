@@ -24,6 +24,7 @@ public class Obj {
     public boolean tempVar = false;
     public boolean parameter = false;
     public boolean stackParameter = false;
+    public boolean inlined = false;
 
     private String name;
     public int uniqueID;
@@ -155,8 +156,7 @@ public class Obj {
                     return false;
             }
             return true;
-        }
-        else
+        } else
             return false;
     }
 

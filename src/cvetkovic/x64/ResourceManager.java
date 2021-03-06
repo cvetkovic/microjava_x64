@@ -126,7 +126,7 @@ public class ResourceManager {
      * remove from free register list if is present there.
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
-        if (newObj.getAdr() ==-1)
+        if (newObj.getAdr() == -1)
             throw new RuntimeException("Address of obj cannot be negative. Operand fetching has failed.");
 
         try {
@@ -210,8 +210,7 @@ public class ResourceManager {
                 !reservedRegisters.contains(addressDescriptor.getDescriptor())) {
             // CASE: obj is already in register, no action needed
             return (RegisterDescriptor) addressDescriptor.getDescriptor();
-        }
-        else if ((addressDescriptor == null || addressDescriptor.getDescriptor() instanceof MemoryDescriptor) &&
+        } else if ((addressDescriptor == null || addressDescriptor.getDescriptor() instanceof MemoryDescriptor) &&
                 freeRegisters.size() > 0) {
             // CASE: var not encountered before or is not in a register and there are free registers
             // take a register from the list and return
@@ -446,8 +445,7 @@ public class ResourceManager {
                     freeRegisters.remove(var.parameterDescriptor);*/
                 }
             }
-        }
-        else
+        } else
             throw new RuntimeException("Invalid parameter.");
     }
 

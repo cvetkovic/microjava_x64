@@ -40,6 +40,9 @@ public class FunctionInlining implements OptimizerPass {
 
         // TODO: check that function has less basic blocks than the callee
 
+        if (allow)
+            inlinedFunction.inlined = true;
+
         return allow;
     }
 
@@ -127,12 +130,12 @@ public class FunctionInlining implements OptimizerPass {
             BasicBlock inlinedStartBlock = clonedCFG.stream().filter(BasicBlock::isEntryBlock).findFirst().orElseThrow();
             BasicBlock inlinedEndBlock = clonedCFG.stream().filter(BasicBlock::isExitBlock).findFirst().orElseThrow();
 
-            // TODO: fix call parameters
-            // TODO: clean ENTER and LEAVE
-            // TODO: see what to do with stack frame size -> change addresses
+            // TODO: see what to do with stack frame size -> change addresses fix
+            // TODO: temps can overwrite some stack variables -> change address fix
             embedFunction(tuple.u, tuple.v, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
             addJumps(tuple.u, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
             removeStackFrameInstructions(inlinedStartBlock, inlinedEndBlock);
+            fixCallParameters(tuple.u, callParameters, tuple.v);
 
             currentSequence.basicBlocks.add(leftoversFromCurrentBlock);
             currentSequence.basicBlocks.addAll(clonedCFG);
@@ -140,6 +143,28 @@ public class FunctionInlining implements OptimizerPass {
             cnt++;
             Config.inlinedCounter++;
         }
+    }
+
+    private void fixCallParameters(BasicBlock startFrom, List<Quadruple> callParameters, Quadruple callInstruction) {
+        Obj functionObj = ((QuadrupleObjVar) callInstruction.getArg1()).getObj();
+
+        List<Quadruple> storeInstructions = new ArrayList<>();
+
+        int i = 0;
+        for (Obj params : functionObj.getLocalSymbols()) {
+            Quadruple store = new Quadruple(IRInstruction.STORE);
+
+            store.setArg1(callParameters.get(i++).getArg1().makeClone());
+            store.setResult(new QuadrupleObjVar(params));
+
+            storeInstructions.add(store);
+
+            startFrom.allVariables.add(params);
+            params.inlined = true;
+        }
+
+        startFrom.instructions.removeAll(callParameters);
+        startFrom.instructions.addAll(startFrom.instructions.size() - 1, storeInstructions);
     }
 
     private void removeStackFrameInstructions(BasicBlock inlinedStartBlock, BasicBlock inlinedEndBlock) {
@@ -170,7 +195,7 @@ public class FunctionInlining implements OptimizerPass {
         BasicBlock newBlock = new BasicBlock(block.enclosingFunction);
 
         newBlock.blockId = newBlockID;
-        // TODO: set newBlock all variables
+        newBlock.allVariables = newBlock.extractAllVariables();
 
         Set<Quadruple> toRemove = new HashSet<>();
 

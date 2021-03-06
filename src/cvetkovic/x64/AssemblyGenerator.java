@@ -157,7 +157,7 @@ public class AssemblyGenerator {
     private void createAddressDescriptors(BasicBlock basicBlock) {
         List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.allVariables)
-            if (!var.parameter)
+            if (!var.parameter || var.inlined)
                 memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
         for (Obj var : basicBlock.enclosingFunction.getLocalSymbols()) {
             if (var.parameter) {
@@ -275,6 +275,9 @@ public class AssemblyGenerator {
         writer.write(System.lineSeparator());
 
         for (CodeSequence codeSequence : codeSequences) {
+            if (codeSequence.inlined)
+                continue;
+
             for (BasicBlock basicBlock : Optimizer.reassembleBasicBlocks(codeSequence.basicBlocks)) {
                 List<String> aux = new ArrayList<>();
                 boolean cancelSaveDirtyVals = false;

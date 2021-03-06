@@ -16,4 +16,6 @@ public class CodeSequence {
 
     public BasicBlock entryBlock;
     public DominanceAnalyzer dominanceAnalyzer;
+
+    public boolean inlined = false;
 }

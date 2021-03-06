@@ -326,7 +326,7 @@ public class BasicBlock {
         return successors.size() > 0;
     }
 
-    private Collection<Obj> extractAllVariables() {
+    public Collection<Obj> extractAllVariables() {
         Set<Obj> variables = new HashSet<>();
 
         for (Quadruple q : instructions) {
