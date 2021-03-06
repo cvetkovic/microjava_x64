@@ -6,6 +6,7 @@ import cvetkovic.ir.optimizations.ssa.DeadCodeElimination;
 import cvetkovic.ir.optimizations.ssa.UninitializedVariableDetection;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
+import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
 
@@ -13,6 +14,8 @@ public abstract class Optimizer {
 
     private List<OptimizerPass> optimizationList = new ArrayList<>();
     protected List<CodeSequence> codeSequenceList = new ArrayList<>();
+
+    protected Set<Obj> globalVariables;
 
     protected Optimizer() {
 
@@ -23,6 +26,8 @@ public abstract class Optimizer {
     }
 
     public void executeOptimizations() {
+        assert globalVariables != null;
+
         for (CodeSequence sequence : codeSequenceList) {
             sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
             SSAConverter ssaConverter = new SSAConverter(sequence.dominanceAnalyzer);
@@ -46,7 +51,7 @@ public abstract class Optimizer {
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\ssa_rcfg_pre_opt_" + sequence.function + ".dot",
                     sequence.dominanceAnalyzer.getBasicBlocks());
 
-            addOptimizationPass(new UninitializedVariableDetection(sequence));
+            addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
             //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
