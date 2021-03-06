@@ -111,7 +111,7 @@ public class Compiler {
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
                 List<Obj> functions = irCodeGenerator.getFunctionsObj();
-                IROptimizer irCodeOptimizer = new IROptimizer(irCode, functions);
+                IROptimizer irCodeOptimizer = new IROptimizer(irCode, functions, semanticCheck.getGlobalVariables());
                 String IRCodeToPrintPre = null;
                 String IRCodeToPrintPost = null;
 

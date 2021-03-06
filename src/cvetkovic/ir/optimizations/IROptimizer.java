@@ -15,8 +15,10 @@ import java.util.List;
 import java.util.Set;
 
 public class IROptimizer extends Optimizer {
-    public IROptimizer(List<List<Quadruple>> code, List<Obj> functions) {
+    public IROptimizer(List<List<Quadruple>> code, List<Obj> functions, Set<Obj> globalVariables) {
         int i = 0;
+
+        this.globalVariables = globalVariables;
 
         for (List<Quadruple> quadrupleList : code) {
             CodeSequence sequence = new CodeSequence();

@@ -17,9 +17,11 @@ import java.util.Set;
 public class UninitializedVariableDetection implements OptimizerPass {
 
     private CodeSequence sequence;
+    private Set<Obj> globalVariables;
 
-    public UninitializedVariableDetection(CodeSequence sequence) {
+    public UninitializedVariableDetection(CodeSequence sequence, Set<Obj> globalVariables) {
         this.sequence = sequence;
+        this.globalVariables = globalVariables;
     }
 
     @Override
@@ -37,11 +39,15 @@ public class UninitializedVariableDetection implements OptimizerPass {
                     continue;
 
                 if (arg1 instanceof QuadrupleObjVar && instruction.getSsaArg1Count() == 0) {
-                    if (!((QuadrupleObjVar) arg1).getObj().parameter)
-                        uninitializedVariables.add(((QuadrupleObjVar) arg1).getObj());
+                    Obj obj = ((QuadrupleObjVar) arg1).getObj();
+
+                    if (!obj.parameter && !globalVariables.contains(obj))
+                        uninitializedVariables.add(obj);
                 } else if (arg2 instanceof QuadrupleObjVar && instruction.getSsaArg2Count() == 0) {
-                    if (!((QuadrupleObjVar) arg2).getObj().parameter)
-                        uninitializedVariables.add(((QuadrupleObjVar) arg2).getObj());
+                    Obj obj = ((QuadrupleObjVar) arg2).getObj();
+
+                    if (!obj.parameter && !globalVariables.contains(obj))
+                        uninitializedVariables.add(obj);
                 } else if (arg1 instanceof QuadruplePhi) {
                     QuadruplePhi phi = (QuadruplePhi) arg1;
                     for (int i = 0; i < phi.size(); i++)
