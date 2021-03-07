@@ -3,6 +3,7 @@ package cvetkovic.ir.optimizations.ssa;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
@@ -15,8 +16,8 @@ import java.util.*;
 
 public class FunctionInlining implements OptimizerPass {
 
-    private CodeSequence currentSequence;
-    private List<CodeSequence> program;
+    private final CodeSequence currentSequence;
+    private final List<CodeSequence> program;
 
     private int cnt = 0;
 
@@ -60,7 +61,7 @@ public class FunctionInlining implements OptimizerPass {
                             continue;
                         default:
                             if (allowToInline(functionObj))
-                                return new BasicBlock.Tuple<BasicBlock, Quadruple>(block, instruction);
+                                return new BasicBlock.Tuple<>(block, instruction);
                     }
                 }
             }
@@ -100,7 +101,7 @@ public class FunctionInlining implements OptimizerPass {
             BasicBlock clone = block.makeClone();
 
             clone.blockId = startCntFrom++;
-            clone.allVariables = clone.extractAllVariables();
+            //clone.allVariables = clone.extractAllVariables();
 
             result.add(clone);
             mappingsToClones.put(block, clone);
@@ -129,6 +130,10 @@ public class FunctionInlining implements OptimizerPass {
         while ((tuple = getCallsToInline()) != null) {
             List<Quadruple> callParameters = getCallParameters(tuple.u, tuple.v);
 
+            int addressOffset = ((QuadrupleIntegerConst) currentSequence.entryBlock.instructions.stream().
+                    filter(p -> p.getInstruction() == IRInstruction.ENTER).findFirst().orElseThrow().getArg1()).getValue();
+            Config.inlinedAddressOffset += addressOffset;
+
             int maxBlockCnt = currentSequence.basicBlocks.stream().mapToInt(p -> p.blockId).max().orElseThrow();
             BasicBlock leftoversFromCurrentBlock = createLeftoversBlock(tuple.u, tuple.v, ++maxBlockCnt);
 
@@ -138,6 +143,7 @@ public class FunctionInlining implements OptimizerPass {
 
             // TODO: see what to do with stack frame size -> change addresses fix
             // TODO: temps can overwrite some stack variables -> change address fix
+            fixHolderEnterInstruction(addressOffset, inlinedStartBlock);
             embedFunction(tuple.u, tuple.v, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
             addJumps(tuple.u, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
             removeStackFrameInstructions(inlinedStartBlock, inlinedEndBlock);
@@ -146,9 +152,25 @@ public class FunctionInlining implements OptimizerPass {
             currentSequence.basicBlocks.add(leftoversFromCurrentBlock);
             currentSequence.basicBlocks.addAll(clonedCFG);
 
+            for (BasicBlock b : currentSequence.basicBlocks)
+                // do not do extraction on block which calls inline function because copied parameters
+                // must be inserted manually
+                if (b != tuple.u)
+                    b.allVariables = b.extractAllVariables();
+
             cnt++;
             Config.inlinedCounter++;
+            QuadrupleObjVar.clonedRefs.clear();
         }
+    }
+
+    private void fixHolderEnterInstruction(int holder, BasicBlock inlinedStartBlock) {
+        int inlined = ((QuadrupleIntegerConst) inlinedStartBlock.instructions.stream().
+                filter(p -> p.getInstruction() == IRInstruction.ENTER).findFirst().orElseThrow().getArg1()).getValue();
+
+        currentSequence.entryBlock.instructions.stream().
+                filter(p -> p.getInstruction() == IRInstruction.ENTER).findFirst().orElseThrow().
+                setArg1(new QuadrupleIntegerConst(holder + inlined));
     }
 
     private void fixCallParameters(BasicBlock startFrom, List<Quadruple> callParameters, Quadruple callInstruction) {
@@ -164,11 +186,14 @@ public class FunctionInlining implements OptimizerPass {
             Quadruple store = new Quadruple(IRInstruction.STORE);
 
             store.setArg1(callParameters.get(i++).getArg1().makeClone());
-            store.setResult(new QuadrupleObjVar(params));
+
+            QuadrupleObjVar objInlined = (QuadrupleObjVar) (new QuadrupleObjVar(params)).makeClone();
+            objInlined.getObj().parameter = false;
+            store.setResult(objInlined);
 
             storeInstructions.add(store);
 
-            startFrom.allVariables.add(params);
+            startFrom.allVariables.add(objInlined.getObj());
             params.inlined = true;
         }
 
@@ -204,7 +229,6 @@ public class FunctionInlining implements OptimizerPass {
         BasicBlock newBlock = new BasicBlock(block.enclosingFunction);
 
         newBlock.blockId = newBlockID;
-        newBlock.allVariables = newBlock.extractAllVariables();
 
         Set<Quadruple> toRemove = new HashSet<>();
 
@@ -245,18 +269,19 @@ public class FunctionInlining implements OptimizerPass {
                 findFirst().orElse(null);
         if (returnInstruction != null) {
             Quadruple store = new Quadruple(IRInstruction.STORE);
+
             store.setArg1(returnInstruction.getArg1().makeClone());
-            store.setResult(callInstruction.getResult().makeClone());
+            Obj resultTmp = ((QuadrupleObjVar) callInstruction.getResult()).getObj();
+            resultTmp.tempVar = false;
+            store.setResult(new QuadrupleObjVar(resultTmp));
 
             inlinedEndBlock.instructions.remove(returnInstruction);
             inlinedEndBlock.instructions.add(store);
-
-            leftoversFromCurrentBlock.allVariables = leftoversFromCurrentBlock.extractAllVariables();
-            inlinedEndBlock.allVariables = leftoversFromCurrentBlock.extractAllVariables();
         }
     }
 
     public void finalizePass() {
+        Config.inlinedAddressOffset = 0;
         if (cnt > 0)
             currentSequence.dominanceAnalyzer = new DominanceAnalyzer(currentSequence);
     }

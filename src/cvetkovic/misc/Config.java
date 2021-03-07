@@ -11,6 +11,7 @@ public class Config {
     public static final String compare_tmp = "_ctmp";
     public static final String leftoversBlockPrefix = "_inlined";
 
+    public static int inlinedAddressOffset = 0;
     public static int inlinedCounter = 0;
     public static int leftoversLabelGenerator = 0;
 }
