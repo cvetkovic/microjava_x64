@@ -96,10 +96,11 @@ public class FunctionInlining implements OptimizerPass {
 
         // cloning basic blocks
         for (BasicBlock block : sequenceToInline.basicBlocks) {
-            BasicBlock clone = block.makeClone();
-            clone.blockId = startCntFrom++;
-
             // NOTE: labels are renamed to be unique in QuadrupleLabel.makeClone()
+            BasicBlock clone = block.makeClone();
+
+            clone.blockId = startCntFrom++;
+            clone.allVariables = clone.extractAllVariables();
 
             result.add(clone);
             mappingsToClones.put(block, clone);
@@ -249,6 +250,9 @@ public class FunctionInlining implements OptimizerPass {
 
             inlinedEndBlock.instructions.remove(returnInstruction);
             inlinedEndBlock.instructions.add(store);
+
+            leftoversFromCurrentBlock.allVariables = leftoversFromCurrentBlock.extractAllVariables();
+            inlinedEndBlock.allVariables = leftoversFromCurrentBlock.extractAllVariables();
         }
     }
 
