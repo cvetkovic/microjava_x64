@@ -34,7 +34,7 @@ public abstract class Optimizer {
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
 
-            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();

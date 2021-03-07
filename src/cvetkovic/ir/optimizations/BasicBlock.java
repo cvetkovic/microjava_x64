@@ -337,21 +337,21 @@ public class BasicBlock {
             if (arg1 instanceof QuadrupleObjVar) {
                 Obj objArg1 = ((QuadrupleObjVar) arg1).getObj();
 
-                if (objArg1.getKind() != Obj.Con && objArg1.getKind() != Obj.Meth)
+                if (objArg1.getKind() != Obj.Con)// && objArg1.getKind() != Obj.Meth)
                     variables.add(objArg1);
             }
 
             if (arg2 instanceof QuadrupleObjVar) {
                 Obj objArg2 = ((QuadrupleObjVar) arg2).getObj();
 
-                if (objArg2.getKind() != Obj.Con && objArg2.getKind() != Obj.Meth)
+                if (objArg2.getKind() != Obj.Con)// && objArg2.getKind() != Obj.Meth)
                     variables.add(objArg2);
             }
 
             if (result instanceof QuadrupleObjVar) {
                 Obj objResult = ((QuadrupleObjVar) result).getObj();
 
-                if (objResult.getKind() != Obj.Con && objResult.getKind() != Obj.Meth)
+                if (objResult.getKind() != Obj.Con)// && objResult.getKind() != Obj.Meth)
                     variables.add(objResult);
             }
         }
