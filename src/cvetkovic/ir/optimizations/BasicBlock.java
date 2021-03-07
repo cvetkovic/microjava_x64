@@ -283,11 +283,11 @@ public class BasicBlock {
                 cmp.setArg1(lastInstruction.getArg1());
                 cmp.setArg2(lastInstruction.getArg2());
 
-                Obj cmpResult = new Obj(Obj.Var, Config.compare_tmp + canonicalFormVarGenerator++, SymbolTable.intType);
+                /*Obj cmpResult = new Obj(Obj.Var, Config.compare_tmp + canonicalFormVarGenerator++, SymbolTable.intType);
                 cmpResult.tempVar = true;
-                cmp.setResult(new QuadrupleObjVar(cmpResult));
+                cmp.setResult(new QuadrupleObjVar(cmpResult));*/
                 block.instructions.add(block.instructions.size() - 1, cmp);
-                block.allVariables.add(cmpResult);
+                //block.allVariables.add(cmpResult);
 
                 BasicBlock successor1 = block.successors.get(0);
                 BasicBlock successor2 = block.successors.get(1);
@@ -308,7 +308,7 @@ public class BasicBlock {
                     targetJump = new QuadrupleLabel(label);
                 }
 
-                lastInstruction.setArg1(new QuadrupleObjVar(cmpResult));
+                lastInstruction.setArg1(null);
                 lastInstruction.setArg2(lastInstruction.getResult());
                 lastInstruction.setResult(targetJump);
             }
