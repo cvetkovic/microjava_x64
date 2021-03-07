@@ -334,14 +334,26 @@ public class BasicBlock {
             QuadrupleVariable arg2 = q.getArg2();
             QuadrupleVariable result = q.getResult();
 
-            if (arg1 instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) arg1).getObj());
+            if (arg1 instanceof QuadrupleObjVar) {
+                Obj objArg1 = ((QuadrupleObjVar) arg1).getObj();
 
-            if (arg2 instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) arg2).getObj());
+                if (objArg1.getKind() != Obj.Con && objArg1.getKind() != Obj.Meth)
+                    variables.add(objArg1);
+            }
 
-            if (result instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) result).getObj());
+            if (arg2 instanceof QuadrupleObjVar) {
+                Obj objArg2 = ((QuadrupleObjVar) arg2).getObj();
+
+                if (objArg2.getKind() != Obj.Con && objArg2.getKind() != Obj.Meth)
+                    variables.add(objArg2);
+            }
+
+            if (result instanceof QuadrupleObjVar) {
+                Obj objResult = ((QuadrupleObjVar) result).getObj();
+
+                if (objResult.getKind() != Obj.Con && objResult.getKind() != Obj.Meth)
+                    variables.add(objResult);
+            }
         }
 
         return variables;
