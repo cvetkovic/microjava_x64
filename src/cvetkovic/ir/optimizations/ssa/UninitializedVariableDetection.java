@@ -41,12 +41,12 @@ public class UninitializedVariableDetection implements OptimizerPass {
                 if (arg1 instanceof QuadrupleObjVar && instruction.getSsaArg1Count() == 0) {
                     Obj obj = ((QuadrupleObjVar) arg1).getObj();
 
-                    if (!obj.parameter && !globalVariables.contains(obj))
+                    if (!obj.parameter && !obj.tempVar && !globalVariables.contains(obj))
                         uninitializedVariables.add(obj);
                 } else if (arg2 instanceof QuadrupleObjVar && instruction.getSsaArg2Count() == 0) {
                     Obj obj = ((QuadrupleObjVar) arg2).getObj();
 
-                    if (!obj.parameter && !globalVariables.contains(obj))
+                    if (!obj.parameter && !obj.tempVar && !globalVariables.contains(obj))
                         uninitializedVariables.add(obj);
                 } else if (arg1 instanceof QuadruplePhi) {
                     QuadruplePhi phi = (QuadruplePhi) arg1;

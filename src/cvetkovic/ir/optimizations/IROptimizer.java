@@ -78,6 +78,9 @@ public class IROptimizer extends Optimizer {
         StringBuilder stringBuilder = new StringBuilder();
 
         for (CodeSequence codeSequence : codeSequenceList) {
+            if (codeSequence.inlined)
+                continue;
+
             stringBuilder.append("-----------------------------------------------------------------------------------------\n");
 
             for (BasicBlock basicBlock : IROptimizer.reassembleBasicBlocks(codeSequence.basicBlocks))

@@ -34,7 +34,7 @@ public abstract class Optimizer {
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
 
-            //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
@@ -65,7 +65,8 @@ public abstract class Optimizer {
                     "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\ssa_rcfg_pre_opt_" + sequence.function + ".dot",
                     sequence.dominanceAnalyzer.getBasicBlocks());
 
-            addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
+            // TODO: uninitialized has to be done before inlining
+            //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
             //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {

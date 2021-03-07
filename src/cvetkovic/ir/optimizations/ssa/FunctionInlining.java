@@ -46,22 +46,27 @@ public class FunctionInlining implements OptimizerPass {
         return allow;
     }
 
-    private Set<BasicBlock.Tuple<BasicBlock, Quadruple>> getCallsToInline() {
-        Set<BasicBlock.Tuple<BasicBlock, Quadruple>> result = new HashSet<>();
-
+    private BasicBlock.Tuple<BasicBlock, Quadruple> getCallsToInline() {
         for (BasicBlock block : currentSequence.basicBlocks) {
             for (Quadruple instruction : block.instructions) {
                 if (instruction.getInstruction() == IRInstruction.CALL ||
                         instruction.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
                     Obj functionObj = ((QuadrupleObjVar) instruction.getArg1()).getObj();
 
-                    if (allowToInline(functionObj))
-                        result.add(new BasicBlock.Tuple<>(block, instruction));
+                    switch (functionObj.getName()) {
+                        case "ord":
+                        case "chr":
+                        case "len":
+                            continue;
+                        default:
+                            if (allowToInline(functionObj))
+                                return new BasicBlock.Tuple<BasicBlock, Quadruple>(block, instruction);
+                    }
                 }
             }
         }
 
-        return result;
+        return null;
     }
 
     private List<Quadruple> getCallParameters(BasicBlock block, Quadruple call) {
@@ -118,9 +123,9 @@ public class FunctionInlining implements OptimizerPass {
 
     @Override
     public void optimize() {
-        Set<BasicBlock.Tuple<BasicBlock, Quadruple>> placesToInline = getCallsToInline();
+        BasicBlock.Tuple<BasicBlock, Quadruple> tuple;
 
-        for (BasicBlock.Tuple<BasicBlock, Quadruple> tuple : placesToInline) {
+        while ((tuple = getCallsToInline()) != null) {
             List<Quadruple> callParameters = getCallParameters(tuple.u, tuple.v);
 
             int maxBlockCnt = currentSequence.basicBlocks.stream().mapToInt(p -> p.blockId).max().orElseThrow();
@@ -152,6 +157,9 @@ public class FunctionInlining implements OptimizerPass {
 
         int i = 0;
         for (Obj params : functionObj.getLocalSymbols()) {
+            if (!params.parameter)
+                continue;
+
             Quadruple store = new Quadruple(IRInstruction.STORE);
 
             store.setArg1(callParameters.get(i++).getArg1().makeClone());
@@ -227,9 +235,21 @@ public class FunctionInlining implements OptimizerPass {
         startFrom.successors.clear();
         startFrom.successors.add(inlinedStartBlock);
 
-        // TODO: move to a separate function
         // deleting call instruction
         startFrom.instructions.remove(callInstruction);
+
+        // fix return statement if function is not void
+        Quadruple returnInstruction = inlinedEndBlock.instructions.stream().
+                filter(p -> p.getInstruction() == IRInstruction.RETURN).
+                findFirst().orElse(null);
+        if (returnInstruction != null) {
+            Quadruple store = new Quadruple(IRInstruction.STORE);
+            store.setArg1(returnInstruction.getArg1().makeClone());
+            store.setResult(callInstruction.getResult().makeClone());
+
+            inlinedEndBlock.instructions.remove(returnInstruction);
+            inlinedEndBlock.instructions.add(store);
+        }
     }
 
     public void finalizePass() {
