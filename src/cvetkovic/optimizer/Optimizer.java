@@ -43,6 +43,9 @@ public abstract class Optimizer {
 
         // SSA optimizations
         for (CodeSequence sequence : codeSequenceList) {
+            if (sequence.inlined)
+                continue;
+
             sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
             SSAConverter ssaConverter = new SSAConverter(sequence.dominanceAnalyzer);
 
