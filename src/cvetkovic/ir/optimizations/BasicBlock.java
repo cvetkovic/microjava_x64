@@ -6,7 +6,6 @@ import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
-import cvetkovic.structures.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -112,6 +111,44 @@ public class BasicBlock {
             throw new RuntimeException("There are no instructions in the block.");
 
         return instructions.get(instructions.size() - 1);
+    }
+
+    public Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariables() {
+        Set<BasicBlock.Tuple<Obj, Integer>> result = new HashSet<>();
+
+        for (Quadruple q : instructions) {
+            switch (q.getInstruction()) {
+                // arithmetic
+                case ADD:
+                case SUB:
+                case MUL:
+                case DIV:
+                case REM:
+                case NEG:
+                    // memory
+                case LOAD:
+                case STORE:
+                case STORE_PHI:
+                case MALLOC:
+                case ALOAD:
+                case ASTORE:
+                case GET_PTR:
+                    // I/O
+                case SCANF:
+                    result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                    break;
+                // functions
+                case CALL:
+                case INVOKE_VIRTUAL:
+                    if (q.getResult() != null)
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return result;
     }
 
     public static class Tuple<U, V> {
@@ -396,7 +433,7 @@ public class BasicBlock {
     }
 
     public Set<Obj> getSetOfDefinedVariables() {
-        Set<Obj> result = new HashSet<>();
+        /*Set<Obj> result = new HashSet<>();
 
         for (Quadruple q : instructions) {
             switch (q.getInstruction()) {
@@ -428,9 +465,11 @@ public class BasicBlock {
                 default:
                     break;
             }
-        }
+        }*/
 
-        return result;
+        return getSetOfSSADefinedVariables().stream().map(p -> p.u).collect(Collectors.toSet());
+
+        //return result;
     }
 
     public boolean isEmpty() {

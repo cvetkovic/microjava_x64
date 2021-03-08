@@ -1,6 +1,7 @@
 package cvetkovic.ir.ssa;
 
 import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.misc.Config;
 import cvetkovic.optimizer.CodeSequence;
 
 import java.io.*;
@@ -152,7 +153,8 @@ public class DominanceAnalyzer {
             else
                 s.append("entry, ");
 
-            System.out.println((reverse ? "R" : "") + "Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+            if (Config.printDominatorRelations)
+                System.out.println((reverse ? "R" : "") + "Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
         }
 
         return dominators;
@@ -264,15 +266,17 @@ public class DominanceAnalyzer {
             }
         }
 
-        for (BasicBlock b : result.keySet()) {
-            StringBuilder s = new StringBuilder();
+        if (Config.printDominatorRelations) {
+            for (BasicBlock b : result.keySet()) {
+                StringBuilder s = new StringBuilder();
 
-            if (result.get(b).size() != 0)
-                result.get(b).forEach(p -> s.append(p.blockId).append(", "));
-            else
-                s.append("null, ");
+                if (result.get(b).size() != 0)
+                    result.get(b).forEach(p -> s.append(p.blockId).append(", "));
+                else
+                    s.append("null, ");
 
-            System.out.println((reverse ? "R" : "") + "DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+                System.out.println((reverse ? "R" : "") + "DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+            }
         }
 
         return result;
@@ -312,15 +316,17 @@ public class DominanceAnalyzer {
                     result.get(b).add(y);
         }
 
-        for (BasicBlock b : result.keySet()) {
-            StringBuilder s = new StringBuilder();
+        if (Config.printDominatorRelations) {
+            for (BasicBlock b : result.keySet()) {
+                StringBuilder s = new StringBuilder();
 
-            if (result.get(b).size() != 0)
-                result.get(b).forEach(p -> s.append(p.blockId).append(", "));
-            else
-                s.append("null, ");
+                if (result.get(b).size() != 0)
+                    result.get(b).forEach(p -> s.append(p.blockId).append(", "));
+                else
+                    s.append("null, ");
 
-            System.out.println(b.blockId + " is control dependent on { " + s.substring(0, s.length() - 2) + " }");
+                System.out.println(b.blockId + " is control dependent on { " + s.substring(0, s.length() - 2) + " }");
+            }
         }
 
         return result;
@@ -360,8 +366,10 @@ public class DominanceAnalyzer {
             }
         }
 
-        System.out.println("Back edges in " + sequence.function.getName() + ":");
-        backEdges.forEach(p -> System.out.println("\t" + p.u.blockId + " -> " + p.v.blockId));
+        if (Config.printNaturalLoopsInfo) {
+            System.out.println("Back edges in " + sequence.function.getName() + ":");
+            backEdges.forEach(p -> System.out.println("\t" + p.u.blockId + " -> " + p.v.blockId));
+        }
 
         // detecting constitutive blocks
         for (BasicBlock.Tuple<BasicBlock, BasicBlock> backEdge : backEdges) {
@@ -390,28 +398,31 @@ public class DominanceAnalyzer {
             loops.add(new BasicBlock.Tuple<>(d, loop));
         }
 
-        if (loops.size() > 0)
-            System.out.println("Natural loops detected in " + sequence.function.getName() + ":");
 
-        for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
-            StringBuilder sb = new StringBuilder();
-            loop.v.forEach(p -> sb.append(p.blockId).append(", "));
-            String members = sb.substring(0, sb.length() - 2);
-            boolean subset = false;
-            int subsetHeaderIndex = -1;
+        if (Config.printNaturalLoopsInfo) {
+            if (loops.size() > 0)
+                System.out.println("Natural loops detected in " + sequence.function.getName() + ":");
+
+            for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
+                StringBuilder sb = new StringBuilder();
+                loop.v.forEach(p -> sb.append(p.blockId).append(", "));
+                String members = sb.substring(0, sb.length() - 2);
+                boolean subset = false;
+                int subsetHeaderIndex = -1;
 
             /* Nesting is checked by testing whether the set of nodes of a
                loop A is a subset of the set of nodes of another loop B */
-            for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
-                if (parent.v.containsAll(loop.v) && loop != parent) {
-                    subset = true;
-                    subsetHeaderIndex = parent.u.blockId;
+                for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
+                    if (parent.v.containsAll(loop.v) && loop != parent) {
+                        subset = true;
+                        subsetHeaderIndex = parent.u.blockId;
+                    }
                 }
-            }
 
-            System.out.println("\tHeader: " + loop.u.blockId +
-                    ", Nested: " + (subset ? "True (" + subsetHeaderIndex + ")" : "False") +
-                    ", Members: { " + members + " }");
+                System.out.println("\tHeader: " + loop.u.blockId +
+                        ", Nested: " + (subset ? "True (" + subsetHeaderIndex + ")" : "False") +
+                        ", Members: { " + members + " }");
+            }
         }
 
         return loops;

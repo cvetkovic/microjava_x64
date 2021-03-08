@@ -2,6 +2,7 @@ package cvetkovic.ir.optimizations.ssa;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.optimizations.IROptimizer;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
@@ -10,9 +11,11 @@ import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.misc.Config;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FunctionInlining implements OptimizerPass {
 
@@ -270,7 +273,7 @@ public class FunctionInlining implements OptimizerPass {
         if (returnInstruction != null) {
             Quadruple store = new Quadruple(IRInstruction.STORE);
 
-            store.setArg1(returnInstruction.getArg1().makeClone());
+            store.setArg1(returnInstruction.getArg1());
             Obj resultTmp = ((QuadrupleObjVar) callInstruction.getResult()).getObj();
             resultTmp.tempVar = false;
             store.setResult(new QuadrupleObjVar(resultTmp));
@@ -282,7 +285,25 @@ public class FunctionInlining implements OptimizerPass {
 
     public void finalizePass() {
         Config.inlinedAddressOffset = 0;
-        if (cnt > 0)
+        if (cnt > 0) {
             currentSequence.dominanceAnalyzer = new DominanceAnalyzer(currentSequence);
+
+            debugVariableAddresses();
+        }
+    }
+
+    private void debugVariableAddresses() {
+        Set<Obj> objs = new HashSet<>();
+
+        for (BasicBlock b : currentSequence.basicBlocks)
+            objs.addAll(b.allVariables.stream().filter(p -> p.getKind() == Obj.Var).collect(Collectors.toSet()));
+
+        int oldAllocationValue = 0;//((QuadrupleIntegerConst) currentSequence.entryBlock.instructions.get(1).getArg1()).getValue();
+        int lastSize = IROptimizer.giveAddressToAll(objs, oldAllocationValue);
+        currentSequence.entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
+
+        objs.stream().sorted(Comparator.comparingInt(Obj::getAdr)).
+                forEach(p -> System.out.println(p.getName() + ": " + p.getAdr()));
+        System.out.println();
     }
 }

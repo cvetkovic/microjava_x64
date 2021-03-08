@@ -58,6 +58,20 @@ public class IROptimizer extends Optimizer {
         }
     }
 
+    public static int giveAddressToAll(Collection<Obj> variables, int startValue) {
+        for (Obj obj : variables) {
+            int lastTaken = startValue;
+            if (SystemV_ABI.alignTo16(lastTaken) - lastTaken < SystemV_ABI.getX64VariableSize(obj.getType()))
+                lastTaken = SystemV_ABI.alignTo16(lastTaken);
+            int thisVarAddress = lastTaken + SystemV_ABI.getX64VariableSize(obj.getType());
+            obj.setAdr(thisVarAddress);
+            startValue = thisVarAddress;
+
+        }
+
+        return startValue;
+    }
+
     public static int giveAddressToTemps(Collection<Obj> variables, int startValue) {
         for (Obj obj : variables) {
             if (((obj.tempVar || obj.getName().startsWith(Config.prefix_phi)) || (obj.parameter && !obj.stackParameter)) && obj.getKind() != Obj.Con) {
