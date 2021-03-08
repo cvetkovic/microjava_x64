@@ -7,7 +7,7 @@ public class Config {
 
     public static boolean printIRCodeLivenessAnalysis = false;
 
-    public static boolean printDominatorRelations = false;
+    public static boolean printDominatorRelations = true;
     public static boolean printNaturalLoopsInfo = true;
 
     public static final String prefix_phi = "_phi";

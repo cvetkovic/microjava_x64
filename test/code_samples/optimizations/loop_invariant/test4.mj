@@ -1,0 +1,29 @@
+program MJProgram
+
+class Tuple
+{
+    int a;
+    int b;
+}
+
+{
+	void main()
+	    int i, a, b, c;
+	    Tuple t;
+	{
+
+	    for (i = 0; i < 10; i++)
+	    {
+            t = new Tuple;
+            t.a = 1;
+            t.b = 2;
+	        c = t.a + t.b;
+	        c++;
+	        // everything above is invariant
+
+	        print(c);
+	        print(eol);
+	    }
+	}
+}
+

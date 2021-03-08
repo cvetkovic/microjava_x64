@@ -5,6 +5,7 @@ import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
@@ -32,7 +33,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
         for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> tuple : loops) {
             Set<BasicBlock.Tuple<Obj, Integer>> definedIn = new HashSet<>();
-            tuple.v.forEach(p -> definedIn.addAll(p.getSetOfSSADefinedVariables()));
+            tuple.v.forEach(p -> definedIn.addAll(p.getSetOfSSADefinedVariablesWithNegatedPHIs()));
 
             BasicBlock header = tuple.u;
             BasicBlock preheader = new BasicBlock(sequence.function);
@@ -40,7 +41,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             boolean changed;
 
             do {
-                BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn);
+                BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v);
 
                 if (loopInvariantInstruction != null) {
                     addToPreheader(loopInvariantInstruction, preheader, definedIn);
@@ -110,13 +111,14 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             int ssaCount = toRemove.getSsaResultCount();
 
             definedIn.remove(definedIn.stream().
-                    filter(p -> (p.u == resultObj) && (p.v == ssaCount)).
+                    filter(p -> (p.u == resultObj) && (Math.abs(p.v) == ssaCount)).
                     findFirst().orElseThrow());
         }
     }
 
     private BasicBlock.Tuple<BasicBlock, Quadruple> findInvariantInstruction(Set<BasicBlock> basicBlocks,
-                                                                             Set<BasicBlock.Tuple<Obj, Integer>> definedIn) {
+                                                                             Set<BasicBlock.Tuple<Obj, Integer>> definedIn,
+                                                                             Set<BasicBlock> loop) {
         for (BasicBlock block : basicBlocks) {
             for (Quadruple q : block.instructions) {
                 boolean invariant1 = false;
@@ -141,10 +143,10 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                     Obj arg1 = ((QuadrupleObjVar) q.getArg1()).getObj();
                     int ssaCnt = q.getSsaArg1Count();
 
-                    if (arg1.getKind() != Obj.Var && arg1.getKind() != Obj.Fld && arg1.getKind() == Obj.Con)
-                        continue;
+                    /*if (arg1.getKind() != Obj.Var && arg1.getKind() != Obj.Fld && arg1.getKind() != Obj.Con)
+                        continue;*/
 
-                    if (arg1.getKind() == Obj.Con || definedIn.stream().noneMatch(p -> p.u == arg1 && p.v == ssaCnt))
+                    if (arg1.getKind() == Obj.Con || definedIn.stream().noneMatch(p -> p.u == arg1 && Math.abs(p.v) == ssaCnt))
                         invariant1 = true;
                 }
 
@@ -152,15 +154,18 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                     Obj arg2 = ((QuadrupleObjVar) q.getArg2()).getObj();
                     int ssaCnt = q.getSsaArg2Count();
 
-                    if (arg2.getKind() != Obj.Var && arg2.getKind() != Obj.Fld && arg2.getKind() != Obj.Con)
-                        continue;
+                    /*if (arg2.getKind() != Obj.Var && arg2.getKind() != Obj.Fld && arg2.getKind() != Obj.Con)
+                        continue;*/
 
-                    if (arg2.getKind() == Obj.Con || definedIn.stream().noneMatch(p -> p.u == arg2 && p.v == ssaCnt))
+                    if (arg2.getKind() == Obj.Con || definedIn.stream().noneMatch(p -> p.u == arg2 && Math.abs(p.v) == ssaCnt))
                         invariant2 = true;
-                }
+                } else if (q.getArg2() instanceof QuadruplePTR)
+                    invariant2 = true;
 
-                if ((invariant1 && q.getArg2() == null) || (invariant1 && invariant2))
-                    return new BasicBlock.Tuple<>(block, q);
+                if ((invariant1 && q.getArg2() == null) || (invariant1 && invariant2)) {
+                    if (satisfiesHostingCriteria(block, loop, definedIn, ((QuadrupleObjVar) q.getResult()).getObj()))
+                        return new BasicBlock.Tuple<>(block, q);
+                }
             }
         }
 
@@ -172,5 +177,30 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         if (invariantsFound > 0) {
             sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
         }
+    }
+
+    private boolean satisfiesHostingCriteria(BasicBlock block,
+                                             Set<BasicBlock> loop,
+                                             Set<BasicBlock.Tuple<Obj, Integer>> definedIn,
+                                             Obj resultObj) {
+        BasicBlock blockNotInLoop = loop.stream().filter(p -> !loop.containsAll(p.successors)).findFirst().orElseThrow();
+        assert loop.stream().filter(p -> p.successors.contains(blockNotInLoop)).count() == 1;
+        BasicBlock loopExitPredecessorInLoop = loop.stream().filter(p -> p.successors.contains(blockNotInLoop)).findFirst().orElseThrow();
+
+        boolean criterion1 = false, criterion2 = true, criterion3 = true;
+
+        // criterion 1 - 'block' dominates all loop exits
+        // NOTE: this criteria forbids elimination from if-then-else structures
+        Set<BasicBlock> dominatorsOfBlock = dominanceAnalyzer.getDominators().get(loopExitPredecessorInLoop);
+        if (dominatorsOfBlock.contains(block))
+            criterion1 = true;
+
+        // criterion 2 - quadruple's result not defined elsewhere in L
+        // NOTE: this criteria forbids elimination from if-then structures
+        long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v >= 0).count();
+        if (numberOfDefinitions > 1)
+            criterion2 = false;
+
+        return criterion1 & criterion2 & criterion3;
     }
 }

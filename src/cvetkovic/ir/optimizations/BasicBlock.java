@@ -114,6 +114,14 @@ public class BasicBlock {
     }
 
     public Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariables() {
+        return getSetOfSSADefinedVariables(false);
+    }
+
+    public Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariablesWithNegatedPHIs() {
+        return getSetOfSSADefinedVariables(true);
+    }
+
+    private Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariables(boolean negatePhi) {
         Set<BasicBlock.Tuple<Obj, Integer>> result = new HashSet<>();
 
         for (Quadruple q : instructions) {
@@ -128,7 +136,6 @@ public class BasicBlock {
                     // memory
                 case LOAD:
                 case STORE:
-                case STORE_PHI:
                 case MALLOC:
                 case ALOAD:
                 case ASTORE:
@@ -143,6 +150,13 @@ public class BasicBlock {
                     if (q.getResult() != null)
                         result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
                     break;
+                case STORE_PHI:
+                    if (negatePhi)
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), -q.getSsaResultCount()));
+                    else
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                    break;
+
                 default:
                     break;
             }

@@ -1,0 +1,19 @@
+program MJProgram
+{
+	void main()
+	    int i, a, b, c;
+	{
+	    for (i = 0; i < 10; i++)
+	    {
+	        if (i % 2 == 0)
+	            c = 0;  // isn't invariant (CRIT 1)
+	        else
+	            c = 1;  // isn't invariant (CRIT 1)
+
+            // no invariant code here
+	        print(c);
+	        print(eol);
+	    }
+	}
+}
+
