@@ -2,6 +2,7 @@ package cvetkovic.ir.optimizations;
 
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
@@ -158,7 +159,7 @@ public class BasicBlock {
 
                 case STORE:
                 case MALLOC:
-                    if (q.getArg2() == null)
+                    if (q.getArg2() == null || q.getArg2() instanceof QuadrupleARR)
                         result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
                 default:
                     break;

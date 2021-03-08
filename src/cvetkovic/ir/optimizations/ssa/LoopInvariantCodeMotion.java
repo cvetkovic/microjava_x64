@@ -238,27 +238,14 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
         // criterion 2 - quadruple's result not defined elsewhere in L
         // NOTE: this criteria forbids elimination from if-then structures
-        long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v > 0).count();
-        numberOfDefinitions -= phis.getOrDefault(resultObj, new HashSet<>()).size();
+        /*long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v > 0).count();
         if (numberOfDefinitions > 1)
-            criterion2 = false;
+            criterion2 = false;*/
+        criterion2 = true;
 
-        // criterion 3 - all uses
-        // NOTE: this criteria forbids elimination from if-then structures
+        // criterion 3 - all uses in L of x can only be reached by the definition of x in s
+        // NOTE: this criteria forbids elimination of instruction if its result is used in an if-then-else structure
         criterion3 = thirdCriterion(loop, resultObj, ssaCount, phis);
-        /*Set<Quadruple> phi_set = phis.getOrDefault(resultObj, new HashSet<>());
-        for (Quadruple q : phi_set) {
-            QuadruplePhi phi = (QuadruplePhi) q.getArg1();
-
-            int phisFromThisLoop = 0;
-            Set tmp = definedIn.stream().filter(p -> p.u == resultObj).map(value -> Math.abs(value.v)).collect(Collectors.toSet());
-            tmp.remove(q.getSsaResultCount());
-
-            if (phi.contains(ssaCount) && !phi.contains(0) && phisFromThisLoop > 1) {
-                criterion3 = false;
-                break;
-            }
-        }*/
 
         return criterion1 & criterion2 & criterion3;
     }
@@ -280,7 +267,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                     Quadruple particularPhi = phi_instructions.stream().
                             filter(p -> p.getSsaResultCount() == q.getSsaArg2Count()).findFirst().orElse(null);
 
-                    if (particularPhi != null && ((QuadruplePhi) particularPhi.getArg2()).contains(ssaCnt))
+                    if (particularPhi != null && ((QuadruplePhi) particularPhi.getArg1()).contains(ssaCnt))
                         return false;
                 }
 

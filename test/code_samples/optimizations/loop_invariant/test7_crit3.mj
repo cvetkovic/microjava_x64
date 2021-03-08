@@ -15,6 +15,6 @@ program MJProgram
 	        c = 1;  // not invariant (CRIT 3)
 	    }
 
-	    print(b);
+	    print(b);   // should print 0
 	}
 }

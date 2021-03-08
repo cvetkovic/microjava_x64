@@ -67,7 +67,7 @@ public abstract class Optimizer {
 
             // TODO: uninitialized has to be done before inlining
             //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
-            addOptimizationPass(new LoopInvariantCodeMotion(sequence, sequence.dominanceAnalyzer));
+            //addOptimizationPass(new LoopInvariantCodeMotion(sequence, sequence.dominanceAnalyzer));
             //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {

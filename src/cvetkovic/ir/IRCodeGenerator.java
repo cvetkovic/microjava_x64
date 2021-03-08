@@ -887,8 +887,13 @@ public class IRCodeGenerator extends VisitorAdaptor {
         // emit all postponed update var list statements if there is come quadruple
         if (!forUpdateVarListInstructionStack.empty()) {
             List<Quadruple> list = forUpdateVarListInstructionStack.pop();
-
             updateVarListLabel = list.get(0).getArg1().toString();
+
+            Quadruple jumpToUpdateVarList = new Quadruple(JMP);
+            jumpToUpdateVarList.setResult(new QuadrupleLabel(updateVarListLabel));
+            code.add(jumpToUpdateVarList);
+
+            // add update var list instructions
             code.addAll(list);
         }
 
