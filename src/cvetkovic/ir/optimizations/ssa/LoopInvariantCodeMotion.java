@@ -3,17 +3,14 @@ package cvetkovic.ir.optimizations.ssa;
 import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.optimizations.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
-import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
-import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
+import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.optimizer.CodeSequence;
 import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 public class LoopInvariantCodeMotion implements OptimizerPass {
@@ -35,13 +32,30 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             Set<BasicBlock.Tuple<Obj, Integer>> definedIn = new HashSet<>();
             tuple.v.forEach(p -> definedIn.addAll(p.getSetOfSSADefinedVariablesWithNegatedPHIs()));
 
+            Map<Obj, Set<Quadruple>> phis = new HashMap<>();
+            for (BasicBlock b : tuple.v) {
+                for (Quadruple q : b.instructions) {
+                    if (q.getInstruction() == IRInstruction.STORE_PHI) {
+                        QuadruplePhi phi = (QuadruplePhi) q.getArg1();
+
+                        if (phis.containsKey(phi.getObj()))
+                            phis.get(phi.getObj()).add(q);
+                        else {
+                            Set<Quadruple> set = new HashSet<>();
+                            set.add(q);
+                            phis.put(phi.getObj(), set);
+                        }
+                    }
+                }
+            }
+
             BasicBlock header = tuple.u;
             BasicBlock preheader = new BasicBlock(sequence.function);
 
             boolean changed;
 
             do {
-                BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v);
+                BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v, phis, tuple.u);
 
                 if (loopInvariantInstruction != null) {
                     addToPreheader(loopInvariantInstruction, preheader, definedIn);
@@ -82,7 +96,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                 if (IRInstruction.isUnconditionalJumpInstruction(lastInstruction.getInstruction()))
                     lastInstruction.setResult(new QuadrupleLabel(preheaderLabel.getLabelName()));
                 else if (IRInstruction.isConditionalJumpInstruction(lastInstruction.getInstruction())) {
-
+                    throw new RuntimeException("Not yet implemented."); // TODO: implement this
                 } else
                     throw new RuntimeException("Invalid IR.");
             }
@@ -110,15 +124,18 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             Obj resultObj = ((QuadrupleObjVar) toRemove.getResult()).getObj();
             int ssaCount = toRemove.getSsaResultCount();
 
-            definedIn.remove(definedIn.stream().
-                    filter(p -> (p.u == resultObj) && (Math.abs(p.v) == ssaCount)).
-                    findFirst().orElseThrow());
+            if (!(toRemove.getArg2() instanceof QuadruplePTR) && !(toRemove.getArg2() instanceof QuadrupleARR))
+                definedIn.remove(definedIn.stream().
+                        filter(p -> (p.u == resultObj) && (Math.abs(p.v) == ssaCount)).
+                        findFirst().orElseThrow());
         }
     }
 
     private BasicBlock.Tuple<BasicBlock, Quadruple> findInvariantInstruction(Set<BasicBlock> basicBlocks,
                                                                              Set<BasicBlock.Tuple<Obj, Integer>> definedIn,
-                                                                             Set<BasicBlock> loop) {
+                                                                             Set<BasicBlock> loop,
+                                                                             Map<Obj, Set<Quadruple>> phis,
+                                                                             BasicBlock loopHeader) {
         for (BasicBlock block : basicBlocks) {
             for (Quadruple q : block.instructions) {
                 boolean invariant1 = false;
@@ -135,6 +152,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                         case INVOKE_VIRTUAL:
                         case GEN_LABEL:
                         case CMP:
+                        case STORE_PHI:
                             continue;
                     }
                 }
@@ -163,7 +181,13 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                     invariant2 = true;
 
                 if ((invariant1 && q.getArg2() == null) || (invariant1 && invariant2)) {
-                    if (satisfiesHostingCriteria(block, loop, definedIn, ((QuadrupleObjVar) q.getResult()).getObj()))
+                    if (satisfiesHostingCriteria(block,
+                            loop,
+                            definedIn,
+                            ((QuadrupleObjVar) q.getResult()).getObj(),
+                            q.getSsaResultCount(),
+                            phis,
+                            loopHeader))
                         return new BasicBlock.Tuple<>(block, q);
                 }
             }
@@ -182,10 +206,27 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
     private boolean satisfiesHostingCriteria(BasicBlock block,
                                              Set<BasicBlock> loop,
                                              Set<BasicBlock.Tuple<Obj, Integer>> definedIn,
-                                             Obj resultObj) {
-        BasicBlock blockNotInLoop = loop.stream().filter(p -> !loop.containsAll(p.successors)).findFirst().orElseThrow();
-        assert loop.stream().filter(p -> p.successors.contains(blockNotInLoop)).count() == 1;
-        BasicBlock loopExitPredecessorInLoop = loop.stream().filter(p -> p.successors.contains(blockNotInLoop)).findFirst().orElseThrow();
+                                             Obj resultObj,
+                                             int ssaCount,
+                                             Map<Obj, Set<Quadruple>> phis,
+                                             BasicBlock loopHeader) {
+        BasicBlock blockNotInLoop = null;
+        for (BasicBlock loopHeaderSuccessor : loopHeader.successors) {
+            if (!loop.contains(loopHeaderSuccessor)) {
+                blockNotInLoop = loopHeaderSuccessor;
+                break;
+            }
+        }
+        assert blockNotInLoop != null;
+
+        BasicBlock loopExitPredecessorInLoop = null;
+        for (BasicBlock loopHeaderPredecessor : loopHeader.successors) {
+            if (loop.contains(loopHeaderPredecessor)) {
+                loopExitPredecessorInLoop = loopHeaderPredecessor;
+                break;
+            }
+        }
+        assert loopExitPredecessorInLoop != null;
 
         boolean criterion1 = false, criterion2 = true, criterion3 = true;
 
@@ -197,10 +238,56 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
         // criterion 2 - quadruple's result not defined elsewhere in L
         // NOTE: this criteria forbids elimination from if-then structures
-        long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v >= 0).count();
+        long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v > 0).count();
+        numberOfDefinitions -= phis.getOrDefault(resultObj, new HashSet<>()).size();
         if (numberOfDefinitions > 1)
             criterion2 = false;
 
+        // criterion 3 - all uses
+        // NOTE: this criteria forbids elimination from if-then structures
+        criterion3 = thirdCriterion(loop, resultObj, ssaCount, phis);
+        /*Set<Quadruple> phi_set = phis.getOrDefault(resultObj, new HashSet<>());
+        for (Quadruple q : phi_set) {
+            QuadruplePhi phi = (QuadruplePhi) q.getArg1();
+
+            int phisFromThisLoop = 0;
+            Set tmp = definedIn.stream().filter(p -> p.u == resultObj).map(value -> Math.abs(value.v)).collect(Collectors.toSet());
+            tmp.remove(q.getSsaResultCount());
+
+            if (phi.contains(ssaCount) && !phi.contains(0) && phisFromThisLoop > 1) {
+                criterion3 = false;
+                break;
+            }
+        }*/
+
         return criterion1 & criterion2 & criterion3;
+    }
+
+    private boolean thirdCriterion(Set<BasicBlock> loop, Obj obj, int ssaCnt, Map<Obj, Set<Quadruple>> phis) {
+        for (BasicBlock block : loop) {
+            for (Quadruple q : block.instructions) {
+                if (q.getArg1() instanceof QuadrupleObjVar && ((QuadrupleObjVar) q.getArg1()).getObj() == obj) {
+                    Set<Quadruple> phi_instructions = phis.getOrDefault(obj, new HashSet<>());
+                    Quadruple particularPhi = phi_instructions.stream().
+                            filter(p -> p.getSsaResultCount() == q.getSsaArg1Count()).findFirst().orElse(null);
+
+                    if (particularPhi != null && ((QuadruplePhi) particularPhi.getArg1()).contains(ssaCnt))
+                        return false;
+                }
+
+                if (q.getArg2() instanceof QuadrupleObjVar && ((QuadrupleObjVar) q.getArg2()).getObj() == obj) {
+                    Set<Quadruple> phi_instructions = phis.getOrDefault(obj, new HashSet<>());
+                    Quadruple particularPhi = phi_instructions.stream().
+                            filter(p -> p.getSsaResultCount() == q.getSsaArg2Count()).findFirst().orElse(null);
+
+                    if (particularPhi != null && ((QuadruplePhi) particularPhi.getArg2()).contains(ssaCnt))
+                        return false;
+                }
+
+                // TODO: recursive phi resolving here
+            }
+        }
+
+        return true;
     }
 }

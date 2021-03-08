@@ -54,4 +54,8 @@ public class QuadruplePhi extends QuadrupleVariable {
 
         return builder.substring(0, builder.length() - 2) + ")";
     }
+
+    public boolean contains(int index) {
+        return varList.contains(index);
+    }
 }

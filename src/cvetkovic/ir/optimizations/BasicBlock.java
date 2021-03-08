@@ -135,8 +135,6 @@ public class BasicBlock {
                 case NEG:
                     // memory
                 case LOAD:
-                case STORE:
-                case MALLOC:
                 case ALOAD:
                 case ASTORE:
                 case GET_PTR:
@@ -157,6 +155,11 @@ public class BasicBlock {
                         result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
                     break;
 
+
+                case STORE:
+                case MALLOC:
+                    if (q.getArg2() == null)
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
                 default:
                     break;
             }
