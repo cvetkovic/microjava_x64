@@ -19,6 +19,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
     private CodeSequence sequence;
     private DominanceAnalyzer dominanceAnalyzer;
+    private int invariantsFound = 0;
 
     public LoopInvariantCodeMotion(CodeSequence sequence, DominanceAnalyzer dominanceAnalyzer) {
         this.sequence = sequence;
@@ -36,8 +37,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             BasicBlock header = tuple.u;
             BasicBlock preheader = new BasicBlock(sequence.function);
 
-            boolean changed = false;
-            int cnt = 0;
+            boolean changed;
 
             do {
                 BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn);
@@ -46,12 +46,12 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                     addToPreheader(loopInvariantInstruction, preheader, definedIn);
 
                     changed = true;
-                    cnt++;
+                    invariantsFound++;
                 } else
                     changed = false;
             } while (changed);
 
-            if (cnt > 0) {
+            if (invariantsFound > 0) {
                 embedPreheaderIntoCFG(preheader, header, tuple.v);
             }
         }
@@ -169,6 +169,8 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
     @Override
     public void finalizePass() {
-        // TODO: recompute dominators
+        if (invariantsFound > 0) {
+            sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
+        }
     }
 }
