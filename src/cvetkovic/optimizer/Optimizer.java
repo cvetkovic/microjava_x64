@@ -1,10 +1,7 @@
 package cvetkovic.optimizer;
 
 import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.ir.optimizations.ssa.CFGCleaner;
-import cvetkovic.ir.optimizations.ssa.DeadCodeElimination;
-import cvetkovic.ir.optimizations.ssa.FunctionInlining;
-import cvetkovic.ir.optimizations.ssa.UninitializedVariableDetection;
+import cvetkovic.ir.optimizations.ssa.*;
 import cvetkovic.ir.ssa.DominanceAnalyzer;
 import cvetkovic.ir.ssa.SSAConverter;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -34,7 +31,7 @@ public abstract class Optimizer {
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
 
-            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
@@ -70,6 +67,7 @@ public abstract class Optimizer {
 
             // TODO: uninitialized has to be done before inlining
             //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
+            addOptimizationPass(new LoopInvariantCodeMotion(sequence, sequence.dominanceAnalyzer));
             //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
