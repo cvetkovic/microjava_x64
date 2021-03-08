@@ -10,23 +10,20 @@ import cvetkovic.optimizer.OptimizerPass;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
-import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 public class LoopInvariantCodeMotion implements OptimizerPass {
 
-    private CodeSequence sequence;
-    private DominanceAnalyzer dominanceAnalyzer;
+    private final CodeSequence sequence;
     private int invariantsFound = 0;
 
-    public LoopInvariantCodeMotion(CodeSequence sequence, DominanceAnalyzer dominanceAnalyzer) {
+    public LoopInvariantCodeMotion(CodeSequence sequence) {
         this.sequence = sequence;
-        this.dominanceAnalyzer = dominanceAnalyzer;
     }
 
     @Override
     public void optimize() {
-        List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> loops = dominanceAnalyzer.getNaturalLoops();
+        List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> loops = sequence.dominanceAnalyzer.getNaturalLoops();
 
         for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> tuple : loops) {
             Set<BasicBlock.Tuple<Obj, Integer>> definedIn = new HashSet<>();
@@ -67,14 +64,14 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             } while (changed);
 
             if (invariantsFound > 0) {
-                embedPreheaderIntoCFG(preheader, header, tuple.v);
+                embedPreHeaderIntoCFG(preheader, header, tuple.v);
             }
         }
     }
 
     private static int invariantCnt = 0;
 
-    private void embedPreheaderIntoCFG(BasicBlock preheader, BasicBlock header, Set<BasicBlock> loop) {
+    private void embedPreHeaderIntoCFG(BasicBlock preheader, BasicBlock header, Set<BasicBlock> loop) {
         QuadrupleLabel preheaderLabel = new QuadrupleLabel("INVARIANT_" + invariantCnt++);
 
         Quadruple preHeaderGenLabel = new Quadruple(IRInstruction.GEN_LABEL);
@@ -92,11 +89,17 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                 predecessor.successors.add(preheader);
 
                 Quadruple lastInstruction = predecessor.getLastInstruction();
+                QuadrupleLabel newLabel = new QuadrupleLabel(preheaderLabel.getLabelName());
 
                 if (IRInstruction.isUnconditionalJumpInstruction(lastInstruction.getInstruction()))
-                    lastInstruction.setResult(new QuadrupleLabel(preheaderLabel.getLabelName()));
+                    lastInstruction.setResult(newLabel);
                 else if (IRInstruction.isConditionalJumpInstruction(lastInstruction.getInstruction())) {
-                    throw new RuntimeException("Not yet implemented."); // TODO: implement this
+                    QuadrupleLabel label1 = ((QuadrupleLabel) lastInstruction.getArg1());
+
+                    if (header.getLabelName().equals(label1.getLabelName()))
+                        lastInstruction.setArg1(newLabel);
+                    else
+                        lastInstruction.setArg2(newLabel);
                 } else
                     throw new RuntimeException("Invalid IR.");
             }
@@ -161,9 +164,6 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                     Obj arg1 = ((QuadrupleObjVar) q.getArg1()).getObj();
                     int ssaCnt = q.getSsaArg1Count();
 
-                    /*if (arg1.getKind() != Obj.Var && arg1.getKind() != Obj.Fld && arg1.getKind() != Obj.Con)
-                        continue;*/
-
                     if (arg1.getKind() == Obj.Con || definedIn.stream().noneMatch(p -> p.u == arg1 && Math.abs(p.v) == ssaCnt))
                         invariant1 = true;
                 }
@@ -171,9 +171,6 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                 if (q.getArg2() instanceof QuadrupleObjVar) {
                     Obj arg2 = ((QuadrupleObjVar) q.getArg2()).getObj();
                     int ssaCnt = q.getSsaArg2Count();
-
-                    /*if (arg2.getKind() != Obj.Var && arg2.getKind() != Obj.Fld && arg2.getKind() != Obj.Con)
-                        continue;*/
 
                     if (arg2.getKind() == Obj.Con || definedIn.stream().noneMatch(p -> p.u == arg2 && Math.abs(p.v) == ssaCnt))
                         invariant2 = true;
@@ -183,7 +180,6 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                 if ((invariant1 && q.getArg2() == null) || (invariant1 && invariant2)) {
                     if (satisfiesHostingCriteria(block,
                             loop,
-                            definedIn,
                             ((QuadrupleObjVar) q.getResult()).getObj(),
                             q.getSsaResultCount(),
                             phis,
@@ -205,7 +201,6 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
     private boolean satisfiesHostingCriteria(BasicBlock block,
                                              Set<BasicBlock> loop,
-                                             Set<BasicBlock.Tuple<Obj, Integer>> definedIn,
                                              Obj resultObj,
                                              int ssaCount,
                                              Map<Obj, Set<Quadruple>> phis,
@@ -228,11 +223,11 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         }
         assert loopExitPredecessorInLoop != null;
 
-        boolean criterion1 = false, criterion2 = true, criterion3 = true;
+        boolean criterion1 = false, criterion2, criterion3;
 
         // criterion 1 - 'block' dominates all loop exits
         // NOTE: this criteria forbids elimination from if-then-else structures
-        Set<BasicBlock> dominatorsOfBlock = dominanceAnalyzer.getDominators().get(loopExitPredecessorInLoop);
+        Set<BasicBlock> dominatorsOfBlock = sequence.dominanceAnalyzer.getDominators().get(loopExitPredecessorInLoop);
         if (dominatorsOfBlock.contains(block))
             criterion1 = true;
 
@@ -241,6 +236,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         /*long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v > 0).count();
         if (numberOfDefinitions > 1)
             criterion2 = false;*/
+        // NOTE: always true -> by definition of SSA
         criterion2 = true;
 
         // criterion 3 - all uses in L of x can only be reached by the definition of x in s
