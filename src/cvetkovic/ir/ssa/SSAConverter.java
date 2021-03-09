@@ -118,6 +118,10 @@ public class SSAConverter {
 
         visited.add(n);
 
+        // NOTE: this maps is needed to count how many pushes to the stack were done on particular Obj node
+        // because the stack needs to be popped the same number of times
+        Map<Obj, Integer> howManyDefinitions = new HashMap<>();
+
         // usages and definitions in each statement of the basic block
         for (Quadruple statement : n.instructions) {
             // dealing with usage
@@ -146,6 +150,9 @@ public class SSAConverter {
                 count.put(obj, i);
                 stack.get(obj).push(i);
                 statement.setSSACountResult(i);
+
+                int howMany = howManyDefinitions.getOrDefault(obj, 0);
+                howManyDefinitions.put(obj, howMany + 1);
             }
         }
 
@@ -169,8 +176,12 @@ public class SSAConverter {
             internalRenaming(node, visited, count, stack);
 
         // popping off stack
-        for (Obj o : n.getSetOfDefinedVariables())
-            stack.get(o).pop();
+        for (Obj o : n.getSetOfDefinedVariables()) {
+            int howManyPops = howManyDefinitions.get(o);
+
+            for (int i = 0; i < howManyPops; i++)
+                stack.get(o).pop();
+        }
     }
 
     /**

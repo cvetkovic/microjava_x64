@@ -18,5 +18,5 @@ public class Config {
     public static int inlinedCounter = 0;
     public static int leftoversLabelGenerator = 0;
 
-    public static boolean dump_dot_files = false;
+    public static boolean dump_dot_files = true;
 }

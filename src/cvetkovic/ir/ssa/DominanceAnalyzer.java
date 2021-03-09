@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 public class DominanceAnalyzer {
 
-    static class DominatorTreeNode {
-        final BasicBlock basicBlock;
-        final List<DominatorTreeNode> children = new ArrayList<>();
+    public static class DominatorTreeNode {
+        public final BasicBlock basicBlock;
+        public final List<DominatorTreeNode> children = new ArrayList<>();
 
         public DominatorTreeNode(BasicBlock basicBlock) {
             this.basicBlock = basicBlock;
