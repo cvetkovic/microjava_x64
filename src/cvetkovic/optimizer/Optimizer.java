@@ -53,6 +53,7 @@ public abstract class Optimizer {
 
             // before SSA conversion
             if (Config.dump_dot_files) {
+                // TODO: change 'dot' files output path in production
                 DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\normal_cfg_pre_ssa_" + sequence.function + ".dot",
                         "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\normal_rcfg_pre_ssa_" + sequence.function + ".dot",
                         sequence.dominanceAnalyzer.getBasicBlocks());
@@ -96,6 +97,8 @@ public abstract class Optimizer {
                         sequence.dominanceAnalyzer.getBasicBlocks());
             }
         }
+
+        // TODO: optimize frame size in ENTER instructions
     }
 
     public List<CodeSequence> getOptimizationOutput() {
