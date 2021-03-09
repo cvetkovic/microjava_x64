@@ -91,11 +91,16 @@ public class ValueNumbering implements OptimizerPass {
                 // do not process instructions without a result Obj node
                 if (instruction.getResult() == null)
                     continue;
+                else if (IRInstruction.isJumpInstruction(instruction.getInstruction()))
+                    continue;
                 switch (instruction.getInstruction()) {
                     case ALOAD:
                     case ASTORE:
                     case MALLOC:
                     case SCANF:
+                    case CALL:
+                    case INVOKE_VIRTUAL:
+                    case GET_PTR:           // arg2 is not type of Obj.Var or Obj.Fld
                         continue;
                 }
 
