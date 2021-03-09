@@ -32,6 +32,7 @@ public abstract class Optimizer {
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
 
+            addOptimizationPass(new ValueNumbering(sequence));
             //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
@@ -72,9 +73,9 @@ public abstract class Optimizer {
 
             // TODO: uninitialized has to be done before inlining
             //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
-            addOptimizationPass(new LoopInvariantCodeMotion(sequence));
+            //addOptimizationPass(new LoopInvariantCodeMotion(sequence));
             //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
-            addOptimizationPass(new CFGCleaner(sequence));
+            //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();

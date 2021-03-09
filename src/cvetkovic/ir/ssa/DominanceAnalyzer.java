@@ -151,7 +151,7 @@ public class DominanceAnalyzer {
             if ((reverse ? !b.isExitBlock() : !b.isEntryBlock()))
                 dominators.get(b).forEach(p -> s.append(p.blockId).append(", "));
             else
-                s.append("entry, ");
+                s.append(b.blockId).append(", ");
 
             if (Config.printDominatorRelations)
                 System.out.println((reverse ? "R" : "") + "Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");

@@ -107,6 +107,10 @@ public class SSAConverter {
         // renaming starts from the entry block
         internalRenaming(dominanceAnalyzer.dominatorTreeRoot, visited, count, stack);
 
+        // asserting algorithm correctness
+        for (Stack<Integer> s : stack.values())
+            assert s.peek() == 0;
+
         System.out.println("Renaming has been done.");
     }
 
@@ -157,8 +161,6 @@ public class SSAConverter {
         }
 
         // patching the successors of a basic block with respect to the CFG
-        // TODO: not sure if here go all successors or just first successors
-        Set<BasicBlock> allSuccessors = n.getAllSuccessors();
         for (BasicBlock Y : n.successors) {
             for (Quadruple statement : Y.instructions) {
                 if (statement.getInstruction() != IRInstruction.STORE_PHI)

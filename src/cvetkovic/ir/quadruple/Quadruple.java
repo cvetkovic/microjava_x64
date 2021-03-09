@@ -231,31 +231,4 @@ public class Quadruple {
 
         return sb.toString();
     }
-
-    public int getFoldedValue() {
-        Obj obj1 = ((QuadrupleObjVar) arg1).getObj();
-        Obj obj2 = (arg2 != null ? ((QuadrupleObjVar) arg2).getObj() : null);
-
-        if (!(obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) &&
-                !(obj1.getKind() == Obj.Con && obj2 == null && instruction == IRInstruction.NEG))
-            throw new RuntimeException("Call not allowed on provided type of quadruple.");
-
-        switch (instruction) {
-            case ADD:
-                return obj1.getAdr() + obj2.getAdr();
-            case SUB:
-                return obj1.getAdr() - obj2.getAdr();
-            case MUL:
-                return obj1.getAdr() * obj2.getAdr();
-            case DIV:
-                return obj1.getAdr() / obj2.getAdr();
-            case REM:
-                return obj1.getAdr() % obj2.getAdr();
-            case NEG:
-                return -obj1.getAdr();
-
-            default:
-                throw new RuntimeException("Call not allowed on provided type of quadruple.");
-        }
-    }
 }
