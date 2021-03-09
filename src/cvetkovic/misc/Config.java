@@ -17,4 +17,6 @@ public class Config {
     public static int inlinedAddressOffset = 0;
     public static int inlinedCounter = 0;
     public static int leftoversLabelGenerator = 0;
+
+    public static boolean dump_dot_files = false;
 }
