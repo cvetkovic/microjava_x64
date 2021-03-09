@@ -1,8 +1,9 @@
-package cvetkovic.ir.ssa;
+package cvetkovic.algorithms;
 
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
+import cvetkovic.misc.Tuple;
 import cvetkovic.misc.Config;
-import cvetkovic.optimizer.CodeSequence;
+import cvetkovic.ir.CodeSequence;
 
 import java.io.*;
 import java.util.*;
@@ -23,7 +24,7 @@ public class DominanceAnalyzer {
     // MEMBERS
     ///////////////////////////////
 
-    DominatorTreeNode dominatorTreeRoot;
+    public DominatorTreeNode dominatorTreeRoot;
     DominatorTreeNode reverseDominatorTreeRoot;
     private final CodeSequence sequence;
 
@@ -36,7 +37,7 @@ public class DominanceAnalyzer {
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominanceFrontier;
 
     private final Map<BasicBlock, Set<BasicBlock>> controlDependence;
-    private final List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> naturalLoops;
+    private final List<Tuple<BasicBlock, Set<BasicBlock>>> naturalLoops;
 
     ///////////////////////////////
     // CONSTRUCTOR
@@ -98,7 +99,7 @@ public class DominanceAnalyzer {
         return controlDependence;
     }
 
-    public List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> getNaturalLoops() {
+    public List<Tuple<BasicBlock, Set<BasicBlock>>> getNaturalLoops() {
         return naturalLoops;
     }
 
@@ -335,8 +336,8 @@ public class DominanceAnalyzer {
     /**
      * http://www.cs.cmu.edu/afs/cs/academic/class/15745-f03/public/lectures/L7_handouts.pdf
      */
-    public List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> determineNaturalLoops() {
-        List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> loops = new ArrayList<>();
+    public List<Tuple<BasicBlock, Set<BasicBlock>>> determineNaturalLoops() {
+        List<Tuple<BasicBlock, Set<BasicBlock>>> loops = new ArrayList<>();
 
         /*
         Three steps:
@@ -346,7 +347,7 @@ public class DominanceAnalyzer {
          */
 
         // DFS of the CFG
-        List<BasicBlock.Tuple<BasicBlock, BasicBlock>> backEdges = new ArrayList<>();
+        List<Tuple<BasicBlock, BasicBlock>> backEdges = new ArrayList<>();
         Stack<BasicBlock> dfsStack = new Stack<>();
         Set<BasicBlock> visited = new HashSet<>();
         dfsStack.push(dominatorTreeRoot.basicBlock);
@@ -362,7 +363,7 @@ public class DominanceAnalyzer {
 
                 // check for back edge condition
                 if (dominators.get(t).contains(h))
-                    backEdges.add(new BasicBlock.Tuple<>(t, h));
+                    backEdges.add(new Tuple<>(t, h));
             }
         }
 
@@ -372,7 +373,7 @@ public class DominanceAnalyzer {
         }
 
         // detecting constitutive blocks
-        for (BasicBlock.Tuple<BasicBlock, BasicBlock> backEdge : backEdges) {
+        for (Tuple<BasicBlock, BasicBlock> backEdge : backEdges) {
             BasicBlock n = backEdge.u;
             BasicBlock d = backEdge.v;
 
@@ -395,7 +396,7 @@ public class DominanceAnalyzer {
                 }
             }
 
-            loops.add(new BasicBlock.Tuple<>(d, loop));
+            loops.add(new Tuple<>(d, loop));
         }
 
 
@@ -403,7 +404,7 @@ public class DominanceAnalyzer {
             if (loops.size() > 0)
                 System.out.println("Natural loops detected in " + sequence.function.getName() + ":");
 
-            for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
+            for (Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
                 StringBuilder sb = new StringBuilder();
                 loop.v.forEach(p -> sb.append(p.blockId).append(", "));
                 String members = sb.substring(0, sb.length() - 2);
@@ -412,7 +413,7 @@ public class DominanceAnalyzer {
 
             /* Nesting is checked by testing whether the set of nodes of a
                loop A is a subset of the set of nodes of another loop B */
-                for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
+                for (Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
                     if (parent.v.containsAll(loop.v) && loop != parent) {
                         subset = true;
                         subsetHeaderIndex = parent.u.blockId;

@@ -1,12 +1,12 @@
-package cvetkovic.ir.optimizations.ssa;
+package cvetkovic.optimizer.passes;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
+import cvetkovic.misc.Tuple;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
-import cvetkovic.ir.ssa.DominanceAnalyzer;
-import cvetkovic.optimizer.CodeSequence;
-import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.algorithms.DominanceAnalyzer;
+import cvetkovic.ir.CodeSequence;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -23,10 +23,10 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
 
     @Override
     public void optimize() {
-        List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> loops = sequence.dominanceAnalyzer.getNaturalLoops();
+        List<Tuple<BasicBlock, Set<BasicBlock>>> loops = sequence.dominanceAnalyzer.getNaturalLoops();
 
-        for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> tuple : loops) {
-            Set<BasicBlock.Tuple<Obj, Integer>> definedIn = new HashSet<>();
+        for (Tuple<BasicBlock, Set<BasicBlock>> tuple : loops) {
+            Set<Tuple<Obj, Integer>> definedIn = new HashSet<>();
             tuple.v.forEach(p -> definedIn.addAll(p.getSetOfSSADefinedVariablesWithNegatedPHIs()));
 
             Map<Obj, Set<Quadruple>> phis = new HashMap<>();
@@ -52,7 +52,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             boolean changed;
 
             do {
-                BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v, phis, tuple.u);
+                Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v, phis, tuple.u);
 
                 if (loopInvariantInstruction != null) {
                     addToPreheader(loopInvariantInstruction, preheader, definedIn);
@@ -115,9 +115,9 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         preheader.allVariables = preheader.extractAllVariables();
     }
 
-    private void addToPreheader(BasicBlock.Tuple<BasicBlock, Quadruple> loopInvariantInstruction,
+    private void addToPreheader(Tuple<BasicBlock, Quadruple> loopInvariantInstruction,
                                 BasicBlock preheader,
-                                Set<BasicBlock.Tuple<Obj, Integer>> definedIn) {
+                                Set<Tuple<Obj, Integer>> definedIn) {
         Quadruple toRemove = loopInvariantInstruction.v;
 
         preheader.instructions.add(toRemove);
@@ -134,11 +134,11 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         }
     }
 
-    private BasicBlock.Tuple<BasicBlock, Quadruple> findInvariantInstruction(Set<BasicBlock> basicBlocks,
-                                                                             Set<BasicBlock.Tuple<Obj, Integer>> definedIn,
-                                                                             Set<BasicBlock> loop,
-                                                                             Map<Obj, Set<Quadruple>> phis,
-                                                                             BasicBlock loopHeader) {
+    private Tuple<BasicBlock, Quadruple> findInvariantInstruction(Set<BasicBlock> basicBlocks,
+                                                                        Set<Tuple<Obj, Integer>> definedIn,
+                                                                        Set<BasicBlock> loop,
+                                                                        Map<Obj, Set<Quadruple>> phis,
+                                                                        BasicBlock loopHeader) {
         for (BasicBlock block : basicBlocks) {
             for (Quadruple q : block.instructions) {
                 boolean invariant1 = false;
@@ -184,7 +184,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                             q.getSsaResultCount(),
                             phis,
                             loopHeader))
-                        return new BasicBlock.Tuple<>(block, q);
+                        return new Tuple<>(block, q);
                 }
             }
         }

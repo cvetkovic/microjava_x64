@@ -1,12 +1,11 @@
-package cvetkovic.ir.optimizations.ssa;
+package cvetkovic.optimizer.passes;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
-import cvetkovic.ir.ssa.DominanceAnalyzer;
-import cvetkovic.optimizer.CodeSequence;
-import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.algorithms.DominanceAnalyzer;
+import cvetkovic.ir.CodeSequence;
 
 import java.util.*;
 

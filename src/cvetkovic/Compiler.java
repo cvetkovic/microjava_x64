@@ -2,9 +2,9 @@ package cvetkovic;
 
 import cvetkovic.exceptions.UninitializedVariableException;
 import cvetkovic.ir.IRCodeGenerator;
-import cvetkovic.ir.optimizations.IROptimizer;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
@@ -111,7 +111,7 @@ public class Compiler {
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
                 List<Obj> functions = irCodeGenerator.getFunctionsObj();
-                IROptimizer irCodeOptimizer = new IROptimizer(irCode, functions, semanticCheck.getGlobalVariables());
+                Optimizer irCodeOptimizer = new Optimizer(irCode, functions, semanticCheck.getGlobalVariables());
                 String IRCodeToPrintPre = null;
                 String IRCodeToPrintPost = null;
 

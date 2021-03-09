@@ -1,16 +1,16 @@
-package cvetkovic.ir.optimizations.ssa;
+package cvetkovic.optimizer.passes;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.ir.optimizations.IROptimizer;
+import cvetkovic.ir.BasicBlock;
+import cvetkovic.misc.Tuple;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
-import cvetkovic.ir.ssa.DominanceAnalyzer;
+import cvetkovic.algorithms.DominanceAnalyzer;
 import cvetkovic.misc.Config;
-import cvetkovic.optimizer.CodeSequence;
-import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.ir.CodeSequence;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -50,7 +50,7 @@ public class FunctionInlining implements OptimizerPass {
         return allow;
     }
 
-    private BasicBlock.Tuple<BasicBlock, Quadruple> getCallsToInline() {
+    private Tuple<BasicBlock, Quadruple> getCallsToInline() {
         for (BasicBlock block : currentSequence.basicBlocks) {
             for (Quadruple instruction : block.instructions) {
                 if (instruction.getInstruction() == IRInstruction.CALL ||
@@ -64,7 +64,7 @@ public class FunctionInlining implements OptimizerPass {
                             continue;
                         default:
                             if (allowToInline(functionObj))
-                                return new BasicBlock.Tuple<>(block, instruction);
+                                return new Tuple<>(block, instruction);
                     }
                 }
             }
@@ -128,7 +128,7 @@ public class FunctionInlining implements OptimizerPass {
 
     @Override
     public void optimize() {
-        BasicBlock.Tuple<BasicBlock, Quadruple> tuple;
+        Tuple<BasicBlock, Quadruple> tuple;
 
         while ((tuple = getCallsToInline()) != null) {
             List<Quadruple> callParameters = getCallParameters(tuple.u, tuple.v);
@@ -299,7 +299,7 @@ public class FunctionInlining implements OptimizerPass {
             objs.addAll(b.allVariables.stream().filter(p -> p.getKind() == Obj.Var).collect(Collectors.toSet()));
 
         int oldAllocationValue = 0;//((QuadrupleIntegerConst) currentSequence.entryBlock.instructions.get(1).getArg1()).getValue();
-        int lastSize = IROptimizer.giveAddressToAll(objs, oldAllocationValue);
+        int lastSize = Optimizer.giveAddressToAll(objs, oldAllocationValue);
         currentSequence.entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
 
         objs.stream().sorted(Comparator.comparingInt(Obj::getAdr)).

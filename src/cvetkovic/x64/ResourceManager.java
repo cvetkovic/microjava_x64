@@ -1,6 +1,6 @@
 package cvetkovic.x64;
 
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.misc.Tuple;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.x64.cpu.AddressDescriptor;
 import cvetkovic.x64.cpu.Descriptor;
@@ -30,7 +30,7 @@ public class ResourceManager {
         this.allRegisters.forEach(p -> _64_bit_name_to_reg_descriptor.put(p.ISA_8_ByteName, p));
     }
 
-    public void configureAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
+    public void configureAddressDescriptors(List<Tuple<Obj, Boolean>> variables) {
         createAddressDescriptors(variables);
     }
 
@@ -39,8 +39,8 @@ public class ResourceManager {
      *
      * @param variables
      */
-    private void createAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
-        for (BasicBlock.Tuple<Obj, Boolean> tuple : variables) {
+    private void createAddressDescriptors(List<Tuple<Obj, Boolean>> variables) {
+        for (Tuple<Obj, Boolean> tuple : variables) {
             if (tuple.u.getKind() == Obj.Con)
                 continue;
 

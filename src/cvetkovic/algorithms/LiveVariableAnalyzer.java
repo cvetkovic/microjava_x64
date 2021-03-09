@@ -1,6 +1,6 @@
-package cvetkovic.ir;
+package cvetkovic.algorithms;
 
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import rs.etf.pp1.symboltable.concepts.Obj;

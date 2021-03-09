@@ -1,13 +1,13 @@
-package cvetkovic.ir.ssa;
+package cvetkovic.algorithms;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.ir.optimizations.IROptimizer;
+import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
 import cvetkovic.misc.Config;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -248,7 +248,7 @@ public class SSAConverter {
 
             // allocate stack for _phi variables
             int oldAllocationValue = ((QuadrupleIntegerConst) entryBlock.instructions.get(1).getArg1()).getValue();
-            int lastSize = IROptimizer.giveAddressToTemps(phis, oldAllocationValue);
+            int lastSize = Optimizer.giveAddressToTemps(phis, oldAllocationValue);
 
             entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
         }

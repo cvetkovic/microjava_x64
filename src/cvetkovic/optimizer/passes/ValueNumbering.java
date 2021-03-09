@@ -1,11 +1,10 @@
-package cvetkovic.ir.optimizations.ssa;
+package cvetkovic.optimizer.passes;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
-import cvetkovic.optimizer.CodeSequence;
-import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.ir.CodeSequence;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 

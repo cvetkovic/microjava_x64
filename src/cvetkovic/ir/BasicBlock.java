@@ -1,12 +1,12 @@
-package cvetkovic.ir.optimizations;
+package cvetkovic.ir;
 
-import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
+import cvetkovic.misc.Tuple;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -114,16 +114,16 @@ public class BasicBlock {
         return instructions.get(instructions.size() - 1);
     }
 
-    public Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariables() {
+    public Set<Tuple<Obj, Integer>> getSetOfSSADefinedVariables() {
         return getSetOfSSADefinedVariables(false);
     }
 
-    public Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariablesWithNegatedPHIs() {
+    public Set<Tuple<Obj, Integer>> getSetOfSSADefinedVariablesWithNegatedPHIs() {
         return getSetOfSSADefinedVariables(true);
     }
 
-    private Set<BasicBlock.Tuple<Obj, Integer>> getSetOfSSADefinedVariables(boolean negatePhi) {
-        Set<BasicBlock.Tuple<Obj, Integer>> result = new HashSet<>();
+    private Set<Tuple<Obj, Integer>> getSetOfSSADefinedVariables(boolean negatePhi) {
+        Set<Tuple<Obj, Integer>> result = new HashSet<>();
 
         for (Quadruple q : instructions) {
             switch (q.getInstruction()) {
@@ -167,16 +167,6 @@ public class BasicBlock {
         }
 
         return result;
-    }
-
-    public static class Tuple<U, V> {
-        public U u;
-        public V v;
-
-        public Tuple(U u, V v) {
-            this.u = u;
-            this.v = v;
-        }
     }
 
     public static List<BasicBlock> extractBasicBlocksFromSequence(Obj function, List<Quadruple> code, Map<String, Integer> labelIndices) {
