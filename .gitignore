@@ -3,3 +3,6 @@
 microjava_x64.iml
 .idea
 test/program.mj
+/src/META-INF
+test/*.jar
+/dump

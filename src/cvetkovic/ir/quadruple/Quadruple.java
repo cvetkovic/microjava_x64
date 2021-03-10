@@ -61,6 +61,19 @@ public class Quadruple {
         this.arg2 = arg2;
     }
 
+    public Quadruple makeClone() {
+        Quadruple q = new Quadruple(instruction);
+
+        if (arg1 != null)
+            q.setArg1(arg1.makeClone());
+        if (arg2 != null)
+            q.setArg2(arg2.makeClone());
+        if (result != null)
+            q.setResult(result.makeClone());
+
+        return q;
+    }
+
     public void setSSACountArg1(int i) {
         ssaArg1Count = i;
     }
@@ -157,34 +170,60 @@ public class Quadruple {
 
     @Override
     public String toString() {
-        String arg1s = "", arg1uses = "", arg2s = "", arg2uses = "", results = "", resultuses = "";
+        String arg1s = "", arg1Addr = "", arg2s = "", arg2Addr = "", results = "", resultAddr = "";
+        String flags1 = "___", flags2 = "___", flagsR = "___";
 
         if (arg1 != null) {
             arg1s = arg1.toString();
+
             if (ssaArg1Count != -1)
                 arg1s += "_" + ssaArg1Count;
-            if (arg1 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
-                arg1uses = arg1NextUse.toString();
+
+            if (arg1 instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) arg1).getObj();
+
+                if (obj.getKind() == Obj.Var)
+                    arg1Addr = "(" + obj.getAdr() + ")";
+                flags1 = (obj.parameter ? "P" : "_");
+                flags1 += (obj.inlined ? "I" : "_");
+                flags1 += (obj.tempVar ? "T" : "_");
+            }
         }
         if (arg2 != null) {
             arg2s = arg2.toString();
+
             if (ssaArg2Count != -1)
                 arg2s += "_" + ssaArg2Count;
-            if (arg2 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
-                arg2uses = arg2NextUse.toString();
+
+            if (arg2 instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) arg2).getObj();
+
+                if (obj.getKind() == Obj.Var)
+                    arg2Addr = "(" + obj.getAdr() + ")";
+                flags2 = (obj.parameter ? "P" : "_");
+                flags2 += (obj.inlined ? "I" : "_");
+                flags2 += (obj.tempVar ? "T" : "_");
+            }
         }
         if (result != null) {
             results = result.toString();
+
             if (ssaResultCount != -1)
                 results += "_" + ssaResultCount;
-            if (result instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
-                resultuses = resultNextUse.toString();
+
+            if (result instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) result).getObj();
+
+                if (obj.getKind() == Obj.Var)
+                    resultAddr = "(" + obj.getAdr() + ")";
+                flagsR = (obj.parameter ? "P" : "_");
+                flagsR += (obj.inlined ? "I" : "_");
+                flagsR += (obj.tempVar ? "T" : "_");
+            }
         }
 
-        String formattedOutput = String.format("%-15.15s | %-15.15s %-5s | %-15.15s %-5s | %-15.15s %-5s |",
-                instruction, arg1s, arg1uses, arg2s, arg2uses, results, resultuses);
-
-        return formattedOutput.toString();
+        return String.format("%-15.15s | %-15.15s %-5s (%-3s) | %-15.15s %-5s (%-3s) | %-15.15s %-5s (%-3s) |",
+                instruction, arg1s, arg1Addr, flags1, arg2s, arg2Addr, flags2, results, resultAddr, flagsR);
     }
 
     public String getNonformattedOutput() {
@@ -217,32 +256,5 @@ public class Quadruple {
         }
 
         return sb.toString();
-    }
-
-    public int getFoldedValue() {
-        Obj obj1 = ((QuadrupleObjVar) arg1).getObj();
-        Obj obj2 = (arg2 != null ? ((QuadrupleObjVar) arg2).getObj() : null);
-
-        if (!(obj1.getKind() == Obj.Con && obj2 != null && obj2.getKind() == Obj.Con) &&
-                !(obj1.getKind() == Obj.Con && obj2 == null && instruction == IRInstruction.NEG))
-            throw new RuntimeException("Call not allowed on provided type of quadruple.");
-
-        switch (instruction) {
-            case ADD:
-                return obj1.getAdr() + obj2.getAdr();
-            case SUB:
-                return obj1.getAdr() - obj2.getAdr();
-            case MUL:
-                return obj1.getAdr() * obj2.getAdr();
-            case DIV:
-                return obj1.getAdr() / obj2.getAdr();
-            case REM:
-                return obj1.getAdr() % obj2.getAdr();
-            case NEG:
-                return -obj1.getAdr();
-
-            default:
-                throw new RuntimeException("Call not allowed on provided type of quadruple.");
-        }
     }
 }

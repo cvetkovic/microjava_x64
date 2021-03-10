@@ -1,0 +1,19 @@
+program MJProgram
+{
+    int parent()
+    {
+        return 1;
+    }
+
+    int toInline()
+    {
+        return parent();
+    }
+
+	void main()
+	    int x;
+	{
+	    x = toInline();
+	    print(x);
+	}
+}

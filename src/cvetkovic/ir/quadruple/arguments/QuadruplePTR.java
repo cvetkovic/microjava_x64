@@ -5,4 +5,9 @@ public class QuadruplePTR extends QuadrupleVariable {
     public String toString() {
         return "PTR";
     }
+
+    @Override
+    public QuadrupleVariable makeClone() {
+        return new QuadruplePTR();
+    }
 }

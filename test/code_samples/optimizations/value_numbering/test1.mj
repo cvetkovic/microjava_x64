@@ -1,0 +1,21 @@
+program MJProgram
+{
+    void main()
+        int a, b, c, d;
+        int x, y;
+        int m, n, o, p, q;
+    {
+        a = b + c;
+        b = a - d;
+        c = b + c;
+        d = a - d;
+
+        // commutativity
+        x = b + c;
+        y = c + b;
+
+        // constant folding
+        m = 1 + 2;
+        n = 2 + 1;
+    }
+}

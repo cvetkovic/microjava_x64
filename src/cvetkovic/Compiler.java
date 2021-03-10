@@ -2,9 +2,9 @@ package cvetkovic;
 
 import cvetkovic.exceptions.UninitializedVariableException;
 import cvetkovic.ir.IRCodeGenerator;
-import cvetkovic.ir.optimizations.IROptimizer;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.parser.MJParser;
 import cvetkovic.parser.ast.Program;
 import cvetkovic.parser.ast.SyntaxNode;
@@ -21,34 +21,34 @@ import java.util.List;
 
 public class Compiler {
     private static String inputFile = "", outputFile = "";
-    private static boolean dumpAST = false, dumpSymbolTable = false, dumpIR = false, run = false, optimize_ir = false, dump_asm = false;
+    private static boolean dumpAST = false, dumpSymbolTable = false, dumpIR = false, dumpCFG = false, optimizeIR = false, dumpASM = false;
     private static boolean showHelp;
 
     public static void main(String[] args) throws Exception {
         boolean setInputFile = false, setOutputFile = false;
 
         for (String s : args) {
-            if (s.toLowerCase().equals("-help")) {
+            if (s.equalsIgnoreCase("-help")) {
                 showHelp = true;
                 break;
-            } else if (s.toLowerCase().equals("-input")) {
+            } else if (s.equalsIgnoreCase("-input")) {
                 setInputFile = true;
                 setOutputFile = false;
-            } else if (s.toLowerCase().equals("-output")) {
+            } else if (s.equalsIgnoreCase("-output")) {
                 setOutputFile = true;
                 setInputFile = false;
-            } else if (s.toLowerCase().equals("-dump_ast"))
+            } else if (s.equalsIgnoreCase("-dump_ast"))
                 dumpAST = true;
-            else if (s.toLowerCase().equals("-dump_symbols"))
+            else if (s.equalsIgnoreCase("-dump_symbols"))
                 dumpSymbolTable = true;
-            else if (s.toLowerCase().equals("-dump_ir"))
+            else if (s.equalsIgnoreCase("-dump_ir"))
                 dumpIR = true;
-            else if (s.toLowerCase().equals("-optimize_ir"))
-                optimize_ir = true;
-            else if (s.toLowerCase().equals("-dump_asm"))
-                dump_asm = true;
-            else if (s.toLowerCase().equals("-run"))
-                run = true;
+            else if (s.equalsIgnoreCase("-dump_cfg"))
+                dumpCFG = true;
+            else if (s.equalsIgnoreCase("-optimize_ir"))
+                optimizeIR = true;
+            else if (s.equalsIgnoreCase("-dump_asm"))
+                dumpASM = true;
             else {
                 if (setInputFile)
                     inputFile = s;
@@ -71,6 +71,7 @@ public class Compiler {
                     "-dump_ast - dump abstract syntax tree\n" +
                     "-dump_symbols - dump symbol table\n" +
                     "-dump_ir - dump intermediate code\n" +
+                    "-dump_cfg - dump control flow graph\n" +
                     "-optimize_ir - do optimizations on intermediate code\n" +
                     "-dump_asm - dump generated x86-64 code\n");
 
@@ -111,13 +112,18 @@ public class Compiler {
                 System.out.println("================ INTERMEDIATE CODE GENERATION ================");
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
                 List<Obj> functions = irCodeGenerator.getFunctionsObj();
-                IROptimizer irCodeOptimizer = new IROptimizer(irCode, functions, semanticCheck.getGlobalVariables());
-                String IRCodeToPrintPre = null;
-                String IRCodeToPrintPost = null;
+                Optimizer irCodeOptimizer = new Optimizer(irCode, functions, semanticCheck.getGlobalVariables());
+                String IRCodeToPrintPre;
+                String IRCodeToPrintPost;
 
                 IRCodeToPrintPre = irCodeOptimizer.toString();
 
-                if (optimize_ir) {
+                if (dumpCFG) {
+                    String dumpPath = System.getProperty("user.dir") + File.separator + "dump" + File.separator;
+                    irCodeOptimizer.setDumpFlag(dumpPath);
+                }
+
+                if (optimizeIR) {
                     System.out.println("================ INTERMEDIATE CODE OPTIMIZATION ================");
                     irCodeOptimizer.executeOptimizations();
                 }
@@ -127,7 +133,7 @@ public class Compiler {
                 if (dumpIR) {
                     System.out.println("================ INTERMEDIATE CODE BEFORE OPTIMIZER ================");
                     System.out.print(IRCodeToPrintPre);
-                    if (optimize_ir) {
+                    if (optimizeIR) {
                         System.out.println("================ INTERMEDIATE CODE AFTER OPTIMIZER ================");
                         System.out.print(IRCodeToPrintPost);
                     }
@@ -140,7 +146,7 @@ public class Compiler {
                         semanticCheck.getClassMetadata());
 
                 assemblyGenerator.generateCode();
-                if (dump_asm) {
+                if (dumpASM) {
                     readOutputFile(Compiler.outputFile);
                 }
 

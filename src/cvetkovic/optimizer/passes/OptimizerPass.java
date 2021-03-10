@@ -1,4 +1,4 @@
-package cvetkovic.optimizer;
+package cvetkovic.optimizer.passes;
 
 public interface OptimizerPass {
     void optimize();

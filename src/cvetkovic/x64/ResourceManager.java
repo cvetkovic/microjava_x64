@@ -1,6 +1,6 @@
 package cvetkovic.x64;
 
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.misc.Tuple;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.x64.cpu.AddressDescriptor;
 import cvetkovic.x64.cpu.Descriptor;
@@ -30,7 +30,7 @@ public class ResourceManager {
         this.allRegisters.forEach(p -> _64_bit_name_to_reg_descriptor.put(p.ISA_8_ByteName, p));
     }
 
-    public void configureAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
+    public void configureAddressDescriptors(List<Tuple<Obj, Boolean>> variables) {
         createAddressDescriptors(variables);
     }
 
@@ -39,8 +39,8 @@ public class ResourceManager {
      *
      * @param variables
      */
-    private void createAddressDescriptors(List<BasicBlock.Tuple<Obj, Boolean>> variables) {
-        for (BasicBlock.Tuple<Obj, Boolean> tuple : variables) {
+    private void createAddressDescriptors(List<Tuple<Obj, Boolean>> variables) {
+        for (Tuple<Obj, Boolean> tuple : variables) {
             if (tuple.u.getKind() == Obj.Con)
                 continue;
 
@@ -126,7 +126,7 @@ public class ResourceManager {
      * remove from free register list if is present there.
      */
     public void fetchOperand(RegisterDescriptor register, Obj newObj, List<String> out) {
-        if (newObj.getAdr() ==-1)
+        if (newObj.getAdr() == -1)
             throw new RuntimeException("Address of obj cannot be negative. Operand fetching has failed.");
 
         try {
@@ -210,8 +210,7 @@ public class ResourceManager {
                 !reservedRegisters.contains(addressDescriptor.getDescriptor())) {
             // CASE: obj is already in register, no action needed
             return (RegisterDescriptor) addressDescriptor.getDescriptor();
-        }
-        else if ((addressDescriptor == null || addressDescriptor.getDescriptor() instanceof MemoryDescriptor) &&
+        } else if ((addressDescriptor == null || addressDescriptor.getDescriptor() instanceof MemoryDescriptor) &&
                 freeRegisters.size() > 0) {
             // CASE: var not encountered before or is not in a register and there are free registers
             // take a register from the list and return
@@ -446,8 +445,7 @@ public class ResourceManager {
                     freeRegisters.remove(var.parameterDescriptor);*/
                 }
             }
-        }
-        else
+        } else
             throw new RuntimeException("Invalid parameter.");
     }
 

@@ -1,0 +1,14 @@
+program test302
+{
+	int inkrement(int a, int inc) int pom;
+	{
+		return a + 1;
+	}
+
+	void main()
+    int i;
+	{
+		for(i = 0; i < 3; )
+			i = inkrement(i, 1);    // this test solved bug -> no update var list
+	}
+}

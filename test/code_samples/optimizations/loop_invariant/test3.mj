@@ -1,0 +1,32 @@
+program MJProgram
+{
+	void main()
+	    int i, j, a, b, c;
+	{
+	    a = 5;
+
+	    for (i = 0; i < 10; i++)
+	    {
+	        b = a; // invariant
+
+	        print(i);
+	        print(' ');
+	        print('-');
+	        print(' ');
+
+	        for (j = 0; j < 10; j++)
+	        {
+	            c = i + 1; // invariant of inner-loop
+	            print(c);
+	            print(' ');
+	        }
+
+	        print(eol);
+	    }
+
+	    print(a);
+	    print(eol);
+	    print(b);
+	}
+}
+

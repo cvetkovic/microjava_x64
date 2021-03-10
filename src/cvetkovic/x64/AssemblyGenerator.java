@@ -1,10 +1,11 @@
 package cvetkovic.x64;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
+import cvetkovic.misc.Tuple;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.*;
-import cvetkovic.optimizer.CodeSequence;
+import cvetkovic.ir.CodeSequence;
 import cvetkovic.optimizer.Optimizer;
 import cvetkovic.semantics.ClassMetadata;
 import cvetkovic.structures.SymbolTable;
@@ -155,13 +156,13 @@ public class AssemblyGenerator {
     }
 
     private void createAddressDescriptors(BasicBlock basicBlock) {
-        List<BasicBlock.Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
+        List<Tuple<Obj, Boolean>> memoryLocationList = new ArrayList<>();
         for (Obj var : basicBlock.allVariables)
-            if (!var.parameter)
-                memoryLocationList.add(new BasicBlock.Tuple<>(var, globalVariables.contains(var)));
+            if (!var.parameter || var.inlined)
+                memoryLocationList.add(new Tuple<>(var, globalVariables.contains(var)));
         for (Obj var : basicBlock.enclosingFunction.getLocalSymbols()) {
             if (var.parameter) {
-                memoryLocationList.add(new BasicBlock.Tuple<>(var, false));
+                memoryLocationList.add(new Tuple<>(var, false));
             }
         }
 
@@ -275,6 +276,9 @@ public class AssemblyGenerator {
         writer.write(System.lineSeparator());
 
         for (CodeSequence codeSequence : codeSequences) {
+            if (codeSequence.inlined)
+                continue;
+
             for (BasicBlock basicBlock : Optimizer.reassembleBasicBlocks(codeSequence.basicBlocks)) {
                 List<String> aux = new ArrayList<>();
                 boolean cancelSaveDirtyVals = false;

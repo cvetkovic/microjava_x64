@@ -1,12 +1,12 @@
-package cvetkovic.ir.optimizations;
+package cvetkovic.ir;
 
-import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleARR;
 import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
 import cvetkovic.misc.Config;
-import cvetkovic.structures.SymbolTable;
+import cvetkovic.misc.Tuple;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
@@ -33,6 +33,21 @@ public class BasicBlock {
     public BasicBlock(Obj enclosingFunction) {
         this.enclosingFunction = enclosingFunction;
     }
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // CLONING
+    //////////////////////////////////////////////////////////////////////////////////
+
+    public BasicBlock makeClone() {
+        BasicBlock result = new BasicBlock(enclosingFunction);
+
+        for (Quadruple q : instructions)
+            result.instructions.add(q.makeClone());
+        result.allVariables = result.extractAllVariables();
+
+        return result;
+    }
+
 
     //////////////////////////////////////////////////////////////////////////////////
     // BASIC BLOCK INFORMATION EXTRACTION
@@ -99,14 +114,59 @@ public class BasicBlock {
         return instructions.get(instructions.size() - 1);
     }
 
-    public static class Tuple<U, V> {
-        public U u;
-        public V v;
+    public Set<Tuple<Obj, Integer>> getSetOfSSADefinedVariables() {
+        return getSetOfSSADefinedVariables(false);
+    }
 
-        public Tuple(U u, V v) {
-            this.u = u;
-            this.v = v;
+    public Set<Tuple<Obj, Integer>> getSetOfSSADefinedVariablesWithNegatedPHIs() {
+        return getSetOfSSADefinedVariables(true);
+    }
+
+    private Set<Tuple<Obj, Integer>> getSetOfSSADefinedVariables(boolean negatePhi) {
+        Set<Tuple<Obj, Integer>> result = new HashSet<>();
+
+        for (Quadruple q : instructions) {
+            switch (q.getInstruction()) {
+                // arithmetic
+                case ADD:
+                case SUB:
+                case MUL:
+                case DIV:
+                case REM:
+                case NEG:
+                    // memory
+                case LOAD:
+                case ALOAD:
+                case ASTORE:
+                case GET_PTR:
+                    // I/O
+                case SCANF:
+                    result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                    break;
+                // functions
+                case CALL:
+                case INVOKE_VIRTUAL:
+                    if (q.getResult() != null)
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                    break;
+                case STORE_PHI:
+                    if (negatePhi)
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), -q.getSsaResultCount()));
+                    else
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                    break;
+
+
+                case STORE:
+                case MALLOC:
+                    if (q.getArg2() == null || q.getArg2() instanceof QuadrupleARR)
+                        result.add(new Tuple<>(((QuadrupleObjVar) q.getResult()).getObj(), q.getSsaResultCount()));
+                default:
+                    break;
+            }
         }
+
+        return result;
     }
 
     public static List<BasicBlock> extractBasicBlocksFromSequence(Obj function, List<Quadruple> code, Map<String, Integer> labelIndices) {
@@ -268,11 +328,11 @@ public class BasicBlock {
                 cmp.setArg1(lastInstruction.getArg1());
                 cmp.setArg2(lastInstruction.getArg2());
 
-                Obj cmpResult = new Obj(Obj.Var, Config.compare_tmp + canonicalFormVarGenerator++, SymbolTable.intType);
+                /*Obj cmpResult = new Obj(Obj.Var, Config.compare_tmp + canonicalFormVarGenerator++, SymbolTable.intType);
                 cmpResult.tempVar = true;
-                cmp.setResult(new QuadrupleObjVar(cmpResult));
+                cmp.setResult(new QuadrupleObjVar(cmpResult));*/
                 block.instructions.add(block.instructions.size() - 1, cmp);
-                block.allVariables.add(cmpResult);
+                //block.allVariables.add(cmpResult);
 
                 BasicBlock successor1 = block.successors.get(0);
                 BasicBlock successor2 = block.successors.get(1);
@@ -293,7 +353,7 @@ public class BasicBlock {
                     targetJump = new QuadrupleLabel(label);
                 }
 
-                lastInstruction.setArg1(new QuadrupleObjVar(cmpResult));
+                lastInstruction.setArg1(null);
                 lastInstruction.setArg2(lastInstruction.getResult());
                 lastInstruction.setResult(targetJump);
             }
@@ -311,7 +371,7 @@ public class BasicBlock {
         return successors.size() > 0;
     }
 
-    private Collection<Obj> extractAllVariables() {
+    public Collection<Obj> extractAllVariables() {
         Set<Obj> variables = new HashSet<>();
 
         for (Quadruple q : instructions) {
@@ -319,14 +379,26 @@ public class BasicBlock {
             QuadrupleVariable arg2 = q.getArg2();
             QuadrupleVariable result = q.getResult();
 
-            if (arg1 instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) arg1).getObj());
+            if (arg1 instanceof QuadrupleObjVar) {
+                Obj objArg1 = ((QuadrupleObjVar) arg1).getObj();
 
-            if (arg2 instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) arg2).getObj());
+                if (objArg1.getKind() != Obj.Con)// && objArg1.getKind() != Obj.Meth)
+                    variables.add(objArg1);
+            }
 
-            if (result instanceof QuadrupleObjVar)
-                variables.add(((QuadrupleObjVar) result).getObj());
+            if (arg2 instanceof QuadrupleObjVar) {
+                Obj objArg2 = ((QuadrupleObjVar) arg2).getObj();
+
+                if (objArg2.getKind() != Obj.Con)// && objArg2.getKind() != Obj.Meth)
+                    variables.add(objArg2);
+            }
+
+            if (result instanceof QuadrupleObjVar) {
+                Obj objResult = ((QuadrupleObjVar) result).getObj();
+
+                if (objResult.getKind() != Obj.Con)// && objResult.getKind() != Obj.Meth)
+                    variables.add(objResult);
+            }
         }
 
         return variables;
@@ -369,7 +441,7 @@ public class BasicBlock {
     }
 
     public Set<Obj> getSetOfDefinedVariables() {
-        Set<Obj> result = new HashSet<>();
+        /*Set<Obj> result = new HashSet<>();
 
         for (Quadruple q : instructions) {
             switch (q.getInstruction()) {
@@ -401,9 +473,11 @@ public class BasicBlock {
                 default:
                     break;
             }
-        }
+        }*/
 
-        return result;
+        return getSetOfSSADefinedVariables().stream().map(p -> p.u).collect(Collectors.toSet());
+
+        //return result;
     }
 
     public boolean isEmpty() {

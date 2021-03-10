@@ -1,0 +1,26 @@
+program MJProgram
+{
+    int toInline(char i, char n, int x)
+    {
+        print(i);
+        print(n);
+        print('l');
+        print('i');
+        print('n');
+        print('e');
+
+        if (x == 1)
+            print('d');
+
+        return 1;
+    }
+
+	void main()
+	    int x;
+	{
+	    x = toInline('i', 'n', 1);
+	    print(eol);
+	    print(x);
+	    print(eol);
+	}
+}

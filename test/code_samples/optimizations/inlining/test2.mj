@@ -1,0 +1,14 @@
+program MJProgram
+{
+    int toInline()
+    {
+        return 1;
+    }
+
+	void main()
+	    int x;
+	{
+	    x = toInline();
+	    print(x);
+	}
+}

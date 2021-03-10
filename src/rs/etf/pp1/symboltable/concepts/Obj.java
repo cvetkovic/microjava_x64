@@ -15,15 +15,16 @@ import java.util.Iterator;
  *
  * @author ETF
  */
-public class Obj {
+public class Obj implements Cloneable {
     public static final int Con = 0, Var = 1, Type = 2, Meth = 3, Fld = 4, Elem = 5, Prog = 6;
 
     public static final int NO_VALUE = -1;
 
-    // aditional specifier
+    // additional specifier
     public boolean tempVar = false;
     public boolean parameter = false;
     public boolean stackParameter = false;
+    public boolean inlined = false;
 
     private String name;
     public int uniqueID;
@@ -51,6 +52,10 @@ public class Obj {
     // Prog: kolekcija simbola programa
     private SymbolDataStructure locals;
 
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 
     public int getKind() {
         return kind;
@@ -91,6 +96,10 @@ public class Obj {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getAdr() {
@@ -155,8 +164,7 @@ public class Obj {
                     return false;
             }
             return true;
-        }
-        else
+        } else
             return false;
     }
 

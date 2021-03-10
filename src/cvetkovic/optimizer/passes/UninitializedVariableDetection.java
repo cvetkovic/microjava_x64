@@ -1,14 +1,13 @@
-package cvetkovic.ir.optimizations.ssa;
+package cvetkovic.optimizer.passes;
 
 import cvetkovic.exceptions.UninitializedVariableException;
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
+import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
 import cvetkovic.ir.quadruple.arguments.QuadrupleVariable;
-import cvetkovic.optimizer.CodeSequence;
-import cvetkovic.optimizer.OptimizerPass;
+import cvetkovic.ir.CodeSequence;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.HashSet;
@@ -41,12 +40,12 @@ public class UninitializedVariableDetection implements OptimizerPass {
                 if (arg1 instanceof QuadrupleObjVar && instruction.getSsaArg1Count() == 0) {
                     Obj obj = ((QuadrupleObjVar) arg1).getObj();
 
-                    if (!obj.parameter && !globalVariables.contains(obj))
+                    if (!obj.parameter && !obj.tempVar && !globalVariables.contains(obj))
                         uninitializedVariables.add(obj);
                 } else if (arg2 instanceof QuadrupleObjVar && instruction.getSsaArg2Count() == 0) {
                     Obj obj = ((QuadrupleObjVar) arg2).getObj();
 
-                    if (!obj.parameter && !globalVariables.contains(obj))
+                    if (!obj.parameter && !obj.tempVar && !globalVariables.contains(obj))
                         uninitializedVariables.add(obj);
                 } else if (arg1 instanceof QuadruplePhi) {
                     QuadruplePhi phi = (QuadruplePhi) arg1;

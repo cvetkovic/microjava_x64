@@ -1,13 +1,13 @@
-package cvetkovic.ir.ssa;
+package cvetkovic.algorithms;
 
 import cvetkovic.ir.IRInstruction;
-import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.ir.optimizations.IROptimizer;
+import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
 import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
 import cvetkovic.misc.Config;
+import cvetkovic.optimizer.Optimizer;
 import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -107,6 +107,10 @@ public class SSAConverter {
         // renaming starts from the entry block
         internalRenaming(dominanceAnalyzer.dominatorTreeRoot, visited, count, stack);
 
+        // asserting algorithm correctness
+        for (Stack<Integer> s : stack.values())
+            assert s.peek() == 0;
+
         System.out.println("Renaming has been done.");
     }
 
@@ -117,6 +121,10 @@ public class SSAConverter {
             return;
 
         visited.add(n);
+
+        // NOTE: this maps is needed to count how many pushes to the stack were done on particular Obj node
+        // because the stack needs to be popped the same number of times
+        Map<Obj, Integer> howManyDefinitions = new HashMap<>();
 
         // usages and definitions in each statement of the basic block
         for (Quadruple statement : n.instructions) {
@@ -146,12 +154,13 @@ public class SSAConverter {
                 count.put(obj, i);
                 stack.get(obj).push(i);
                 statement.setSSACountResult(i);
+
+                int howMany = howManyDefinitions.getOrDefault(obj, 0);
+                howManyDefinitions.put(obj, howMany + 1);
             }
         }
 
         // patching the successors of a basic block with respect to the CFG
-        // TODO: not sure if here go all successors or just first successors
-        Set<BasicBlock> allSuccessors = n.getAllSuccessors();
         for (BasicBlock Y : n.successors) {
             for (Quadruple statement : Y.instructions) {
                 if (statement.getInstruction() != IRInstruction.STORE_PHI)
@@ -169,8 +178,12 @@ public class SSAConverter {
             internalRenaming(node, visited, count, stack);
 
         // popping off stack
-        for (Obj o : n.getSetOfDefinedVariables())
-            stack.get(o).pop();
+        for (Obj o : n.getSetOfDefinedVariables()) {
+            int howManyPops = howManyDefinitions.get(o);
+
+            for (int i = 0; i < howManyPops; i++)
+                stack.get(o).pop();
+        }
     }
 
     /**
@@ -235,7 +248,7 @@ public class SSAConverter {
 
             // allocate stack for _phi variables
             int oldAllocationValue = ((QuadrupleIntegerConst) entryBlock.instructions.get(1).getArg1()).getValue();
-            int lastSize = IROptimizer.giveAddressToTemps(phis, oldAllocationValue);
+            int lastSize = Optimizer.giveAddressToTemps(phis, oldAllocationValue);
 
             entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
         }

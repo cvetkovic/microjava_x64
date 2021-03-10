@@ -1,7 +1,9 @@
-package cvetkovic.ir.ssa;
+package cvetkovic.algorithms;
 
-import cvetkovic.ir.optimizations.BasicBlock;
-import cvetkovic.optimizer.CodeSequence;
+import cvetkovic.ir.BasicBlock;
+import cvetkovic.misc.Tuple;
+import cvetkovic.misc.Config;
+import cvetkovic.ir.CodeSequence;
 
 import java.io.*;
 import java.util.*;
@@ -9,9 +11,9 @@ import java.util.stream.Collectors;
 
 public class DominanceAnalyzer {
 
-    static class DominatorTreeNode {
-        final BasicBlock basicBlock;
-        final List<DominatorTreeNode> children = new ArrayList<>();
+    public static class DominatorTreeNode {
+        public final BasicBlock basicBlock;
+        public final List<DominatorTreeNode> children = new ArrayList<>();
 
         public DominatorTreeNode(BasicBlock basicBlock) {
             this.basicBlock = basicBlock;
@@ -22,7 +24,7 @@ public class DominanceAnalyzer {
     // MEMBERS
     ///////////////////////////////
 
-    DominatorTreeNode dominatorTreeRoot;
+    public DominatorTreeNode dominatorTreeRoot;
     DominatorTreeNode reverseDominatorTreeRoot;
     private final CodeSequence sequence;
 
@@ -35,7 +37,7 @@ public class DominanceAnalyzer {
     private final Map<BasicBlock, Set<BasicBlock>> reverseDominanceFrontier;
 
     private final Map<BasicBlock, Set<BasicBlock>> controlDependence;
-    private final List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> naturalLoops;
+    private final List<Tuple<BasicBlock, Set<BasicBlock>>> naturalLoops;
 
     ///////////////////////////////
     // CONSTRUCTOR
@@ -97,7 +99,7 @@ public class DominanceAnalyzer {
         return controlDependence;
     }
 
-    public List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> getNaturalLoops() {
+    public List<Tuple<BasicBlock, Set<BasicBlock>>> getNaturalLoops() {
         return naturalLoops;
     }
 
@@ -150,9 +152,10 @@ public class DominanceAnalyzer {
             if ((reverse ? !b.isExitBlock() : !b.isEntryBlock()))
                 dominators.get(b).forEach(p -> s.append(p.blockId).append(", "));
             else
-                s.append("entry, ");
+                s.append(b.blockId).append(", ");
 
-            System.out.println((reverse ? "R" : "") + "Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+            if (Config.printDominatorRelations)
+                System.out.println((reverse ? "R" : "") + "Dom(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
         }
 
         return dominators;
@@ -264,15 +267,17 @@ public class DominanceAnalyzer {
             }
         }
 
-        for (BasicBlock b : result.keySet()) {
-            StringBuilder s = new StringBuilder();
+        if (Config.printDominatorRelations) {
+            for (BasicBlock b : result.keySet()) {
+                StringBuilder s = new StringBuilder();
 
-            if (result.get(b).size() != 0)
-                result.get(b).forEach(p -> s.append(p.blockId).append(", "));
-            else
-                s.append("null, ");
+                if (result.get(b).size() != 0)
+                    result.get(b).forEach(p -> s.append(p.blockId).append(", "));
+                else
+                    s.append("null, ");
 
-            System.out.println((reverse ? "R" : "") + "DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+                System.out.println((reverse ? "R" : "") + "DF(" + b.blockId + ") = { " + s.substring(0, s.length() - 2) + " }");
+            }
         }
 
         return result;
@@ -312,15 +317,17 @@ public class DominanceAnalyzer {
                     result.get(b).add(y);
         }
 
-        for (BasicBlock b : result.keySet()) {
-            StringBuilder s = new StringBuilder();
+        if (Config.printDominatorRelations) {
+            for (BasicBlock b : result.keySet()) {
+                StringBuilder s = new StringBuilder();
 
-            if (result.get(b).size() != 0)
-                result.get(b).forEach(p -> s.append(p.blockId).append(", "));
-            else
-                s.append("null, ");
+                if (result.get(b).size() != 0)
+                    result.get(b).forEach(p -> s.append(p.blockId).append(", "));
+                else
+                    s.append("null, ");
 
-            System.out.println(b.blockId + " is control dependent on { " + s.substring(0, s.length() - 2) + " }");
+                System.out.println(b.blockId + " is control dependent on { " + s.substring(0, s.length() - 2) + " }");
+            }
         }
 
         return result;
@@ -329,8 +336,8 @@ public class DominanceAnalyzer {
     /**
      * http://www.cs.cmu.edu/afs/cs/academic/class/15745-f03/public/lectures/L7_handouts.pdf
      */
-    public List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> determineNaturalLoops() {
-        List<BasicBlock.Tuple<BasicBlock, Set<BasicBlock>>> loops = new ArrayList<>();
+    public List<Tuple<BasicBlock, Set<BasicBlock>>> determineNaturalLoops() {
+        List<Tuple<BasicBlock, Set<BasicBlock>>> loops = new ArrayList<>();
 
         /*
         Three steps:
@@ -340,7 +347,7 @@ public class DominanceAnalyzer {
          */
 
         // DFS of the CFG
-        List<BasicBlock.Tuple<BasicBlock, BasicBlock>> backEdges = new ArrayList<>();
+        List<Tuple<BasicBlock, BasicBlock>> backEdges = new ArrayList<>();
         Stack<BasicBlock> dfsStack = new Stack<>();
         Set<BasicBlock> visited = new HashSet<>();
         dfsStack.push(dominatorTreeRoot.basicBlock);
@@ -356,15 +363,17 @@ public class DominanceAnalyzer {
 
                 // check for back edge condition
                 if (dominators.get(t).contains(h))
-                    backEdges.add(new BasicBlock.Tuple<>(t, h));
+                    backEdges.add(new Tuple<>(t, h));
             }
         }
 
-        System.out.println("Back edges in " + sequence.function.getName() + ":");
-        backEdges.forEach(p -> System.out.println("\t" + p.u.blockId + " -> " + p.v.blockId));
+        if (Config.printNaturalLoopsInfo) {
+            System.out.println("Back edges in " + sequence.function.getName() + ":");
+            backEdges.forEach(p -> System.out.println("\t" + p.u.blockId + " -> " + p.v.blockId));
+        }
 
         // detecting constitutive blocks
-        for (BasicBlock.Tuple<BasicBlock, BasicBlock> backEdge : backEdges) {
+        for (Tuple<BasicBlock, BasicBlock> backEdge : backEdges) {
             BasicBlock n = backEdge.u;
             BasicBlock d = backEdge.v;
 
@@ -387,31 +396,34 @@ public class DominanceAnalyzer {
                 }
             }
 
-            loops.add(new BasicBlock.Tuple<>(d, loop));
+            loops.add(new Tuple<>(d, loop));
         }
 
-        if (loops.size() > 0)
-            System.out.println("Natural loops detected in " + sequence.function.getName() + ":");
 
-        for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
-            StringBuilder sb = new StringBuilder();
-            loop.v.forEach(p -> sb.append(p.blockId).append(", "));
-            String members = sb.substring(0, sb.length() - 2);
-            boolean subset = false;
-            int subsetHeaderIndex = -1;
+        if (Config.printNaturalLoopsInfo) {
+            if (loops.size() > 0)
+                System.out.println("Natural loops detected in " + sequence.function.getName() + ":");
+
+            for (Tuple<BasicBlock, Set<BasicBlock>> loop : loops) {
+                StringBuilder sb = new StringBuilder();
+                loop.v.forEach(p -> sb.append(p.blockId).append(", "));
+                String members = sb.substring(0, sb.length() - 2);
+                boolean subset = false;
+                int subsetHeaderIndex = -1;
 
             /* Nesting is checked by testing whether the set of nodes of a
                loop A is a subset of the set of nodes of another loop B */
-            for (BasicBlock.Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
-                if (parent.v.containsAll(loop.v) && loop != parent) {
-                    subset = true;
-                    subsetHeaderIndex = parent.u.blockId;
+                for (Tuple<BasicBlock, Set<BasicBlock>> parent : loops) {
+                    if (parent.v.containsAll(loop.v) && loop != parent) {
+                        subset = true;
+                        subsetHeaderIndex = parent.u.blockId;
+                    }
                 }
-            }
 
-            System.out.println("\tHeader: " + loop.u.blockId +
-                    ", Nested: " + (subset ? "True (" + subsetHeaderIndex + ")" : "False") +
-                    ", Members: { " + members + " }");
+                System.out.println("\tHeader: " + loop.u.blockId +
+                        ", Nested: " + (subset ? "True (" + subsetHeaderIndex + ")" : "False") +
+                        ", Members: { " + members + " }");
+            }
         }
 
         return loops;
@@ -444,6 +456,12 @@ public class DominanceAnalyzer {
 
                 p.successors.forEach(s -> writer.println(p.blockId + " -> " + s.blockId));
                 p.successors.forEach(s -> reverseWriter.println(s.blockId + " -> " + p.blockId));
+
+                // asserting that optimizations do not corrupt the links
+                for (BasicBlock q : p.successors)
+                    assert (q.predecessors.contains(p));
+                for (BasicBlock q : p.predecessors)
+                    assert (q.successors.contains(p));
             }
 
             writer.println("}");
