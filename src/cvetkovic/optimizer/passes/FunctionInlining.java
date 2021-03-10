@@ -35,14 +35,14 @@ public class FunctionInlining implements OptimizerPass {
         boolean allow = true;
         for (BasicBlock b : inlinedFunction.basicBlocks) {
             for (Quadruple q : b.instructions) {
-                if (q.getInstruction() == IRInstruction.CALL || q.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
+                if (q.getInstruction() == IRInstruction.CALL) {
                     allow = false;
                     break;
                 }
             }
         }
 
-        // TODO: check that function has less basic blocks than the callee
+        // NOTE: here smart strategies can be implemented to decide whether a function will be inlined
 
         if (allow)
             inlinedFunction.inlined = true;
@@ -53,8 +53,8 @@ public class FunctionInlining implements OptimizerPass {
     private Tuple<BasicBlock, Quadruple> getCallsToInline() {
         for (BasicBlock block : currentSequence.basicBlocks) {
             for (Quadruple instruction : block.instructions) {
-                if (instruction.getInstruction() == IRInstruction.CALL ||
-                        instruction.getInstruction() == IRInstruction.INVOKE_VIRTUAL) {
+                // NOTE: virtual methods cannot be inlined
+                if (instruction.getInstruction() == IRInstruction.CALL) {
                     Obj functionObj = ((QuadrupleObjVar) instruction.getArg1()).getObj();
 
                     switch (functionObj.getName()) {
@@ -135,7 +135,6 @@ public class FunctionInlining implements OptimizerPass {
 
             int addressOffset = ((QuadrupleIntegerConst) currentSequence.entryBlock.instructions.stream().
                     filter(p -> p.getInstruction() == IRInstruction.ENTER).findFirst().orElseThrow().getArg1()).getValue();
-            Config.inlinedAddressOffset += addressOffset;
 
             int maxBlockCnt = currentSequence.basicBlocks.stream().mapToInt(p -> p.blockId).max().orElseThrow();
             BasicBlock leftoversFromCurrentBlock = createLeftoversBlock(tuple.u, tuple.v, ++maxBlockCnt);
@@ -144,8 +143,6 @@ public class FunctionInlining implements OptimizerPass {
             BasicBlock inlinedStartBlock = clonedCFG.stream().filter(BasicBlock::isEntryBlock).findFirst().orElseThrow();
             BasicBlock inlinedEndBlock = clonedCFG.stream().filter(BasicBlock::isExitBlock).findFirst().orElseThrow();
 
-            // TODO: see what to do with stack frame size -> change addresses fix
-            // TODO: temps can overwrite some stack variables -> change address fix
             fixHolderEnterInstruction(addressOffset, inlinedStartBlock);
             embedFunction(tuple.u, tuple.v, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
             addJumps(tuple.u, inlinedStartBlock, inlinedEndBlock, leftoversFromCurrentBlock);
@@ -298,7 +295,6 @@ public class FunctionInlining implements OptimizerPass {
     }
 
     public void finalizePass() {
-        Config.inlinedAddressOffset = 0;
         currentSequence.dominanceAnalyzer = new DominanceAnalyzer(currentSequence);
 
         if (cnt > 0)
