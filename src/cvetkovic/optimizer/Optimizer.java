@@ -7,6 +7,8 @@ import cvetkovic.ir.CodeSequence;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.misc.Config;
+import cvetkovic.optimizer.passes.CFGCleaner;
+import cvetkovic.optimizer.passes.FunctionInlining;
 import cvetkovic.optimizer.passes.OptimizerPass;
 import cvetkovic.optimizer.passes.ValueNumbering;
 import cvetkovic.x64.SystemV_ABI;
@@ -125,13 +127,24 @@ public class Optimizer {
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
 
-            addOptimizationPass(new ValueNumbering(sequence));
-            //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            //addOptimizationPass(new ValueNumbering(sequence));
+            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            //addOptimizationPass(new CFGCleaner(sequence));
+
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
             }
+
+            if (Config.dump_dot_files) {
+                // TODO: change 'dot' files output path in production
+                sequence.dominanceAnalyzer=new DominanceAnalyzer(sequence);
+                DominanceAnalyzer.dumpCFG("C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\inlining" + sequence.function + ".dot",
+                        "C:\\Users\\jugos000\\IdeaProjects\\pp2\\test\\debug\\rcfg_inlining" + sequence.function + ".dot",
+                        sequence.dominanceAnalyzer.getBasicBlocks());
+            }
         }
+
 
         // SSA optimizations
         for (CodeSequence sequence : codeSequenceList) {

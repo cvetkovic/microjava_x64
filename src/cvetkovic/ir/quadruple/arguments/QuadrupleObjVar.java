@@ -38,7 +38,7 @@ public class QuadrupleObjVar extends QuadrupleVariable {
                 cloned = (Obj) obj.clone();
                 if (cloned.getKind() == Obj.Var || cloned.getKind() == Obj.Fld)
                     cloned.setAdr(cloned.getAdr() + Config.inlinedAddressOffset);
-                cloned.setName(cloned.getName() + "_inl_" + Config.inlinedCounter);
+                cloned.setName(cloned.getName() + "_i_" + Config.inlinedCounter);
 
                 clonedRefs.put(obj, cloned);
             }

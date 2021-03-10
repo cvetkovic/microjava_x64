@@ -260,6 +260,20 @@ public class FunctionInlining implements OptimizerPass {
         leftoversFromCurrentBlock.predecessors.add(inlinedEndBlock);
         leftoversFromCurrentBlock.successors.addAll(startFrom.successors);
 
+        for (BasicBlock startFromSuccessors : startFrom.successors) {
+            // needed for if with several OR conditions
+            if (startFromSuccessors.predecessors.contains(startFrom)) {
+                startFromSuccessors.predecessors.remove(startFrom);
+                startFromSuccessors.predecessors.add(leftoversFromCurrentBlock);
+            }
+        }
+        for (BasicBlock startFromPredecessor : startFrom.predecessors) {
+            // needed for loop without the 'update var part'
+            if (startFromPredecessor.predecessors.contains(startFrom)) {
+                startFromPredecessor.predecessors.remove(startFrom);
+                startFromPredecessor.predecessors.add(leftoversFromCurrentBlock);
+            }
+        }
         startFrom.successors.clear();
         startFrom.successors.add(inlinedStartBlock);
 
@@ -285,25 +299,20 @@ public class FunctionInlining implements OptimizerPass {
 
     public void finalizePass() {
         Config.inlinedAddressOffset = 0;
-        if (cnt > 0) {
-            currentSequence.dominanceAnalyzer = new DominanceAnalyzer(currentSequence);
+        currentSequence.dominanceAnalyzer = new DominanceAnalyzer(currentSequence);
 
-            debugVariableAddresses();
-        }
+        if (cnt > 0)
+            setVariableAddresses();
     }
 
-    private void debugVariableAddresses() {
+    private void setVariableAddresses() {
         Set<Obj> objs = new HashSet<>();
 
         for (BasicBlock b : currentSequence.basicBlocks)
             objs.addAll(b.allVariables.stream().filter(p -> p.getKind() == Obj.Var).collect(Collectors.toSet()));
 
-        int oldAllocationValue = 0;//((QuadrupleIntegerConst) currentSequence.entryBlock.instructions.get(1).getArg1()).getValue();
+        int oldAllocationValue = 0;
         int lastSize = Optimizer.giveAddressToAll(objs, oldAllocationValue);
         currentSequence.entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
-
-        objs.stream().sorted(Comparator.comparingInt(Obj::getAdr)).
-                forEach(p -> System.out.println(p.getName() + ": " + p.getAdr()));
-        System.out.println();
     }
 }

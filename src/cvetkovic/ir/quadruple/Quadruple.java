@@ -170,34 +170,60 @@ public class Quadruple {
 
     @Override
     public String toString() {
-        String arg1s = "", arg1uses = "", arg2s = "", arg2uses = "", results = "", resultuses = "";
+        String arg1s = "", arg1Addr = "", arg2s = "", arg2Addr = "", results = "", resultAddr = "";
+        String flags1 = "___", flags2 = "___", flagsR = "___";
 
         if (arg1 != null) {
             arg1s = arg1.toString();
+
             if (ssaArg1Count != -1)
                 arg1s += "_" + ssaArg1Count;
-            if (arg1 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
-                arg1uses = arg1NextUse.toString();
+
+            if (arg1 instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) arg1).getObj();
+
+                if (obj.getKind() == Obj.Var)
+                    arg1Addr = "(" + obj.getAdr() + ")";
+                flags1 = (obj.parameter ? "P" : "_");
+                flags1 += (obj.inlined ? "I" : "_");
+                flags1 += (obj.tempVar ? "T" : "_");
+            }
         }
         if (arg2 != null) {
             arg2s = arg2.toString();
+
             if (ssaArg2Count != -1)
                 arg2s += "_" + ssaArg2Count;
-            if (arg2 instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
-                arg2uses = arg2NextUse.toString();
+
+            if (arg2 instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) arg2).getObj();
+
+                if (obj.getKind() == Obj.Var)
+                    arg2Addr = "(" + obj.getAdr() + ")";
+                flags2 = (obj.parameter ? "P" : "_");
+                flags2 += (obj.inlined ? "I" : "_");
+                flags2 += (obj.tempVar ? "T" : "_");
+            }
         }
         if (result != null) {
             results = result.toString();
+
             if (ssaResultCount != -1)
                 results += "_" + ssaResultCount;
-            if (result instanceof QuadrupleObjVar && Config.printIRCodeLivenessAnalysis)
-                resultuses = resultNextUse.toString();
+
+            if (result instanceof QuadrupleObjVar) {
+                Obj obj = ((QuadrupleObjVar) result).getObj();
+
+                if (obj.getKind() == Obj.Var)
+                    resultAddr = "(" + obj.getAdr() + ")";
+                flagsR = (obj.parameter ? "P" : "_");
+                flagsR += (obj.inlined ? "I" : "_");
+                flagsR += (obj.tempVar ? "T" : "_");
+            }
         }
 
-        String formattedOutput = String.format("%-15.15s | %-15.15s %-5s | %-15.15s %-5s | %-15.15s %-5s |",
-                instruction, arg1s, arg1uses, arg2s, arg2uses, results, resultuses);
-
-        return formattedOutput.toString();
+        return String.format("%-15.15s | %-15.15s %-5s (%-3s) | %-15.15s %-5s (%-3s) | %-15.15s %-5s (%-3s) |",
+                instruction, arg1s, arg1Addr, flags1, arg2s, arg2Addr, flags2, results, resultAddr, flagsR);
     }
 
     public String getNonformattedOutput() {

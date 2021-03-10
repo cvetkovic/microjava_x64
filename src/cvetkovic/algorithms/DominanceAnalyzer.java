@@ -456,6 +456,12 @@ public class DominanceAnalyzer {
 
                 p.successors.forEach(s -> writer.println(p.blockId + " -> " + s.blockId));
                 p.successors.forEach(s -> reverseWriter.println(s.blockId + " -> " + p.blockId));
+
+                // asserting that optimizations do not corrupt the links
+                for (BasicBlock q : p.successors)
+                    assert (q.predecessors.contains(p));
+                for (BasicBlock q : p.predecessors)
+                    assert (q.successors.contains(p));
             }
 
             writer.println("}");
