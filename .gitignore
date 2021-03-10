@@ -5,3 +5,4 @@ microjava_x64.iml
 test/program.mj
 /src/META-INF
 test/*.jar
+/dump
