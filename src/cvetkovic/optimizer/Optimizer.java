@@ -2,15 +2,13 @@ package cvetkovic.optimizer;
 
 import cvetkovic.algorithms.DominanceAnalyzer;
 import cvetkovic.algorithms.SSAConverter;
+import cvetkovic.exceptions.UninitializedVariableException;
 import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.CodeSequence;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.ir.quadruple.arguments.QuadrupleIntegerConst;
 import cvetkovic.misc.Config;
-import cvetkovic.optimizer.passes.CFGCleaner;
-import cvetkovic.optimizer.passes.FunctionInlining;
-import cvetkovic.optimizer.passes.OptimizerPass;
-import cvetkovic.optimizer.passes.ValueNumbering;
+import cvetkovic.optimizer.passes.*;
 import cvetkovic.x64.SystemV_ABI;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
@@ -21,7 +19,7 @@ public class Optimizer {
     private final List<OptimizerPass> optimizationList = new ArrayList<>();
     protected List<CodeSequence> codeSequenceList = new ArrayList<>();
 
-    protected boolean doDumping;
+    protected boolean doDumping = false;
     protected String dumpingPath;
 
     protected Set<Obj> globalVariables;
@@ -161,14 +159,18 @@ public class Optimizer {
             internalDump(sequence, dumpingPath, "3_pre_ssa_opt_");
 
             // TODO: uninitialized has to be done before inlining
-            //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
+            addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
             //addOptimizationPass(new LoopInvariantCodeMotion(sequence));
             //addOptimizationPass(new CFGCleaner(sequence));
             //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
-                pass.optimize();
-                pass.finalizePass();
+                try {
+                    pass.optimize();
+                    pass.finalizePass();
+                } catch (UninitializedVariableException ex) {
+                    System.err.println(ex.getMessage());
+                }
             }
 
             internalDump(sequence, dumpingPath, "4_post_ssa_opt_");
@@ -243,6 +245,9 @@ public class Optimizer {
     }
 
     private void internalDump(CodeSequence sequence, String path, String prefix) {
+        if (!doDumping)
+            return;
+
         if (sequence.dominanceAnalyzer == null)
             sequence.dominanceAnalyzer = new DominanceAnalyzer(sequence);
 

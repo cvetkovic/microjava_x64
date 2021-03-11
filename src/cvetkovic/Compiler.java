@@ -119,7 +119,8 @@ public class Compiler {
                 IRCodeToPrintPre = irCodeOptimizer.toString();
 
                 if (dumpCFG) {
-                    String dumpPath = System.getProperty("user.dir") + File.separator + "dump" + File.separator;
+                    // TODO: change path in production
+                    String dumpPath = System.getProperty("user.dir") + File.separator + "test" + File.separator + "debug" + File.separator;
                     irCodeOptimizer.setDumpFlag(dumpPath);
                 }
 

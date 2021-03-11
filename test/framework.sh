@@ -16,8 +16,6 @@ do
 	EX1=$(eval java -jar pp2.jar -input $FILE -output $OUTPUT_1 -dump_ir)
 	EX2=$(eval java -jar pp2.jar -input $FILE -output $OUTPUT_2 -dump_ir -optimize_ir)
 
-
-
 	ELF_1=$(pwd)/elf1
 	ELF_2=$(pwd)/elf2
 

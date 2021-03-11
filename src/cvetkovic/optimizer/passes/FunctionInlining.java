@@ -189,6 +189,7 @@ public class FunctionInlining implements OptimizerPass {
 
             QuadrupleObjVar objInlined = (QuadrupleObjVar) (new QuadrupleObjVar(params)).makeClone();
             objInlined.getObj().parameter = false;
+            objInlined.getObj().inlinedParameter = true;
             store.setResult(objInlined);
 
             storeInstructions.add(store);
@@ -286,7 +287,7 @@ public class FunctionInlining implements OptimizerPass {
 
             store.setArg1(returnInstruction.getArg1());
             Obj resultTmp = ((QuadrupleObjVar) callInstruction.getResult()).getObj();
-            resultTmp.tempVar = false;
+            resultTmp.tempVar = true;
             store.setResult(new QuadrupleObjVar(resultTmp));
 
             inlinedEndBlock.instructions.remove(returnInstruction);

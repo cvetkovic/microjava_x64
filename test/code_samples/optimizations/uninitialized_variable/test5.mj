@@ -1,0 +1,17 @@
+program test302
+{
+	void main()
+	     int pom;
+	     int inc;
+	{
+	    inc = 5;
+
+		if(inc == 1)
+		    pom = 1;
+		else if(inc == 2)
+		    pom = 2;
+		else
+		    pom = 0;
+	}
+}
+

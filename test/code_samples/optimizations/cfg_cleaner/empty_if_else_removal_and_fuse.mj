@@ -3,6 +3,8 @@ program MJProgram
 	void main()
 		int i;
 	{
+	    i = 5;
+
 		if (i == 0) {
 		}
 		else {
