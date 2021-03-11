@@ -1,0 +1,15 @@
+program MJProgram
+{
+    int test(int i)
+    {
+        return i;
+
+        i = 5;
+    }
+
+	void main()
+	    int i, j, k, t;
+	{
+	    print(test(1));
+	}
+}

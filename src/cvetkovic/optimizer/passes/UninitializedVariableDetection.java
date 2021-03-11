@@ -28,6 +28,10 @@ public class UninitializedVariableDetection implements OptimizerPass {
         determineDeadPhis();
     }
 
+    /**
+     * Used to mark dead phis nodes. This is needed when inlining pass is used because the SSA generation algorithm might
+     * insert dead phi nodes, which will be then detected as uninitialized by this pass, in spite of their false positiveness.
+     */
     private void determineDeadPhis() {
         for (BasicBlock basicBlock : sequence.basicBlocks) {
             for (Quadruple instruction : basicBlock.instructions) {

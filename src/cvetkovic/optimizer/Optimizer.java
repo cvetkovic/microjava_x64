@@ -3,6 +3,7 @@ package cvetkovic.optimizer;
 import cvetkovic.algorithms.DominanceAnalyzer;
 import cvetkovic.algorithms.SSAConverter;
 import cvetkovic.exceptions.UninitializedVariableException;
+import cvetkovic.exceptions.UnreachableCodeDetectedException;
 import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.CodeSequence;
 import cvetkovic.ir.quadruple.Quadruple;
@@ -24,6 +25,8 @@ public class Optimizer {
 
     protected Set<Obj> globalVariables;
 
+    protected StringBuilder exceptionToThrow = new StringBuilder();
+
     public Optimizer(List<List<Quadruple>> code, List<Obj> functions, Set<Obj> globalVariables) {
         int i = 0;
 
@@ -35,16 +38,13 @@ public class Optimizer {
             sequence.function = functions.get(i);
             sequence.labelIndices = BasicBlock.generateMapOfLabels(quadrupleList);
             sequence.basicBlocks = BasicBlock.extractBasicBlocksFromSequence(sequence.function, quadrupleList, sequence.labelIndices);
-
             assert sequence.basicBlocks != null;
-            for (BasicBlock b : sequence.basicBlocks) {
-                if (b.isEntryBlock()) {
-                    sequence.entryBlock = b;
-                    break;
-                }
-            }
-            if (sequence.entryBlock == null)
-                throw new RuntimeException("Invalid code sequence for loop discovery as entry block has not been found.");
+            sequence.entryBlock = sequence.basicBlocks.stream().filter(BasicBlock::isEntryBlock).findFirst().orElseThrow();
+
+            long numberOfBlocksWithoutPredecessors = sequence.basicBlocks.stream().filter(p -> p.predecessors.size() == 0).count();
+            if (numberOfBlocksWithoutPredecessors > 1)
+                exceptionToThrow.append("At least one unreachable portion of code " +
+                        "has been detected in function '" + sequence.function.getName() + "'.").append(System.lineSeparator());
 
             // update ENTER instruction and assign address to all variables
             Quadruple enterInstruction = sequence.entryBlock.instructions.get(1);
@@ -65,6 +65,10 @@ public class Optimizer {
             codeSequenceList.add(sequence);
             i++;
         }
+    }
+
+    public StringBuilder getExceptionToThrow() {
+        return exceptionToThrow;
     }
 
     public static int giveAddressToAll(Collection<Obj> variables, int startValue) {
@@ -128,11 +132,14 @@ public class Optimizer {
             // DO NOT REMOVE THIS LINE
             optimizationList.clear();
 
+            // NOTE: do not comment the following line -> unreachable code elimination
+            (new CFGCleaner(sequence)).optimize();
+
             internalDump(sequence, dumpingPath, "1_pre_non_ssa_opt_");
 
-            addOptimizationPass(new ValueNumbering(sequence));
-            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
-            addOptimizationPass(new CFGCleaner(sequence));
+            //addOptimizationPass(new ValueNumbering(sequence));
+            //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            //addOptimizationPass(new CFGCleaner(sequence));
 
             internalDump(sequence, dumpingPath, "2_post_non_ssa_opt_");
 
@@ -158,11 +165,10 @@ public class Optimizer {
 
             internalDump(sequence, dumpingPath, "3_pre_ssa_opt_");
 
-            // TODO: uninitialized has to be done before inlining
-            addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
+            //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
             //addOptimizationPass(new LoopInvariantCodeMotion(sequence));
             //addOptimizationPass(new CFGCleaner(sequence));
-            //addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
+            addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             //addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
                 try {

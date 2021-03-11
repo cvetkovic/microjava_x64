@@ -24,13 +24,11 @@ public class DeadCodeElimination implements OptimizerPass {
     public void optimize() {
         mark();
         sweep();
-
-        System.out.println("Dead code elimination completed.");
     }
 
     @Override
     public void finalizePass() {
-
+        // NOTE: do not calculate dominance relations here, but instead run CFGCleaner pass after this one
     }
 
     /**
@@ -101,7 +99,9 @@ public class DeadCodeElimination implements OptimizerPass {
                 if (isCritical(q)) {
                     marked.add(q);
 
-                    if (q.getInstruction() != IRInstruction.GEN_LABEL)
+                    if (q.getInstruction() != IRInstruction.GEN_LABEL &&
+                            q.getInstruction() != IRInstruction.ENTER &&
+                            q.getInstruction() != IRInstruction.LEAVE)
                         worklist.add(q);
                 }
             }
@@ -119,7 +119,7 @@ public class DeadCodeElimination implements OptimizerPass {
                         Set<Quadruple> defSet = defined.get(arg1);
 
                         // defSet will be null when 'arg1' is function parameter or global variable
-                        if (defSet != null) {
+                        if (defSet != null && instruction.getSsaArg1Count() != 0) {
                             Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg1Count()).findFirst().orElseThrow();
                             if (!marked.contains(c)) {
                                 marked.add(c);
@@ -157,7 +157,7 @@ public class DeadCodeElimination implements OptimizerPass {
                     Set<Quadruple> defSet = defined.get(arg2);
 
                     // defSet will be null when 'arg2' is function parameter or global variable
-                    if (defSet != null) {
+                    if (defSet != null && instruction.getSsaArg2Count() != 0) {
                         Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).findFirst().orElseThrow();
                         if (!marked.contains(c)) {
                             marked.add(c);

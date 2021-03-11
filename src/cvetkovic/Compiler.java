@@ -1,6 +1,7 @@
 package cvetkovic;
 
 import cvetkovic.exceptions.UninitializedVariableException;
+import cvetkovic.exceptions.UnreachableCodeDetectedException;
 import cvetkovic.ir.IRCodeGenerator;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
@@ -113,6 +114,10 @@ public class Compiler {
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
                 List<Obj> functions = irCodeGenerator.getFunctionsObj();
                 Optimizer irCodeOptimizer = new Optimizer(irCode, functions, semanticCheck.getGlobalVariables());
+
+                if (irCodeOptimizer.getExceptionToThrow().length() > 1)
+                    System.err.println(irCodeOptimizer.getExceptionToThrow());
+
                 String IRCodeToPrintPre;
                 String IRCodeToPrintPost;
 

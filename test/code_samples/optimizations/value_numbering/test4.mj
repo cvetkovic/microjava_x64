@@ -9,6 +9,8 @@ program TestProgram
 
     {
         void main()
+            Klasa k;
+            int a;
         {
             k = new Klasa;
 
