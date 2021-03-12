@@ -165,8 +165,8 @@ public class Optimizer {
             internalDump(sequence, dumpingPath, "3_pre_ssa_opt_");
 
             addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
-            //addOptimizationPass(new LoopInvariantCodeMotion(sequence));
-            //addOptimizationPass(new CFGCleaner(sequence));
+            addOptimizationPass(new LoopInvariantCodeMotion(sequence));
+            addOptimizationPass(new CFGCleaner(sequence));
             addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
             addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
@@ -193,7 +193,6 @@ public class Optimizer {
 
     public static List<BasicBlock> reassembleBasicBlocks(List<BasicBlock> cfg) {
         /*List<BasicBlock> result = new ArrayList<>();
-
 
         Stack<BasicBlock> stack = new Stack<>();
         BasicBlock currentBlock = cfg.stream().filter(BasicBlock::isEntryBlock).collect(Collectors.toList()).get(0);

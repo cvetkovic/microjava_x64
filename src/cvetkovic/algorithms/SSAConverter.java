@@ -218,7 +218,6 @@ public class SSAConverter {
                     // only if p defines 'sourceNode'
                     if (!p.getSetOfDefinedVariables().contains(destinationNode) && !(p.isEntryBlock() && destinationNode.parameter))
                         continue;
-                    // TODO: add global names here and local variables
 
                     Quadruple mov = new Quadruple(IRInstruction.STORE);
                     mov.setArg1(new QuadrupleObjVar(destinationNode));

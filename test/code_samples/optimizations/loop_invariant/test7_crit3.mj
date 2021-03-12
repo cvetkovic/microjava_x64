@@ -13,7 +13,7 @@ program MJProgram
 	        else
 	            a = 0;
 
-	        c = 1;  // not invariant (CRIT 3)
+	        c = b + c;  // not invariant (CRIT 3)
 	    }
 
 	    print(b);   // should print 0
