@@ -6,6 +6,8 @@ import cvetkovic.misc.Config;
 import cvetkovic.ir.CodeSequence;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -434,8 +436,15 @@ public class DominanceAnalyzer {
     ///////////////////////////////
 
     public static void dumpCFG(String path, String reversePath, List<BasicBlock> basicBlocks) {
-        (new File(path)).getParentFile().mkdir();
-        (new File(reversePath)).getParentFile().mkdir();
+        try {
+            if (!(new File(path)).getParentFile().exists())
+                Files.createDirectories(Paths.get((new File(path)).getParentFile().getPath()));
+            if (!(new File(reversePath)).getParentFile().exists())
+                Files.createDirectories(Paths.get((new File(reversePath)).getParentFile().getPath()));
+        } catch (Exception ex) {
+            System.err.println("Error dumping control flow graph.");
+            return;
+        }
 
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)));
              PrintWriter reverseWriter = new PrintWriter(new BufferedWriter(new FileWriter(reversePath)))) {
@@ -472,7 +481,14 @@ public class DominanceAnalyzer {
     }
 
     public static void dumpDominatorTree(String path, Map<BasicBlock, BasicBlock> idoms) {
-        (new File(path)).getParentFile().mkdir();
+        try {
+            if (!(new File(path)).getParentFile().exists())
+                Files.createDirectories(Paths.get((new File(path)).getParentFile().getPath()));
+        } catch (Exception ex) {
+            System.err.println("Error dumping control flow graph.");
+            return;
+        }
+
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))) {
             writer.println("digraph G {");
 

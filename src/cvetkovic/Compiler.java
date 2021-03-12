@@ -1,7 +1,6 @@
 package cvetkovic;
 
 import cvetkovic.exceptions.UninitializedVariableException;
-import cvetkovic.exceptions.UnreachableCodeDetectedException;
 import cvetkovic.ir.IRCodeGenerator;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
@@ -124,7 +123,6 @@ public class Compiler {
                 IRCodeToPrintPre = irCodeOptimizer.toString();
 
                 if (dumpCFG) {
-                    // TODO: change path in production
                     String dumpPath = System.getProperty("user.dir") + File.separator + "test" + File.separator + "debug" + File.separator;
                     irCodeOptimizer.setDumpFlag(dumpPath);
 
