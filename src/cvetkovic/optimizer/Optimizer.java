@@ -3,7 +3,6 @@ package cvetkovic.optimizer;
 import cvetkovic.algorithms.DominanceAnalyzer;
 import cvetkovic.algorithms.SSAConverter;
 import cvetkovic.exceptions.UninitializedVariableException;
-import cvetkovic.exceptions.UnreachableCodeDetectedException;
 import cvetkovic.ir.BasicBlock;
 import cvetkovic.ir.CodeSequence;
 import cvetkovic.ir.quadruple.Quadruple;
@@ -43,7 +42,7 @@ public class Optimizer {
 
             long numberOfBlocksWithoutPredecessors = sequence.basicBlocks.stream().filter(p -> p.predecessors.size() == 0).count();
             if (numberOfBlocksWithoutPredecessors > 1)
-                exceptionToThrow.append("At least one unreachable portion of code " +
+                exceptionToThrow.append("WARNING: At least one unreachable portion of code " +
                         "has been detected in function '" + sequence.function.getName() + "'.").append(System.lineSeparator());
 
             // update ENTER instruction and assign address to all variables

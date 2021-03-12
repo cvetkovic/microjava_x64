@@ -1,10 +1,13 @@
 #!/bin/bash
 
+if [ ! -d "$1" ]; then
+	echo "Invalid path in argument. Testing has been aborted!"
+	exit
+fi
+
 echo "Compiling all MikroJava programs in:"
 echo $1
 echo
-
-CNT=0
 
 for FILE in $1/*.mj
 do
@@ -26,6 +29,7 @@ do
 
 	if [[ $FILE = *test301.mj ]]
 	then
+		echo "Type a number:"
 		read IN_1
 		
 		CMD_1="echo $IN_1 | ./elf1"
@@ -35,6 +39,7 @@ do
 		RESULT_2=$(eval "$CMD_2")
 	elif [[ $FILE = *test302.mj ]]
 	then
+		echo "Type three numbers, one in each line:"
 		read IN_1
 		read IN_2
 		read IN_3
@@ -46,6 +51,7 @@ do
 		RESULT_2=$(eval "$CMD_2")
 	elif [[ $FILE = *test303.mj ]]
 	then
+		echo "Type a number:"
 		read IN_1
 		
 		CMD_1="echo $IN_1 | ./elf1"
@@ -58,16 +64,22 @@ do
 		ARGS=""
 		
 		while : ; do
+			echo "Type char 'c' or 's', or any other to exit program:"
 			read TYPE
 			
-			[[ "$TYPE" == "c" || "$TYPE" == "s" ]] || break
+			if [[ "$TYPE" != "c" && "$TYPE" != "s" ]]; then
+				break
+			fi
 			
+			echo "Type three numbers, one in each line:"
 			read IN1
 			read IN2
 			read IN3
 			
-			ARGS="$ARGS $TYPE $IN1 $IN2 $IN3"
+			ARGS="${ARGS} $TYPE $IN1 $IN2 $IN3"
 		done
+	
+		ARGS="${ARGS} q"
 	
 		CMD_1="echo $ARGS | ./elf1"
 		CMD_2="echo $ARGS | ./elf2"
