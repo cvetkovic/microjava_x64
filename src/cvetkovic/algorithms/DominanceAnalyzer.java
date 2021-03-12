@@ -438,11 +438,11 @@ public class DominanceAnalyzer {
     public static void dumpCFG(String path, String reversePath, List<BasicBlock> basicBlocks) {
         try {
             if (!(new File(path)).getParentFile().exists())
-                Files.createDirectories(Paths.get((new File(path)).getParentFile().getPath()));
+                (new File(path)).getParentFile().mkdirs();
             if (!(new File(reversePath)).getParentFile().exists())
-                Files.createDirectories(Paths.get((new File(reversePath)).getParentFile().getPath()));
+                (new File(reversePath)).getParentFile().mkdirs();
         } catch (Exception ex) {
-            System.err.println("Error dumping control flow graph.");
+            System.out.println("Error dumping control flow graph.");
             return;
         }
 
@@ -483,9 +483,9 @@ public class DominanceAnalyzer {
     public static void dumpDominatorTree(String path, Map<BasicBlock, BasicBlock> idoms) {
         try {
             if (!(new File(path)).getParentFile().exists())
-                Files.createDirectories(Paths.get((new File(path)).getParentFile().getPath()));
+                (new File(path)).getParentFile().mkdirs();
         } catch (Exception ex) {
-            System.err.println("Error dumping control flow graph.");
+            System.out.println("Error dumping control flow graph.");
             return;
         }
 

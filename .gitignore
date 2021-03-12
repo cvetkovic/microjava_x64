@@ -6,3 +6,4 @@ test/program.mj
 /src/META-INF
 test/*.jar
 /dump
+/test/test
