@@ -87,10 +87,10 @@ do
 	then
 		echo "${red}Test failed! Semantics not preserved in $FILE!${reset}"
 	else
-		echo "${green}Test passed!${reset}"
 		echo -e "\t$RESULT_1"
 		echo ""
 		echo -e "\t$RESULT_2"
+		echo "${green}Test passed!${reset}"
 	fi
 
 	rm $OUTPUT_1

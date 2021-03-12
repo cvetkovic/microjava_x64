@@ -24,71 +24,27 @@ public class UninitializedVariableDetection implements OptimizerPass {
     public UninitializedVariableDetection(CodeSequence sequence, Set<Obj> globalVariables) {
         this.sequence = sequence;
         this.globalVariables = globalVariables;
-
-        determineDeadPhis();
-    }
-
-    /**
-     * Used to mark dead phis nodes. This is needed when inlining pass is used because the SSA generation algorithm might
-     * insert dead phi nodes, which will be then detected as uninitialized by this pass, in spite of their false positiveness.
-     */
-    private void determineDeadPhis() {
-        for (BasicBlock basicBlock : sequence.basicBlocks) {
-            for (Quadruple instruction : basicBlock.instructions) {
-                if (instruction.getInstruction() == IRInstruction.STORE_PHI) {
-                    Obj resultObj = ((QuadrupleObjVar) instruction.getResult()).getObj();
-
-                    boolean dead = true;
-                    for (BasicBlock basicBlock2 : sequence.basicBlocks) {
-                        for (Quadruple i2 : basicBlock2.instructions) {
-                            if (instruction == i2)
-                                continue;
-
-                            if (i2.getArg1() instanceof QuadrupleObjVar) {
-                                Obj obj = ((QuadrupleObjVar) i2.getArg1()).getObj();
-
-                                if (resultObj == obj && instruction.getSsaResultCount() == i2.getSsaArg1Count()) {
-                                    dead = false;
-                                    break;
-                                }
-                            } else if (i2.getArg1() instanceof QuadruplePhi) {
-                                Obj obj = ((QuadruplePhi) i2.getArg1()).getObj();
-
-                                if (resultObj == obj && ((QuadruplePhi) i2.getArg1()).contains(instruction.getSsaResultCount()))
-                                    dead = false;
-                                break;
-                            }
-
-                            if (i2.getArg2() instanceof QuadrupleObjVar) {
-                                Obj obj = ((QuadrupleObjVar) i2.getArg2()).getObj();
-
-                                if (resultObj == obj && instruction.getSsaResultCount() == i2.getSsaArg2Count()) {
-                                    dead = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (dead)
-                        markedDeadPhis.add((QuadruplePhi) instruction.getArg1());
-                }
-            }
-        }
     }
 
     @Override
     public void optimize() {
+        Set<Quadruple> notDead = DeadCodeElimination.mark(sequence);
+
         Set<Obj> uninitializedVariables = new HashSet<>();
 
         for (BasicBlock basicBlock : sequence.basicBlocks) {
             for (Quadruple instruction : basicBlock.instructions) {
+                if (!notDead.contains(instruction))
+                    continue;
+
                 QuadrupleVariable arg1 = instruction.getArg1();
                 QuadrupleVariable arg2 = instruction.getArg2();
 
                 if (instruction.getInstruction() == IRInstruction.MALLOC)
                     continue;
                 else if (instruction.getInstruction() == IRInstruction.INVOKE_VIRTUAL)
+                    continue;
+                else if (instruction.getInstruction() == IRInstruction.GET_PTR)
                     continue;
 
                 if (arg1 instanceof QuadrupleObjVar && instruction.getSsaArg1Count() == 0) {
@@ -111,7 +67,8 @@ public class UninitializedVariableDetection implements OptimizerPass {
                         if (phi.getObj().inlinedParameter)
                             assert !phi.getObj().parameter;
 
-                        if (phi.getPhiArg(i) == 0 && !phi.getObj().parameter && !phi.getObj().inlinedParameter)
+                        if (phi.getPhiArg(i) == 0 && !phi.getObj().parameter
+                                && !phi.getObj().inlinedParameter && !phi.getObj().inlinedResult)
                             uninitializedVariables.add(phi.getObj());
                     }
                 }

@@ -3,7 +3,8 @@ program MJProgram
 	void main()
 	    int i, a, b, c;
 	{
-	    c = 0;
+	    b = 100;
+	    c = 50;
 
 	    for (i = 0; i < 10; i++)
 	    {

@@ -137,16 +137,16 @@ public class Optimizer {
 
             internalDump(sequence, dumpingPath, "1_pre_non_ssa_opt_");
 
-            //addOptimizationPass(new ValueNumbering(sequence));
-            //addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
-            //addOptimizationPass(new CFGCleaner(sequence));
-
-            internalDump(sequence, dumpingPath, "2_post_non_ssa_opt_");
+            addOptimizationPass(new ValueNumbering(sequence));
+            addOptimizationPass(new FunctionInlining(sequence, codeSequenceList));
+            addOptimizationPass(new CFGCleaner(sequence));
 
             for (OptimizerPass pass : optimizationList) {
                 pass.optimize();
                 pass.finalizePass();
             }
+
+            internalDump(sequence, dumpingPath, "2_post_non_ssa_opt_");
         }
 
         // SSA optimizations
@@ -165,11 +165,11 @@ public class Optimizer {
 
             internalDump(sequence, dumpingPath, "3_pre_ssa_opt_");
 
-            //addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
+            addOptimizationPass(new UninitializedVariableDetection(sequence, globalVariables));
             //addOptimizationPass(new LoopInvariantCodeMotion(sequence));
             //addOptimizationPass(new CFGCleaner(sequence));
             addOptimizationPass(new DeadCodeElimination(sequence)); // always call CFGCleaner after DCE
-            //addOptimizationPass(new CFGCleaner(sequence));
+            addOptimizationPass(new CFGCleaner(sequence));
             for (OptimizerPass pass : optimizationList) {
                 try {
                     pass.optimize();
