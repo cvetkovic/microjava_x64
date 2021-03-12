@@ -3,6 +3,6 @@ program MJProgram
 {
 	void main()
 	{
-	    print(x);
+	    print(x);   // won't throw warning -> global variables are initialized to 0
 	}
 }

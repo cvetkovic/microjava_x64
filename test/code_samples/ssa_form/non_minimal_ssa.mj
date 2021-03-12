@@ -4,7 +4,7 @@ program MJProgram
 	    int i, t;
 	{
 	    read(t);
-	    //i = 0;
+	    i = 0;
 
         for (t = 0; t < 10; t++) {
             if (t % 2 == 0)

@@ -1,0 +1,19 @@
+program MJProgram
+{
+    int test(int i)
+    {
+        if (i == 0)
+            return 1;
+        else
+            i = 2;  // return 2 -> rest is unreachable code
+
+        i = 3;
+        return i;
+    }
+
+	void main()
+	    int i, j, k, t;
+	{
+	    print(test(1));
+	}
+}

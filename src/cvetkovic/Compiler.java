@@ -1,6 +1,7 @@
 package cvetkovic;
 
 import cvetkovic.exceptions.UninitializedVariableException;
+import cvetkovic.exceptions.UnreachableCodeDetectedException;
 import cvetkovic.ir.IRCodeGenerator;
 import cvetkovic.ir.quadruple.Quadruple;
 import cvetkovic.lexer.Yylex;
@@ -113,14 +114,21 @@ public class Compiler {
                 List<List<Quadruple>> irCode = irCodeGenerator.getIRCodeOutput();
                 List<Obj> functions = irCodeGenerator.getFunctionsObj();
                 Optimizer irCodeOptimizer = new Optimizer(irCode, functions, semanticCheck.getGlobalVariables());
+
+                if (irCodeOptimizer.getExceptionToThrow().length() > 1)
+                    System.err.println(irCodeOptimizer.getExceptionToThrow());
+
                 String IRCodeToPrintPre;
                 String IRCodeToPrintPost;
 
                 IRCodeToPrintPre = irCodeOptimizer.toString();
 
                 if (dumpCFG) {
-                    String dumpPath = System.getProperty("user.dir") + File.separator + "dump" + File.separator;
+                    // TODO: change path in production
+                    String dumpPath = System.getProperty("user.dir") + File.separator + "test" + File.separator + "debug" + File.separator;
                     irCodeOptimizer.setDumpFlag(dumpPath);
+
+                    System.out.println("CFGs will be dumped in: " + dumpPath);
                 }
 
                 if (optimizeIR) {

@@ -1,20 +1,20 @@
 package cvetkovic.optimizer.passes;
 
-import cvetkovic.ir.IRInstruction;
 import cvetkovic.ir.BasicBlock;
-import cvetkovic.ir.quadruple.Quadruple;
-import cvetkovic.ir.quadruple.arguments.*;
 import cvetkovic.ir.CodeSequence;
+import cvetkovic.ir.IRInstruction;
+import cvetkovic.ir.quadruple.Quadruple;
+import cvetkovic.ir.quadruple.arguments.QuadrupleLabel;
+import cvetkovic.ir.quadruple.arguments.QuadrupleObjVar;
+import cvetkovic.ir.quadruple.arguments.QuadruplePTR;
+import cvetkovic.ir.quadruple.arguments.QuadruplePhi;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.util.*;
 
-import static java.util.Map.Entry.comparingByKey;
-
 public class DeadCodeElimination implements OptimizerPass {
 
     private final CodeSequence sequence;
-    private final Set<Quadruple> marked = new HashSet<>();
 
     public DeadCodeElimination(CodeSequence sequence) {
         this.sequence = sequence;
@@ -22,22 +22,20 @@ public class DeadCodeElimination implements OptimizerPass {
 
     @Override
     public void optimize() {
-        mark();
-        sweep();
-
-        System.out.println("Dead code elimination completed.");
+        Set<Quadruple> marked = mark(sequence);
+        sweep(marked);
     }
 
     @Override
     public void finalizePass() {
-
+        // NOTE: do not calculate dominance relations here, but instead run CFGCleaner pass after this one
     }
 
     /**
      * Critical statements are I/O statements, linkage code (entry & exit blocks),
      * return values, calls to other procedures.
      */
-    private boolean isCritical(Quadruple instruction) {
+    private static boolean isCritical(Quadruple instruction) {
         switch (instruction.getInstruction()) {
             // I/O statements
             case SCANF:
@@ -72,7 +70,8 @@ public class DeadCodeElimination implements OptimizerPass {
      * Algorithm starts from the critical instructions and then iteratively
      * marks instruction whose results are used.
      */
-    private void mark() {
+    static Set<Quadruple> mark(CodeSequence sequence) {
+        Set<Quadruple> marked = new HashSet<>();
         Set<Quadruple> worklist = new HashSet<>();
 
         Map<Obj, Set<Quadruple>> defined = new HashMap<>();
@@ -101,7 +100,9 @@ public class DeadCodeElimination implements OptimizerPass {
                 if (isCritical(q)) {
                     marked.add(q);
 
-                    if (q.getInstruction() != IRInstruction.GEN_LABEL)
+                    if (q.getInstruction() != IRInstruction.GEN_LABEL &&
+                            q.getInstruction() != IRInstruction.ENTER &&
+                            q.getInstruction() != IRInstruction.LEAVE)
                         worklist.add(q);
                 }
             }
@@ -119,7 +120,7 @@ public class DeadCodeElimination implements OptimizerPass {
                         Set<Quadruple> defSet = defined.get(arg1);
 
                         // defSet will be null when 'arg1' is function parameter or global variable
-                        if (defSet != null) {
+                        if (defSet != null && instruction.getSsaArg1Count() != 0) {
                             Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg1Count()).findFirst().orElseThrow();
                             if (!marked.contains(c)) {
                                 marked.add(c);
@@ -157,7 +158,7 @@ public class DeadCodeElimination implements OptimizerPass {
                     Set<Quadruple> defSet = defined.get(arg2);
 
                     // defSet will be null when 'arg2' is function parameter or global variable
-                    if (defSet != null) {
+                    if (defSet != null && instruction.getSsaArg2Count() != 0) {
                         Quadruple c = defSet.stream().filter(p -> p.getSsaResultCount() == instruction.getSsaArg2Count()).findFirst().orElseThrow();
                         if (!marked.contains(c)) {
                             marked.add(c);
@@ -204,6 +205,8 @@ public class DeadCodeElimination implements OptimizerPass {
 
             assert (long) worklist.size() == worklist.stream().distinct().count();
         }
+
+        return marked;
     }
 
     /**
@@ -211,7 +214,7 @@ public class DeadCodeElimination implements OptimizerPass {
      * If non-marked instruction is a jump instruction then route the jump to the
      * nearest useful post-dominator.
      */
-    private void sweep() {
+    private void sweep(Set<Quadruple> marked) {
         for (BasicBlock block : sequence.dominanceAnalyzer.getBasicBlocks()) {
             Set<Quadruple> toRemove = new HashSet<>();
 

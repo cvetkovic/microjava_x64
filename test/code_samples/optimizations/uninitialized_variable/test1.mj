@@ -13,6 +13,7 @@ program MJProgram
 	        i = 1;
 
 	    print(i);
+	    print(t);
 
 	    // no exception
 	}

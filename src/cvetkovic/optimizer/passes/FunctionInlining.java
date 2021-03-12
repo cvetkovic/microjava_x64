@@ -189,6 +189,7 @@ public class FunctionInlining implements OptimizerPass {
 
             QuadrupleObjVar objInlined = (QuadrupleObjVar) (new QuadrupleObjVar(params)).makeClone();
             objInlined.getObj().parameter = false;
+            objInlined.getObj().inlinedParameter = true;
             store.setResult(objInlined);
 
             storeInstructions.add(store);
@@ -278,19 +279,27 @@ public class FunctionInlining implements OptimizerPass {
         startFrom.instructions.remove(callInstruction);
 
         // fix return statement if function is not void
-        Quadruple returnInstruction = inlinedEndBlock.instructions.stream().
+        Set<Tuple<BasicBlock, Quadruple>> returnInstructions = new HashSet<>();
+
+        inlinedEndBlock.instructions.stream().
                 filter(p -> p.getInstruction() == IRInstruction.RETURN).
-                findFirst().orElse(null);
-        if (returnInstruction != null) {
+                findFirst().ifPresent(quadruple -> returnInstructions.add(new Tuple<>(inlinedEndBlock, quadruple)));
+        if (inlinedEndBlock.predecessors.size() > 0)
+            inlinedEndBlock.predecessors.forEach(p -> p.instructions.stream().
+                    filter(q -> q.getInstruction() == IRInstruction.RETURN).findFirst().
+                    ifPresent(quadruple -> returnInstructions.add(new Tuple<>(p, quadruple))));
+
+        for (Tuple<BasicBlock, Quadruple> returnInstruction : returnInstructions) {
             Quadruple store = new Quadruple(IRInstruction.STORE);
 
-            store.setArg1(returnInstruction.getArg1());
+            store.setArg1(returnInstruction.v.getArg1());
             Obj resultTmp = ((QuadrupleObjVar) callInstruction.getResult()).getObj();
             resultTmp.tempVar = false;
+            resultTmp.inlinedResult = true;
             store.setResult(new QuadrupleObjVar(resultTmp));
 
-            inlinedEndBlock.instructions.remove(returnInstruction);
-            inlinedEndBlock.instructions.add(store);
+            returnInstruction.u.instructions.remove(returnInstruction.v);
+            returnInstruction.u.instructions.add(returnInstruction.u.instructions.size() - 1, store);
         }
     }
 

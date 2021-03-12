@@ -82,7 +82,7 @@ public class SSAConverter {
             }
         }
 
-        System.out.println("Phi functions inserted where necessary.");
+        //System.out.println("Phi functions inserted where necessary.");
     }
 
     /**
@@ -111,7 +111,7 @@ public class SSAConverter {
         for (Stack<Integer> s : stack.values())
             assert s.peek() == 0;
 
-        System.out.println("Renaming has been done.");
+        //System.out.println("Renaming has been done.");
     }
 
     private void internalRenaming(DominanceAnalyzer.DominatorTreeNode dominatorTreeNode, Set<BasicBlock> visited, Map<Obj, Integer> count, Map<Obj, Stack<Integer>> stack) {
@@ -218,7 +218,6 @@ public class SSAConverter {
                     // only if p defines 'sourceNode'
                     if (!p.getSetOfDefinedVariables().contains(destinationNode) && !(p.isEntryBlock() && destinationNode.parameter))
                         continue;
-                    // TODO: add global names here and local variables
 
                     Quadruple mov = new Quadruple(IRInstruction.STORE);
                     mov.setArg1(new QuadrupleObjVar(destinationNode));
@@ -253,6 +252,6 @@ public class SSAConverter {
             entryBlock.instructions.get(1).setArg1(new QuadrupleIntegerConst(SystemV_ABI.alignTo16(lastSize)));
         }
 
-        System.out.println("Function has been put from SSA back into the normal form.");
+        //System.out.println("Function has been put from SSA back into the normal form.");
     }
 }

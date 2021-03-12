@@ -29,18 +29,18 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             Set<Tuple<Obj, Integer>> definedIn = new HashSet<>();
             tuple.v.forEach(p -> definedIn.addAll(p.getSetOfSSADefinedVariablesWithNegatedPHIs()));
 
-            Map<Obj, Set<Quadruple>> phis = new HashMap<>();
+            Map<Obj, Set<Quadruple>> phisInLoop = new HashMap<>();
             for (BasicBlock b : tuple.v) {
                 for (Quadruple q : b.instructions) {
                     if (q.getInstruction() == IRInstruction.STORE_PHI) {
                         QuadruplePhi phi = (QuadruplePhi) q.getArg1();
 
-                        if (phis.containsKey(phi.getObj()))
-                            phis.get(phi.getObj()).add(q);
+                        if (phisInLoop.containsKey(phi.getObj()))
+                            phisInLoop.get(phi.getObj()).add(q);
                         else {
                             Set<Quadruple> set = new HashSet<>();
                             set.add(q);
-                            phis.put(phi.getObj(), set);
+                            phisInLoop.put(phi.getObj(), set);
                         }
                     }
                 }
@@ -52,7 +52,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
             boolean changed;
 
             do {
-                Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v, phis, tuple.u);
+                Tuple<BasicBlock, Quadruple> loopInvariantInstruction = findInvariantInstruction(tuple.v, definedIn, tuple.v, phisInLoop, tuple.u);
 
                 if (loopInvariantInstruction != null) {
                     addToPreheader(loopInvariantInstruction, preheader, definedIn);
@@ -137,7 +137,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
     private Tuple<BasicBlock, Quadruple> findInvariantInstruction(Set<BasicBlock> basicBlocks,
                                                                         Set<Tuple<Obj, Integer>> definedIn,
                                                                         Set<BasicBlock> loop,
-                                                                        Map<Obj, Set<Quadruple>> phis,
+                                                                        Map<Obj, Set<Quadruple>> phisInLoop,
                                                                         BasicBlock loopHeader) {
         for (BasicBlock block : basicBlocks) {
             for (Quadruple q : block.instructions) {
@@ -182,7 +182,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                             loop,
                             ((QuadrupleObjVar) q.getResult()).getObj(),
                             q.getSsaResultCount(),
-                            phis,
+                            phisInLoop,
                             loopHeader))
                         return new Tuple<>(block, q);
                 }
@@ -203,7 +203,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                                              Set<BasicBlock> loop,
                                              Obj resultObj,
                                              int ssaCount,
-                                             Map<Obj, Set<Quadruple>> phis,
+                                             Map<Obj, Set<Quadruple>> phisInLoop,
                                              BasicBlock loopHeader) {
         BasicBlock blockNotInLoop = null;
         for (BasicBlock loopHeaderSuccessor : loopHeader.successors) {
@@ -215,7 +215,7 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         assert blockNotInLoop != null;
 
         BasicBlock loopExitPredecessorInLoop = null;
-        for (BasicBlock loopHeaderPredecessor : loopHeader.successors) {
+        for (BasicBlock loopHeaderPredecessor : loopHeader.predecessors) {
             if (loop.contains(loopHeaderPredecessor)) {
                 loopExitPredecessorInLoop = loopHeaderPredecessor;
                 break;
@@ -236,21 +236,24 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
         /*long numberOfDefinitions = definedIn.stream().filter(p -> p.u == resultObj && p.v > 0).count();
         if (numberOfDefinitions > 1)
             criterion2 = false;*/
-        // NOTE: always true -> by definition of SSA
+        // NOTE: always true -> by the definition of SSA
         criterion2 = true;
 
-        // criterion 3 - all uses in L of x can only be reached by the definition of x in s
+        // criterion 3 - t is not live-out of the loop preheader
+        // NOTE: when SSA is used, this means that instruction is loop invariant if its result is not
+        // present as an argument of phi function residing in loop header, or conservatively in any
+        // of the loop's phi functions
         // NOTE: this criteria forbids elimination of instruction if its result is used in an if-then-else structure
-        criterion3 = thirdCriterion(loop, resultObj, ssaCount, phis);
+        criterion3 = thirdCriterion(loop, resultObj, ssaCount, phisInLoop);
 
         return criterion1 & criterion2 & criterion3;
     }
 
-    private boolean thirdCriterion(Set<BasicBlock> loop, Obj obj, int ssaCnt, Map<Obj, Set<Quadruple>> phis) {
+    private boolean thirdCriterion(Set<BasicBlock> loop, Obj obj, int ssaCnt, Map<Obj, Set<Quadruple>> phisInLoop) {
         for (BasicBlock block : loop) {
             for (Quadruple q : block.instructions) {
                 if (q.getArg1() instanceof QuadrupleObjVar && ((QuadrupleObjVar) q.getArg1()).getObj() == obj) {
-                    Set<Quadruple> phi_instructions = phis.getOrDefault(obj, new HashSet<>());
+                    Set<Quadruple> phi_instructions = phisInLoop.getOrDefault(obj, new HashSet<>());
                     Quadruple particularPhi = phi_instructions.stream().
                             filter(p -> p.getSsaResultCount() == q.getSsaArg1Count()).findFirst().orElse(null);
 
@@ -259,15 +262,13 @@ public class LoopInvariantCodeMotion implements OptimizerPass {
                 }
 
                 if (q.getArg2() instanceof QuadrupleObjVar && ((QuadrupleObjVar) q.getArg2()).getObj() == obj) {
-                    Set<Quadruple> phi_instructions = phis.getOrDefault(obj, new HashSet<>());
+                    Set<Quadruple> phi_instructions = phisInLoop.getOrDefault(obj, new HashSet<>());
                     Quadruple particularPhi = phi_instructions.stream().
                             filter(p -> p.getSsaResultCount() == q.getSsaArg2Count()).findFirst().orElse(null);
 
                     if (particularPhi != null && ((QuadruplePhi) particularPhi.getArg1()).contains(ssaCnt))
                         return false;
                 }
-
-                // TODO: recursive phi resolving here
             }
         }
 

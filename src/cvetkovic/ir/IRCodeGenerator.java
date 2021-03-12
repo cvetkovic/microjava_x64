@@ -52,6 +52,7 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
     private boolean postponeUpdateVarList = false;
 
+    // NOTE: if function contains multiple return statements then they all need to point to unique leave instruction
     private List<Quadruple> returnStatementJMPFixPoint = new ArrayList<>();
 
     private Obj currentMethod = null;
@@ -748,6 +749,12 @@ public class IRCodeGenerator extends VisitorAdaptor {
         // generate label -> first quadruple after whole IF-THEN-ELSE structure
         String labelName = null;
 
+        Quadruple jumpAfterElse = null;
+        if (code.get(code.size() - 1).getInstruction() != JMP) {
+            jumpAfterElse = new Quadruple(JMP);
+            code.add(jumpAfterElse);
+        }
+
         // backpatching
         while (!ifFixPointStack.empty() && ifFixPointStack.peek().statementDepth == ifStatementDepth) {
             if (labelName == null) {
@@ -757,16 +764,29 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
             ControlFlow.IfFixPoint fix = ifFixPointStack.pop();
             fix.quadruple.setResult(new QuadrupleLabel(labelName));
+
+            if (jumpAfterElse != null)
+                jumpAfterElse.setResult(new QuadrupleLabel(labelName));
         }
 
         ifStatementDepth--;
+
+        if (labelName == null && jumpAfterElse != null) {
+            labelName = ControlFlow.generateUniqueLabelName();
+            generateLabel(code, labelName);
+            jumpAfterElse.setResult(new QuadrupleLabel(labelName));
+        }
     }
 
     @Override
     public void visit(ElseStatementKeyword ElseStatementKeyword) {
+        boolean waiveFixPointPush = true;
         // still in IF-true branch -> put JMP to skip ELSE instruction
         Quadruple unconditionalJump = new Quadruple(IRInstruction.JMP);
-        code.add(unconditionalJump);
+        if (code.get(code.size() - 1).getInstruction() != JMP) {
+            code.add(unconditionalJump);
+            waiveFixPointPush = false;
+        }
 
         // generate label for beginning of else branch
         String labelName = null;
@@ -783,7 +803,8 @@ public class IRCodeGenerator extends VisitorAdaptor {
         }
 
         // schedule unconditional jump to be backpatched upon finishing current if-then-else structure
-        ifFixPointStack.push(new ControlFlow.IfFixPoint(unconditionalJump, ifStatementDepth));
+        if (!waiveFixPointPush)
+            ifFixPointStack.push(new ControlFlow.IfFixPoint(unconditionalJump, ifStatementDepth));
     }
 
     @Override
@@ -1129,8 +1150,9 @@ public class IRCodeGenerator extends VisitorAdaptor {
 
         expressionDAG = new ExpressionDAG();
 
-        Quadruple jmp = new Quadruple(LEAVE);
+        Quadruple jmp = new Quadruple(IRInstruction.JMP);
         code.add(jmp);
+        returnStatementJMPFixPoint.add(jmp);
     }
 
     //////////////////////////////////////////////////////////////////////////////////

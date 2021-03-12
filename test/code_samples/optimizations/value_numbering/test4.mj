@@ -9,13 +9,8 @@ program TestProgram
 
     {
         void main()
-            int a;      // -8
-            int b;      // -12
-            int c;      // -16
-            int d;      // -20
-            int niz[];  // -24
-            Klasa k;    // -32
-            int i;      // -40
+            Klasa k;
+            int a;
         {
             k = new Klasa;
 

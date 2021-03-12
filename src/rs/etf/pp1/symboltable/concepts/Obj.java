@@ -25,6 +25,8 @@ public class Obj implements Cloneable {
     public boolean parameter = false;
     public boolean stackParameter = false;
     public boolean inlined = false;
+    public boolean inlinedParameter = false; // used for passing uninitialized variable detection check for parameters
+    public boolean inlinedResult = false; // used for passing uninitialized variable detection check for return statements
 
     private String name;
     public int uniqueID;
