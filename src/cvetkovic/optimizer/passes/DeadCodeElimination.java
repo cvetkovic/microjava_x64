@@ -283,6 +283,9 @@ public class DeadCodeElimination implements OptimizerPass {
                 if (alt < distance.get(v)) {
                     distance.put(v, alt);
                     previous.put(v, u);
+
+                    Q.remove(v);
+                    Q.add(v);
                 }
             }
         }
